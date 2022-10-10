@@ -189,35 +189,18 @@ macro_rules! impl_rand_gated {
 #[cfg(feature = "serde")]
 #[macro_export]
 macro_rules! impl_serde_gated {
-    ($quantity: ident, $dimension: ident, $dimensionless_const: ident) => {
-        $crate::impl_serde!($quantity, $dimension, $dimensionless_const);
+    ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $unit_names_array: ident) => {
+        $crate::impl_serde!(
+            $quantity,
+            $dimension,
+            $dimensionless_const,
+            $unit_names_array
+        );
     };
 }
 
 #[cfg(not(feature = "serde"))]
 #[macro_export]
 macro_rules! impl_serde_gated {
-    ($quantity: ident, $dimension: ident, $dimensionless_const: ident) => {};
-}
-
-#[macro_export]
-macro_rules! define_system {
-    ($quantity: ident, $dimension: ident, $dimensionless_const: ident) => {
-        $crate::define_quantity!($quantity, $dimension, $dimensionless_const);
-        $crate::impl_float_methods!($quantity, $dimension, $dimensionless_const);
-        $crate::impl_concrete_float_methods!($quantity, $dimension, $dimensionless_const, f32);
-        $crate::impl_concrete_float_methods!($quantity, $dimension, $dimensionless_const, f64);
-        $crate::impl_vector_methods!($quantity, $dimension, $dimensionless_const, Vec2, f32, 2);
-        $crate::impl_vector_methods!($quantity, $dimension, $dimensionless_const, Vec3, f32, 3);
-        $crate::impl_vector_methods!($quantity, $dimension, $dimensionless_const, DVec2, f64, 2);
-        $crate::impl_vector_methods!($quantity, $dimension, $dimensionless_const, DVec3, f64, 3);
-        $crate::impl_vector2_methods!($quantity, $dimension, $dimensionless_const, Vec2, f32);
-        $crate::impl_vector3_methods!($quantity, $dimension, $dimensionless_const, Vec3, f32);
-        $crate::impl_vector2_methods!($quantity, $dimension, $dimensionless_const, DVec2, f64);
-        $crate::impl_vector3_methods!($quantity, $dimension, $dimensionless_const, DVec3, f64);
-        $crate::impl_hdf5_gated!($quantity, $dimension, $dimensionless_const);
-        $crate::impl_mpi_gated!($quantity, $dimension);
-        $crate::impl_rand_gated!($quantity, $dimension, $dimensionless_const);
-        $crate::impl_serde_gated!($quantity, $dimension, $dimensionless_const);
-    };
+    ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $unit_names_array: ident) => {};
 }

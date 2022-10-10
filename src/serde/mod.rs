@@ -3,8 +3,13 @@ mod vector_quantity;
 
 #[macro_export]
 macro_rules! impl_serde {
-    ($quantity: ident, $dimension: ident, $dimensionless_const: ident) => {
-        $crate::impl_serde_helpers!($quantity, $dimension, $dimensionless_const);
+    ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $unit_names_array: ident) => {
+        $crate::impl_serde_helpers!(
+            $quantity,
+            $dimension,
+            $dimensionless_const,
+            $unit_names_array
+        );
         $crate::impl_serde_float!($quantity, $dimension, $dimensionless_const, f32);
         $crate::impl_serde_float!($quantity, $dimension, $dimensionless_const, f64);
         $crate::impl_serde_vector!($quantity, $dimension, $dimensionless_const, Vec2, f32, 2);
@@ -16,7 +21,7 @@ macro_rules! impl_serde {
 
 #[macro_export]
 macro_rules! impl_serde_helpers {
-    ($quantity: ident, $dimension: ident, $dimensionless_const: ident) => {
+    ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $unit_names_array: ident) => {
         use std::marker::PhantomData;
         use std::str::SplitWhitespace;
 
@@ -69,7 +74,7 @@ macro_rules! impl_serde_helpers {
             } else {
                 (unit_str, 1)
             };
-            let (dimension, _, factor) = UNIT_NAMES
+            let (dimension, _, factor) = $unit_names_array
                 .iter()
                 .find(|(_, known_unit_name, _)| &unit == known_unit_name)
                 .ok_or_else(|| E::custom(format!("unknown unit: {}", &unit)))?;

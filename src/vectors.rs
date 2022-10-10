@@ -1,6 +1,6 @@
 #[macro_export]
 macro_rules! impl_vector_methods {
-    ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $vector_type: ident, $float_type: ident, $num_dims: literal) => {
+    ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $unit_names_array: ident, $vector_type: ident, $float_type: ident, $num_dims: literal) => {
         impl<const D: $dimension> $quantity<$vector_type, D> {
             pub fn from_vector_and_scale(
                 vec: $vector_type,
@@ -54,7 +54,7 @@ macro_rules! impl_vector_methods {
 
         impl<const D: $dimension> std::fmt::Debug for $quantity<$vector_type, D> {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                let unit_name = UNIT_NAMES
+                let unit_name = $unit_names_array
                     .iter()
                     .filter(|(d, _, _)| d == &D)
                     .filter(|(_, _, val)| *val == 1.0)

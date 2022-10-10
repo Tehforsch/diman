@@ -64,9 +64,9 @@ macro_rules! default_vector_quantity {
 
 #[macro_export]
 macro_rules! unit_system {
-    ($dimension: ident, $quantity: ident, $dimensionless_const: ident, $($const: ident, $quantity_name:ident, $($dimension_name: ident: $dimension_value: literal),*, {$($unit:ident, $factor:literal, $($unit_symbol:literal)?),*}),+) => {
+    ($dimension: ident, $quantity: ident, $dimensionless_const: ident, $unit_names_array: ident, $($const: ident, $quantity_name:ident, $($dimension_name: ident: $dimension_value: literal),*, {$($unit:ident, $factor:literal, $($unit_symbol:literal)?),*}),+) => {
         use paste::paste;
-        pub const UNIT_NAMES: &[($dimension, &str, f64)] = &[
+        pub const $unit_names_array: &[($dimension, &str, f64)] = &[
         $(
             $(
                 $(

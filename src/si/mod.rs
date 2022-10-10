@@ -19,13 +19,14 @@ use glam::Vec3;
 use crate::define_system;
 use crate::unit_system;
 
-define_system!(Quantity, Dimension, NONE);
+define_system!(Quantity, Dimension, NONE, UNIT_NAMES);
 
 #[rustfmt::skip]
 unit_system!(
     Dimension,
     Quantity,
     NONE,
+    UNIT_NAMES,
     DIMENSIONLESS, Dimensionless, length: 0,
     {
         dimensionless, 1.0, ""

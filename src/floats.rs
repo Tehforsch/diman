@@ -46,7 +46,7 @@ macro_rules! impl_float_methods {
 
 #[macro_export]
 macro_rules! impl_concrete_float_methods {
-    ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $float_type: ident) => {
+    ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $unit_names_array: ident, $float_type: ident) => {
         impl<const D: $dimension> $quantity<$float_type, D> {
             pub fn zero() -> Self {
                 Self(0.0)
@@ -104,7 +104,7 @@ macro_rules! impl_concrete_float_methods {
 
         impl<const D: $dimension> std::fmt::Debug for $quantity<$float_type, D> {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                let unit_name = UNIT_NAMES
+                let unit_name = $unit_names_array
                     .iter()
                     .filter(|(d, _, _)| d == &D)
                     .filter(|(_, _, val)| *val == 1.0)
