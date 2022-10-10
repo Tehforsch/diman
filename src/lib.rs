@@ -40,7 +40,7 @@ mod tests {
         )
     }
 
-    #[cfg(feature = "default-f64")]
+    #[cfg(not(feature = "default-f32"))]
     pub(crate) fn assert_is_close<const U: Dimension>(x: Quantity<f64, U>, y: Quantity<f64, U>) {
         const EPSILON: f64 = 1e-20;
         assert!(

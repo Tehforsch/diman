@@ -6,7 +6,7 @@ macro_rules! default_quantity {
     };
 }
 
-#[cfg(feature = "default-f64")]
+#[cfg(not(feature = "default-f32"))]
 #[macro_export]
 macro_rules! default_quantity {
     ($quantity: ident, $quantity_name: ident, $const: ident) => {
@@ -26,7 +26,7 @@ macro_rules! default_vector_quantity {
     };
 }
 
-#[cfg(all(feature = "default-2d", feature = "default-f64"))]
+#[cfg(all(feature = "default-2d", not(feature = "default-f32")))]
 #[macro_export]
 macro_rules! default_vector_quantity {
     ($quantity: ident, $quantity_name: ident, $const: ident) => {
@@ -38,7 +38,7 @@ macro_rules! default_vector_quantity {
     };
 }
 
-#[cfg(all(feature = "default-3d", feature = "default-f32"))]
+#[cfg(all(not(feature = "default-2d"), feature = "default-f32"))]
 #[macro_export]
 macro_rules! default_vector_quantity {
     ($quantity: ident, $quantity_name: ident, $const: ident) => {
@@ -50,7 +50,7 @@ macro_rules! default_vector_quantity {
     };
 }
 
-#[cfg(all(feature = "default-3d", feature = "default-f64"))]
+#[cfg(all(not(feature = "default-2d"), not(feature = "default-f32")))]
 #[macro_export]
 macro_rules! default_vector_quantity {
     ($quantity: ident, $quantity_name: ident, $const: ident) => {
