@@ -145,7 +145,7 @@ mod tests {
     #[test]
     fn debug_vector_2() {
         assert_eq!(
-            format!("{:?}", crate::si::DVec2Length::meters(1.0, 5.0)),
+            format!("{:?}", crate::si::Vec2Length::meters(1.0, 5.0)),
             "[1.0 5.0] m"
         );
     }
@@ -153,7 +153,7 @@ mod tests {
     #[test]
     fn debug_vector_3() {
         assert_eq!(
-            format!("{:?}", crate::si::DVec3Length::meters(1.0, 5.0, 6.0)),
+            format!("{:?}", crate::si::Vec3Length::meters(1.0, 5.0, 6.0)),
             "[1.0 5.0 6.0] m"
         );
     }

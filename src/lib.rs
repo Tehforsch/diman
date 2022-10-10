@@ -29,6 +29,18 @@ mod tests {
     use crate::si::Length;
     use crate::si::Quantity;
 
+    #[cfg(feature = "default-f32")]
+    pub(crate) fn assert_is_close<const U: Dimension>(x: Quantity<f32, U>, y: Quantity<f32, U>) {
+        const EPSILON: f32 = 1e-20;
+        assert!(
+            (x - y).abs().unwrap_value() < EPSILON,
+            "{} {}",
+            x.unwrap_value(),
+            y.unwrap_value()
+        )
+    }
+
+    #[cfg(feature = "default-f64")]
     pub(crate) fn assert_is_close<const U: Dimension>(x: Quantity<f64, U>, y: Quantity<f64, U>) {
         const EPSILON: f64 = 1e-20;
         assert!(

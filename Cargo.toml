@@ -9,7 +9,11 @@ mpi = ["dep:once_cell", "dep:mpi"]
 hdf5 = ["dep:hdf5"]
 rand = ["dep:rand"]
 serde = ["dep:serde"]
-default = ["si"]
+default = ["si", "default-3d", "default-f32"]
+default-2d = []
+default-3d = []
+default-f32 = []
+default-f64 = []
 
 [lib]
 

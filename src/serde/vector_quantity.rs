@@ -61,21 +61,21 @@ macro_rules! impl_serde_vector {
 
 #[cfg(test)]
 mod tests {
-    use crate::si::DVec2Length;
-    use crate::si::DVec3Length;
     use crate::si::Length;
+    use crate::si::Vec2Length;
+    use crate::si::Vec3Length;
     use crate::tests::assert_is_close;
 
     #[test]
     fn deserialize_vector_2() {
-        let q: DVec2Length = serde_yaml::from_str("(5.0 3.0) km").unwrap();
+        let q: Vec2Length = serde_yaml::from_str("(5.0 3.0) km").unwrap();
         assert_is_close(q.x(), Length::kilometers(5.0));
         assert_is_close(q.y(), Length::kilometers(3.0));
     }
 
     #[test]
     fn deserialize_vector_3() {
-        let q: DVec3Length = serde_yaml::from_str("(5.0 3.0 7.0) km").unwrap();
+        let q: Vec3Length = serde_yaml::from_str("(5.0 3.0 7.0) km").unwrap();
         assert_is_close(q.x(), Length::kilometers(5.0));
         assert_is_close(q.y(), Length::kilometers(3.0));
         assert_is_close(q.z(), Length::kilometers(7.0));
@@ -84,24 +84,24 @@ mod tests {
     #[test]
     #[should_panic]
     fn deserialize_vector_2_fails_with_fewer_than_2_components() {
-        let _: DVec2Length = serde_yaml::from_str("(5.0) km").unwrap();
+        let _: Vec2Length = serde_yaml::from_str("(5.0) km").unwrap();
     }
 
     #[test]
     #[should_panic]
     fn deserialize_vector_2_fails_with_more_than_2_components() {
-        let _: DVec2Length = serde_yaml::from_str("(5.0 3.0 7.0) km").unwrap();
+        let _: Vec2Length = serde_yaml::from_str("(5.0 3.0 7.0) km").unwrap();
     }
 
     #[test]
     #[should_panic]
     fn deserialize_vector_3_fails_with_fewer_than_3_components() {
-        let _: DVec3Length = serde_yaml::from_str("(5.0 4.0) km").unwrap();
+        let _: Vec3Length = serde_yaml::from_str("(5.0 4.0) km").unwrap();
     }
 
     #[test]
     #[should_panic]
     fn deserialize_vector_3_fails_with_more_than_3_components() {
-        let _: DVec3Length = serde_yaml::from_str("(5.0 3.0 7.0 9.0) km").unwrap();
+        let _: Vec3Length = serde_yaml::from_str("(5.0 3.0 7.0 9.0) km").unwrap();
     }
 }

@@ -57,6 +57,51 @@ macro_rules! impl_concrete_float_methods {
             }
         }
 
+        impl<S, const D: $dimension> Mul<$float_type> for $quantity<S, D>
+        where
+            S: Mul<$float_type, Output = S>,
+        {
+            type Output = $quantity<S, D>;
+
+            fn mul(self, rhs: $float_type) -> Self::Output {
+                $quantity(self.0 * rhs)
+            }
+        }
+
+        impl<S, const D: $dimension> Mul<$quantity<S, D>> for $float_type
+        where
+            $float_type: Mul<S, Output = S>,
+        {
+            type Output = $quantity<S, D>;
+
+            fn mul(self, rhs: $quantity<S, D>) -> Self::Output {
+                $quantity(self * rhs.0)
+            }
+        }
+
+        impl<S, const D: $dimension> Div<$float_type> for $quantity<S, D>
+        where
+            S: Div<$float_type, Output = S>,
+        {
+            type Output = $quantity<S, D>;
+
+            fn div(self, rhs: $float_type) -> Self::Output {
+                $quantity(self.0 / rhs)
+            }
+        }
+
+        impl<S, const D: $dimension> Div<$quantity<S, D>> for $float_type
+        where
+            $quantity<S, { D.dimension_inv() }>:,
+            $float_type: Div<S, Output = S>,
+        {
+            type Output = $quantity<S, { D.dimension_inv() }>;
+
+            fn div(self, rhs: $quantity<S, D>) -> Self::Output {
+                $quantity(self / rhs.0)
+            }
+        }
+
         impl<const D: $dimension> std::fmt::Debug for $quantity<$float_type, D> {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 let unit_name = UNIT_NAMES

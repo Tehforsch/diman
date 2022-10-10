@@ -13,6 +13,8 @@ pub use dimension::Dimension;
 use dimension::NONE;
 use glam::DVec2;
 use glam::DVec3;
+use glam::Vec2;
+use glam::Vec3;
 
 use crate::define_system;
 use crate::unit_system;

@@ -77,50 +77,6 @@ macro_rules! define_quantity {
                 $quantity::<S, D>(-self.0)
             }
         }
-        impl<S, const D: $dimension> Mul<f64> for $quantity<S, D>
-        where
-            S: Mul<f64, Output = S>,
-        {
-            type Output = $quantity<S, D>;
-
-            fn mul(self, rhs: f64) -> Self::Output {
-                $quantity(self.0 * rhs)
-            }
-        }
-
-        impl<S, const D: $dimension> Mul<$quantity<S, D>> for f64
-        where
-            f64: Mul<S, Output = S>,
-        {
-            type Output = $quantity<S, D>;
-
-            fn mul(self, rhs: $quantity<S, D>) -> Self::Output {
-                $quantity(self * rhs.0)
-            }
-        }
-
-        impl<S, const D: $dimension> Div<f64> for $quantity<S, D>
-        where
-            S: Div<f64, Output = S>,
-        {
-            type Output = $quantity<S, D>;
-
-            fn div(self, rhs: f64) -> Self::Output {
-                $quantity(self.0 / rhs)
-            }
-        }
-
-        impl<S, const D: $dimension> Div<$quantity<S, D>> for f64
-        where
-            $quantity<S, { D.dimension_inv() }>:,
-            f64: Div<S, Output = S>,
-        {
-            type Output = $quantity<S, { D.dimension_inv() }>;
-
-            fn div(self, rhs: $quantity<S, D>) -> Self::Output {
-                $quantity(self / rhs.0)
-            }
-        }
 
         impl<SL, SR, const DL: $dimension, const DR: $dimension> Mul<$quantity<SR, DR>>
             for $quantity<SL, DL>
@@ -205,15 +161,15 @@ macro_rules! impl_hdf5_gated {
 #[cfg(feature = "mpi")]
 #[macro_export]
 macro_rules! impl_mpi_gated {
-    ($quantity: ident, $dimension: ident, $dimensionless_const: ident) => {
-        $crate::impl_mpi!($quantity, $dimension, $dimensionless_const);
+    ($quantity: ident, $dimension: ident) => {
+        $crate::impl_mpi!($quantity, $dimension);
     };
 }
 
 #[cfg(not(feature = "mpi"))]
 #[macro_export]
 macro_rules! impl_mpi_gated {
-    ($quantity: ident, $dimension: ident, $dimensionless_const: ident) => {};
+    ($quantity: ident, $dimension: ident) => {};
 }
 
 #[cfg(feature = "rand")]
@@ -251,12 +207,16 @@ macro_rules! define_system {
         $crate::impl_float_methods!($quantity, $dimension, $dimensionless_const);
         $crate::impl_concrete_float_methods!($quantity, $dimension, $dimensionless_const, f32);
         $crate::impl_concrete_float_methods!($quantity, $dimension, $dimensionless_const, f64);
+        $crate::impl_vector_methods!($quantity, $dimension, $dimensionless_const, Vec2, f32, 2);
+        $crate::impl_vector_methods!($quantity, $dimension, $dimensionless_const, Vec3, f32, 3);
         $crate::impl_vector_methods!($quantity, $dimension, $dimensionless_const, DVec2, f64, 2);
         $crate::impl_vector_methods!($quantity, $dimension, $dimensionless_const, DVec3, f64, 3);
+        $crate::impl_vector2_methods!($quantity, $dimension, $dimensionless_const, Vec2, f32);
+        $crate::impl_vector3_methods!($quantity, $dimension, $dimensionless_const, Vec3, f32);
         $crate::impl_vector2_methods!($quantity, $dimension, $dimensionless_const, DVec2, f64);
         $crate::impl_vector3_methods!($quantity, $dimension, $dimensionless_const, DVec3, f64);
         $crate::impl_hdf5_gated!($quantity, $dimension, $dimensionless_const);
-        $crate::impl_mpi_gated!($quantity, $dimension, $dimensionless_const);
+        $crate::impl_mpi_gated!($quantity, $dimension);
         $crate::impl_rand_gated!($quantity, $dimension, $dimensionless_const);
         $crate::impl_serde_gated!($quantity, $dimension, $dimensionless_const);
     };
