@@ -16,49 +16,41 @@ macro_rules! default_quantity {
 
 #[cfg(all(feature = "default-2d", feature = "default-f32"))]
 #[macro_export]
-macro_rules! default_vector_quantity {
-    ($quantity: ident, $quantity_name: ident, $const: ident) => {
-        paste! {
-            pub type [<Vec2 $quantity_name>] = $quantity<glam::Vec2, $const>;
-            pub type [<Vec3 $quantity_name>] = $quantity<glam::Vec3, $const>;
-            pub type [<Vec $quantity_name>] = $quantity<glam::Vec2, $const>;
-        }
-    };
-}
-
-#[cfg(all(feature = "default-2d", not(feature = "default-f32")))]
-#[macro_export]
-macro_rules! default_vector_quantity {
-    ($quantity: ident, $quantity_name: ident, $const: ident) => {
-        paste! {
-            pub type [<Vec2 $quantity_name>] = $quantity<glam::DVec2, $const>;
-            pub type [<Vec3 $quantity_name>] = $quantity<glam::DVec3, $const>;
-            pub type [<Vec $quantity_name>] = $quantity<glam::DVec2, $const>;
-        }
+macro_rules! default_vector {
+    () => {
+        pub type MVec = Vec2;
+        pub type MVec2 = Vec2;
+        pub type MVec3 = Vec3;
     };
 }
 
 #[cfg(all(not(feature = "default-2d"), feature = "default-f32"))]
 #[macro_export]
-macro_rules! default_vector_quantity {
-    ($quantity: ident, $quantity_name: ident, $const: ident) => {
-        paste! {
-            pub type [<Vec2 $quantity_name>] = $quantity<glam::Vec2, $const>;
-            pub type [<Vec3 $quantity_name>] = $quantity<glam::Vec3, $const>;
-            pub type [<Vec $quantity_name>] = $quantity<glam::Vec3, $const>;
-        }
+macro_rules! default_vector {
+    () => {
+        pub type MVec = Vec3;
+        pub type MVec2 = Vec2;
+        pub type MVec3 = Vec3;
+    };
+}
+
+#[cfg(all(feature = "default-2d", not(feature = "default-f32")))]
+#[macro_export]
+macro_rules! default_vector {
+    () => {
+        pub type MVec = DVec2;
+        pub type MVec2 = DVec2;
+        pub type MVec3 = DVec3;
     };
 }
 
 #[cfg(all(not(feature = "default-2d"), not(feature = "default-f32")))]
 #[macro_export]
-macro_rules! default_vector_quantity {
-    ($quantity: ident, $quantity_name: ident, $const: ident) => {
-        paste! {
-            pub type [<Vec2 $quantity_name>] = $quantity<glam::DVec2, $const>;
-            pub type [<Vec3 $quantity_name>] = $quantity<glam::DVec3, $const>;
-            pub type [<Vec $quantity_name>] = $quantity<glam::DVec3, $const>;
-        }
+macro_rules! default_vector {
+    () => {
+        pub type MVec = DVec3;
+        pub type MVec2 = DVec2;
+        pub type MVec3 = DVec3;
     };
 }
 
@@ -84,16 +76,16 @@ macro_rules! unit_system {
                 .. $dimensionless_const };
 
             $crate::default_quantity!($quantity, $quantity_name, $const);
-            $crate::default_vector_quantity!($quantity, $quantity_name, $const);
+
+            paste! {
+                pub type [<Vec2 $quantity_name>] = $quantity<MVec2, $const>;
+                pub type [<Vec3 $quantity_name>] = $quantity<MVec3, $const>;
+                pub type [<Vec $quantity_name>] = $quantity<MVec, $const>;
+            }
 
             paste!{
                 pub type [<F32 $quantity_name>] = $quantity<f32, $const>;
                 pub type [<F64 $quantity_name>] = $quantity<f64, $const>;
-            }
-
-            paste!{
-                pub type [<DVec2 $quantity_name>] = $quantity<glam::DVec2, $const>;
-                pub type [<DVec3 $quantity_name>] = $quantity<glam::DVec3, $const>;
             }
 
             impl $quantity::<f64, $const> {

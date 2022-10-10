@@ -60,6 +60,30 @@ macro_rules! impl_vector_methods {
             }
         }
 
+        impl<const D: $dimension> Mul<Quantity<$float_type, D>> for $vector_type {
+            type Output = $quantity<$vector_type, D>;
+
+            fn mul(self, rhs: Quantity<$float_type, D>) -> Self::Output {
+                $quantity(self * rhs.0)
+            }
+        }
+
+        impl<const D: $dimension> Div<Quantity<$float_type, D>> for $vector_type {
+            type Output = $quantity<$vector_type, D>;
+
+            fn div(self, rhs: Quantity<$float_type, D>) -> Self::Output {
+                $quantity(self / rhs.0)
+            }
+        }
+
+        impl<const D: $dimension> Mul<$vector_type> for Quantity<$float_type, D> {
+            type Output = $quantity<$vector_type, D>;
+
+            fn mul(self, rhs: $vector_type) -> Self::Output {
+                $quantity(self.0 * rhs)
+            }
+        }
+
         impl<const D: $dimension> std::fmt::Debug for $quantity<$vector_type, D> {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 let unit_name = $unit_names_array
@@ -150,6 +174,11 @@ macro_rules! impl_vector3_methods {
 
 #[cfg(test)]
 mod tests {
+    use crate::{
+        si::{Length, MVec2, MVec3},
+        tests::assert_is_close,
+    };
+
     #[test]
     fn debug_vector_2() {
         assert_eq!(
@@ -164,5 +193,42 @@ mod tests {
             format!("{:?}", crate::si::Vec3Length::meters(1.0, 5.0, 6.0)),
             "[1.0 5.0 6.0] m"
         );
+    }
+
+    #[test]
+    fn mul_vec3() {
+        let multiplied = MVec3::new(1.0, 2.0, 3.0) * Length::meters(5.0);
+        assert_is_close(multiplied.x(), Length::meters(5.0));
+        assert_is_close(multiplied.y(), Length::meters(10.0));
+        assert_is_close(multiplied.z(), Length::meters(15.0));
+        let multiplied = Length::meters(5.0) * MVec3::new(1.0, 2.0, 3.0);
+        assert_is_close(multiplied.x(), Length::meters(5.0));
+        assert_is_close(multiplied.y(), Length::meters(10.0));
+        assert_is_close(multiplied.z(), Length::meters(15.0));
+    }
+
+    #[test]
+    fn div_vec3() {
+        let divided = MVec3::new(1.0, 2.0, 3.0) / Length::meters(0.2);
+        assert_is_close(divided.x(), Length::meters(5.0));
+        assert_is_close(divided.y(), Length::meters(10.0));
+        assert_is_close(divided.z(), Length::meters(15.0));
+    }
+
+    #[test]
+    fn mul_vec2() {
+        let multiplied = MVec2::new(1.0, 2.0) * Length::meters(5.0);
+        assert_is_close(multiplied.x(), Length::meters(5.0));
+        assert_is_close(multiplied.y(), Length::meters(10.0));
+        let multiplied = Length::meters(5.0) * MVec2::new(1.0, 2.0);
+        assert_is_close(multiplied.x(), Length::meters(5.0));
+        assert_is_close(multiplied.y(), Length::meters(10.0));
+    }
+
+    #[test]
+    fn div_vec2() {
+        let divided = MVec2::new(1.0, 2.0) / Length::meters(0.2);
+        assert_is_close(divided.x(), Length::meters(5.0));
+        assert_is_close(divided.y(), Length::meters(10.0));
     }
 }

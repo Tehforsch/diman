@@ -41,6 +41,7 @@ macro_rules! define_system {
             $unit_names_array,
             f64
         );
+        $crate::default_vector!();
         $crate::impl_vector_methods!(
             $quantity,
             $dimension,
