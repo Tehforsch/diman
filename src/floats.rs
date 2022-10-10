@@ -30,7 +30,7 @@ macro_rules! impl_float_methods {
                 S: Div<F, Output = S>,
                 $quantity<S, { D.dimension_div(D) }>:,
             {
-                (self / other).unwrap_value()
+                (self / other).value_unchecked()
             }
         }
     };

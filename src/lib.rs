@@ -103,20 +103,20 @@ mod tests {
     #[cfg(feature = "default-f32")]
     pub(crate) fn assert_is_close<const U: Dimension>(x: Quantity<f32, U>, y: Quantity<f32, U>) {
         assert!(
-            (x - y).abs().unwrap_value() < f32::EPSILON,
+            (x - y).abs().value_unchecked() < f32::EPSILON,
             "{} {}",
-            x.unwrap_value(),
-            y.unwrap_value()
+            x.value_unchecked(),
+            y.value_unchecked()
         )
     }
 
     #[cfg(not(feature = "default-f32"))]
     pub(crate) fn assert_is_close<const U: Dimension>(x: Quantity<f64, U>, y: Quantity<f64, U>) {
         assert!(
-            (x - y).abs().unwrap_value() < f64::EPSILON,
+            (x - y).abs().value_unchecked() < f64::EPSILON,
             "{} {}",
-            x.unwrap_value(),
-            y.unwrap_value()
+            x.value_unchecked(),
+            y.value_unchecked()
         )
     }
 

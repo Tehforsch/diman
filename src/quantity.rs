@@ -12,10 +12,10 @@ macro_rules! define_quantity {
         }
 
         impl<S, const D: $dimension> $quantity<S, D> {
-            /// Unwrap the value of a quantity, regardless of whether
+            /// Return the value of a quantity, regardless of whether
             /// it is dimensionless or not. Use this carefully, since the
             /// result depends on the underlying base units
-            pub fn unwrap_value(self) -> S {
+            pub fn value_unchecked(self) -> S {
                 self.0
             }
 

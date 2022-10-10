@@ -22,11 +22,11 @@ macro_rules! impl_vector_methods {
             }
 
             pub fn set_x(&mut self, new_x: $quantity<$float_type, D>) {
-                self.0.x = new_x.unwrap_value();
+                self.0.x = new_x.value_unchecked();
             }
 
             pub fn set_y(&mut self, new_y: $quantity<$float_type, D>) {
-                self.0.y = new_y.unwrap_value();
+                self.0.y = new_y.value_unchecked();
             }
 
             pub fn min(self, rhs: Self) -> Self {
@@ -88,15 +88,15 @@ macro_rules! impl_vector2_methods {
     ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $vector_type: ident, $float_type: ident) => {
         impl<const D: $dimension> $quantity<$vector_type, D> {
             pub fn new(x: $quantity<$float_type, D>, y: $quantity<$float_type, D>) -> Self {
-                Self($vector_type::new(x.unwrap_value(), y.unwrap_value()))
+                Self($vector_type::new(x.value_unchecked(), y.value_unchecked()))
             }
 
             pub fn new_x(x: $quantity<$float_type, D>) -> Self {
-                Self($vector_type::new(x.unwrap_value(), 0.0))
+                Self($vector_type::new(x.value_unchecked(), 0.0))
             }
 
             pub fn new_y(y: $quantity<$float_type, D>) -> Self {
-                Self($vector_type::new(0.0, y.unwrap_value()))
+                Self($vector_type::new(0.0, y.value_unchecked()))
             }
 
             pub fn zero() -> Self {
@@ -115,22 +115,22 @@ macro_rules! impl_vector3_methods {
                 z: $quantity<$float_type, D>,
             ) -> Self {
                 Self($vector_type::new(
-                    x.unwrap_value(),
-                    y.unwrap_value(),
-                    z.unwrap_value(),
+                    x.value_unchecked(),
+                    y.value_unchecked(),
+                    z.value_unchecked(),
                 ))
             }
 
             pub fn new_x(x: $quantity<$float_type, D>) -> Self {
-                Self($vector_type::new(x.unwrap_value(), 0.0, 0.0))
+                Self($vector_type::new(x.value_unchecked(), 0.0, 0.0))
             }
 
             pub fn new_y(y: $quantity<$float_type, D>) -> Self {
-                Self($vector_type::new(0.0, y.unwrap_value(), 0.0))
+                Self($vector_type::new(0.0, y.value_unchecked(), 0.0))
             }
 
             pub fn new_z(z: $quantity<$float_type, D>) -> Self {
-                Self($vector_type::new(0.0, 0.0, z.unwrap_value()))
+                Self($vector_type::new(0.0, 0.0, z.value_unchecked()))
             }
 
             pub fn z(&self) -> $quantity<$float_type, D> {
@@ -138,7 +138,7 @@ macro_rules! impl_vector3_methods {
             }
 
             pub fn set_z(&mut self, new_z: $quantity<$float_type, D>) {
-                self.0.z = new_z.unwrap_value();
+                self.0.z = new_z.value_unchecked();
             }
 
             pub fn zero() -> Self {
