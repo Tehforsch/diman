@@ -58,7 +58,7 @@ mod tests {
     use mpi::Threading;
 
     use crate::si::Length;
-    use crate::si::VecLength;
+    use crate::si::Vec2Length;
 
     lazy_static::lazy_static! {
         pub static ref MPI_UNIVERSE: Universe = {
@@ -84,8 +84,8 @@ mod tests {
     #[test]
     fn pack_unpack_vec_quantity() {
         let world = MPI_UNIVERSE.world();
-        let q1 = VecLength::meters(1.0, 2.0);
-        let mut q2 = VecLength::meters(3.0, 4.0);
+        let q1 = Vec2Length::meters(1.0, 2.0);
+        let mut q2 = Vec2Length::meters(3.0, 4.0);
         let a = world.pack(&q1);
         unsafe {
             world.unpack_into(&a, &mut q2, 0);
