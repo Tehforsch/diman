@@ -2,14 +2,6 @@
 macro_rules! impl_float_methods {
     ($quantity: ident, $dimension: ident, $dimensionless_const: ident) => {
         impl<const D: $dimension, S: num_traits::Float> $quantity<S, D> {
-            pub fn min(self, other: Self) -> Self {
-                Self(self.0.min(other.0))
-            }
-
-            pub fn max(self, other: Self) -> Self {
-                Self(self.0.max(other.0))
-            }
-
             pub fn squared(&self) -> $quantity<S, { D.dimension_powi(2) }>
             where
                 $quantity<S, { D.dimension_powi(2) }>:,
@@ -48,6 +40,14 @@ macro_rules! impl_float_methods {
 macro_rules! impl_concrete_float_methods {
     ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $unit_names_array: ident, $float_type: ident) => {
         impl<const D: $dimension> $quantity<$float_type, D> {
+            pub fn min(self, other: Self) -> Self {
+                Self(self.0.min(other.0))
+            }
+
+            pub fn max(self, other: Self) -> Self {
+                Self(self.0.max(other.0))
+            }
+
             pub fn zero() -> Self {
                 Self(0.0)
             }

@@ -29,6 +29,14 @@ macro_rules! impl_vector_methods {
                 self.0.y = new_y.unwrap_value();
             }
 
+            pub fn min(self, rhs: Self) -> Self {
+                Self(self.0.min(rhs.0))
+            }
+
+            pub fn max(self, rhs: Self) -> Self {
+                Self(self.0.max(rhs.0))
+            }
+
             pub fn length(&self) -> $quantity<$float_type, D> {
                 $quantity::<$float_type, D>(self.0.length())
             }
