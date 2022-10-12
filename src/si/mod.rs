@@ -1,4 +1,4 @@
-mod dimension;
+pub(crate) mod dimension;
 
 // todo: remove
 use std::ops::Add;

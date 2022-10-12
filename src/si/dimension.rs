@@ -11,7 +11,7 @@ pub struct Dimension {
     pub temperature: i32,
 }
 
-pub(super) const NONE: Dimension = Dimension {
+pub(crate) const NONE: Dimension = Dimension {
     length: 0,
     time: 0,
     mass: 0,

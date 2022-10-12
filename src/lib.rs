@@ -95,18 +95,25 @@ macro_rules! define_system {
 }
 
 #[macro_export]
-macro_rules! constant {
-    ($quantity: ident, $float_type: ident, $constant_name: ident, $dimension_expr: expr, $value_base: literal) => {
-        pub const $constant_name: $quantity<$float_type, $dimension_expr> =
+macro_rules! define_constant {
+    ($quantity: ident, $float_type: ident, $dimensionless_const: ident, $constant_name: ident, $value_base: literal, $($dimension_ident: ident: $dimension_expr: literal),*) => {
+        pub const $constant_name: $quantity<$float_type, {Dimension {
+            $(
+                $dimension_ident: $dimension_expr,
+            )*
+                ..$dimensionless_const
+        }}> =
             Quantity::new_unchecked($value_base);
     };
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::si::dimension::NONE;
     use crate::si::Dimension;
     use crate::si::Dimensionless;
     use crate::si::Length;
+    use crate::si::Mass;
     use crate::si::Quantity;
 
     #[cfg(feature = "default-f32")]
@@ -155,5 +162,17 @@ mod tests {
         let x = Length::meters(1.0);
         let y = Length::meters(10.0);
         assert_is_close(x / y, Dimensionless::dimensionless(0.1));
+    }
+
+    #[test]
+    fn constant() {
+        #[cfg(not(feature = "default-f32"))]
+        define_constant!(Quantity, f64, NONE, CONSTANT, 5.0, length: 1, mass: 1);
+        #[cfg(feature = "default-f32")]
+        define_constant!(Quantity, f32, NONE, CONSTANT, 5.0, length: 1, mass: 1);
+        assert_is_close(
+            CONSTANT / Length::meters(5.0) / Mass::kilograms(1.0),
+            Dimensionless::dimensionless(1.0),
+        )
     }
 }
