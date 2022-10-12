@@ -52,6 +52,10 @@ macro_rules! impl_concrete_float_methods {
                 Self(0.0)
             }
 
+            pub fn one() -> Self {
+                Self(1.0)
+            }
+
             pub fn abs(&self) -> Self {
                 Self(self.0.abs())
             }
