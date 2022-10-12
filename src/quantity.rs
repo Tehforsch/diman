@@ -82,9 +82,9 @@ macro_rules! define_quantity {
             for $quantity<SL, DL>
         where
             $quantity<SL, { DL.dimension_mul(DR) }>:,
-            SL: Mul<SR, Output = SL>,
+            SL: Mul<SR>,
         {
-            type Output = $quantity<SL, { DL.dimension_mul(DR) }>;
+            type Output = $quantity<<SL as Mul<SR>>::Output, { DL.dimension_mul(DR) }>;
 
             fn mul(self, rhs: $quantity<SR, DR>) -> Self::Output {
                 $quantity(self.0 * rhs.0)
@@ -95,9 +95,9 @@ macro_rules! define_quantity {
             for $quantity<SL, DL>
         where
             $quantity<SL, { DL.dimension_div(DR) }>:,
-            SL: Div<SR, Output = SL>,
+            SL: Div<SR>,
         {
-            type Output = $quantity<SL, { DL.dimension_div(DR) }>;
+            type Output = $quantity<<SL as Div<SR>>::Output, { DL.dimension_div(DR) }>;
 
             fn div(self, rhs: $quantity<SR, DR>) -> Self::Output {
                 $quantity(self.0 / rhs.0)

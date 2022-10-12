@@ -58,6 +58,13 @@ macro_rules! impl_vector_methods {
             pub fn normalize(&self) -> $quantity<$vector_type, NONE> {
                 $quantity::<$vector_type, NONE>(self.0.normalize())
             }
+
+            pub fn dot<const DR: Dimension>(
+                self,
+                rhs: Quantity<$vector_type, DR>,
+            ) -> $quantity<$float_type, { D.dimension_mul(DR) }> {
+                $quantity(self.0.dot(rhs.0))
+            }
         }
 
         impl<const D: $dimension> Mul<Quantity<$float_type, D>> for $vector_type {
@@ -175,7 +182,7 @@ macro_rules! impl_vector3_methods {
 #[cfg(test)]
 mod tests {
     use crate::{
-        si::{Length, MVec2, MVec3},
+        si::{Length, MVec2, MVec3, Time, Vec3Velocity},
         tests::assert_is_close,
     };
 
@@ -202,6 +209,18 @@ mod tests {
         assert_is_close(multiplied.y(), Length::meters(10.0));
         assert_is_close(multiplied.z(), Length::meters(15.0));
         let multiplied = Length::meters(5.0) * MVec3::new(1.0, 2.0, 3.0);
+        assert_is_close(multiplied.x(), Length::meters(5.0));
+        assert_is_close(multiplied.y(), Length::meters(10.0));
+        assert_is_close(multiplied.z(), Length::meters(15.0));
+    }
+
+    #[test]
+    fn mul_quantity_vec3() {
+        let multiplied = Vec3Velocity::meters_per_second(1.0, 2.0, 3.0) * Time::seconds(5.0);
+        assert_is_close(multiplied.x(), Length::meters(5.0));
+        assert_is_close(multiplied.y(), Length::meters(10.0));
+        assert_is_close(multiplied.z(), Length::meters(15.0));
+        let multiplied = Time::seconds(5.0) * Vec3Velocity::meters_per_second(1.0, 2.0, 3.0);
         assert_is_close(multiplied.x(), Length::meters(5.0));
         assert_is_close(multiplied.y(), Length::meters(10.0));
         assert_is_close(multiplied.z(), Length::meters(15.0));
