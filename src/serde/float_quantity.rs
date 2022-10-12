@@ -1,6 +1,6 @@
 #[macro_export]
 macro_rules! impl_serde_float {
-    ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $float_type: ident) => {
+    ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $unit_names_array: ident, $float_type: ident) => {
         impl<'de, const D: $dimension> serde::Deserialize<'de> for $quantity<$float_type, D> {
             fn deserialize<DE>(deserializer: DE) -> Result<$quantity<$float_type, D>, DE::Error>
             where
@@ -79,6 +79,30 @@ macro_rules! impl_serde_float {
                     (numerical_value * (total_factor as $float_type)),
                     total_dimension,
                 )
+            }
+        }
+
+        impl<const D: Dimension> serde::Serialize for $quantity<$float_type, D> {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where
+                S: serde::Serializer,
+            {
+                if D == $dimensionless_const {
+                    paste! {
+                        serializer.[<serialize_ $float_type>](self.0)
+                    }
+                } else {
+                    let unit_name = $unit_names_array
+                        .iter()
+                        .filter(|(d, _, _)| d == &D)
+                        .filter(|(_, _, val)| *val == 1.0)
+                        .map(|(_, name, _)| name)
+                        .next()
+                        .unwrap_or_else(|| {
+                            panic!("Attempt to deserialize quantity with unnamed unit.")
+                        });
+                    serializer.serialize_str(&format!("{} {}", self.0.to_string(), unit_name))
+                }
             }
         }
     };

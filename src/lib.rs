@@ -97,6 +97,7 @@ macro_rules! define_system {
 #[macro_export]
 macro_rules! define_constant {
     ($quantity: ident, $float_type: ident, $dimensionless_const: ident, $constant_name: ident, $value_base: literal, $($dimension_ident: ident: $dimension_expr: literal),*) => {
+        #[allow(clippy::needless_update)]
         pub const $constant_name: $quantity<$float_type, {Dimension {
             $(
                 $dimension_ident: $dimension_expr,

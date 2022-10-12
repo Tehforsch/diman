@@ -10,8 +10,20 @@ macro_rules! impl_serde {
             $dimensionless_const,
             $unit_names_array
         );
-        $crate::impl_serde_float!($quantity, $dimension, $dimensionless_const, f32);
-        $crate::impl_serde_float!($quantity, $dimension, $dimensionless_const, f64);
+        $crate::impl_serde_float!(
+            $quantity,
+            $dimension,
+            $dimensionless_const,
+            $unit_names_array,
+            f32
+        );
+        $crate::impl_serde_float!(
+            $quantity,
+            $dimension,
+            $dimensionless_const,
+            $unit_names_array,
+            f64
+        );
         $crate::impl_serde_vector!($quantity, $dimension, $dimensionless_const, Vec2, f32, 2);
         $crate::impl_serde_vector!($quantity, $dimension, $dimensionless_const, Vec3, f32, 3);
         $crate::impl_serde_vector!($quantity, $dimension, $dimensionless_const, DVec2, f64, 2);
@@ -132,5 +144,15 @@ mod tests {
         assert_is_close(q, Force::newtons(5.0));
         let q: Force = serde_yaml::from_str("5.0e-3 kg km^2 m^-1 s^-2").unwrap();
         assert_is_close(q, Force::newtons(5000.0));
+    }
+
+    #[test]
+    fn serialize_float_quantity() {
+        let x = Length::meters(5.3);
+        let result: String = serde_yaml::to_string(&x).unwrap();
+        assert_eq!(result, "5.3 m\n");
+        let x = Dimensionless::dimensionless(5.3);
+        let result: String = serde_yaml::to_string(&x).unwrap();
+        assert_eq!(result, "5.3\n");
     }
 }
