@@ -1,6 +1,6 @@
 #[macro_export]
 macro_rules! impl_vector_methods {
-    ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $unit_names_array: ident, $vector_type: ident, $float_type: ident, $num_dims: literal) => {
+    ($quantity: ident, $dimension: ty, $dimensionless_const: ident, $unit_names_array: ident, $vector_type: ty, $float_type: ty, $num_dims: literal) => {
         impl<const D: $dimension> $quantity<$vector_type, D> {
             pub fn from_vector_and_scale(
                 vec: $vector_type,
@@ -67,7 +67,7 @@ macro_rules! impl_vector_methods {
             }
         }
 
-        impl<const D: $dimension> Mul<Quantity<$float_type, D>> for $vector_type {
+        impl<const D: $dimension> std::ops::Mul<Quantity<$float_type, D>> for $vector_type {
             type Output = $quantity<$vector_type, D>;
 
             fn mul(self, rhs: Quantity<$float_type, D>) -> Self::Output {
@@ -75,7 +75,7 @@ macro_rules! impl_vector_methods {
             }
         }
 
-        impl<const D: $dimension> Div<Quantity<$float_type, D>> for $vector_type {
+        impl<const D: $dimension> std::ops::Div<Quantity<$float_type, D>> for $vector_type {
             type Output = $quantity<$vector_type, D>;
 
             fn div(self, rhs: Quantity<$float_type, D>) -> Self::Output {
@@ -83,7 +83,7 @@ macro_rules! impl_vector_methods {
             }
         }
 
-        impl<const D: $dimension> Mul<$vector_type> for Quantity<$float_type, D> {
+        impl<const D: $dimension> std::ops::Mul<$vector_type> for Quantity<$float_type, D> {
             type Output = $quantity<$vector_type, D>;
 
             fn mul(self, rhs: $vector_type) -> Self::Output {
@@ -116,36 +116,39 @@ macro_rules! impl_vector_methods {
 
 #[macro_export]
 macro_rules! impl_vector2_methods {
-    ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $vector_type: ident, $float_type: ident) => {
+    ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $vector_type: ty, $float_type: ty) => {
         impl<const D: $dimension> $quantity<$vector_type, D> {
             pub fn new(x: $quantity<$float_type, D>, y: $quantity<$float_type, D>) -> Self {
-                Self($vector_type::new(x.value_unchecked(), y.value_unchecked()))
+                Self(<$vector_type>::new(
+                    x.value_unchecked(),
+                    y.value_unchecked(),
+                ))
             }
 
             pub fn new_x(x: $quantity<$float_type, D>) -> Self {
-                Self($vector_type::new(x.value_unchecked(), 0.0))
+                Self(<$vector_type>::new(x.value_unchecked(), 0.0))
             }
 
             pub fn new_y(y: $quantity<$float_type, D>) -> Self {
-                Self($vector_type::new(0.0, y.value_unchecked()))
+                Self(<$vector_type>::new(0.0, y.value_unchecked()))
             }
 
             pub fn zero() -> Self {
-                Self($vector_type::new(0.0, 0.0))
+                Self(<$vector_type>::new(0.0, 0.0))
             }
         }
     };
 }
 #[macro_export]
 macro_rules! impl_vector3_methods {
-    ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $vector_type: ident, $float_type: ident) => {
+    ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $vector_type: ty, $float_type: ty) => {
         impl<const D: $dimension> $quantity<$vector_type, D> {
             pub fn new(
                 x: $quantity<$float_type, D>,
                 y: $quantity<$float_type, D>,
                 z: $quantity<$float_type, D>,
             ) -> Self {
-                Self($vector_type::new(
+                Self(<$vector_type>::new(
                     x.value_unchecked(),
                     y.value_unchecked(),
                     z.value_unchecked(),
@@ -153,15 +156,15 @@ macro_rules! impl_vector3_methods {
             }
 
             pub fn new_x(x: $quantity<$float_type, D>) -> Self {
-                Self($vector_type::new(x.value_unchecked(), 0.0, 0.0))
+                Self(<$vector_type>::new(x.value_unchecked(), 0.0, 0.0))
             }
 
             pub fn new_y(y: $quantity<$float_type, D>) -> Self {
-                Self($vector_type::new(0.0, y.value_unchecked(), 0.0))
+                Self(<$vector_type>::new(0.0, y.value_unchecked(), 0.0))
             }
 
             pub fn new_z(z: $quantity<$float_type, D>) -> Self {
-                Self($vector_type::new(0.0, 0.0, z.value_unchecked()))
+                Self(<$vector_type>::new(0.0, 0.0, z.value_unchecked()))
             }
 
             pub fn z(&self) -> $quantity<$float_type, D> {
@@ -173,7 +176,7 @@ macro_rules! impl_vector3_methods {
             }
 
             pub fn zero() -> Self {
-                Self($vector_type::new(0.0, 0.0, 0.0))
+                Self(<$vector_type>::new(0.0, 0.0, 0.0))
             }
         }
     };

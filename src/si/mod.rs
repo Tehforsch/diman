@@ -1,20 +1,7 @@
 pub(crate) mod dimension;
 
-// todo: remove
-use std::ops::Add;
-use std::ops::AddAssign;
-use std::ops::Div;
-use std::ops::Mul;
-use std::ops::Neg;
-use std::ops::Sub;
-use std::ops::SubAssign;
-
 pub use dimension::Dimension;
 use dimension::NONE;
-use glam::DVec2;
-use glam::DVec3;
-use glam::Vec2;
-use glam::Vec3;
 
 use crate::define_system;
 use crate::unit_system;

@@ -3,7 +3,7 @@ mod vector_quantity;
 
 #[macro_export]
 macro_rules! impl_serde {
-    ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $unit_names_array: ident) => {
+    ($quantity: ident, $dimension: ty, $dimensionless_const: ident, $unit_names_array: ident) => {
         $crate::impl_serde_helpers!(
             $quantity,
             $dimension,
@@ -24,16 +24,44 @@ macro_rules! impl_serde {
             $unit_names_array,
             f64
         );
-        $crate::impl_serde_vector!($quantity, $dimension, $dimensionless_const, Vec2, f32, 2);
-        $crate::impl_serde_vector!($quantity, $dimension, $dimensionless_const, Vec3, f32, 3);
-        $crate::impl_serde_vector!($quantity, $dimension, $dimensionless_const, DVec2, f64, 2);
-        $crate::impl_serde_vector!($quantity, $dimension, $dimensionless_const, DVec3, f64, 3);
+        $crate::impl_serde_vector!(
+            $quantity,
+            $dimension,
+            $dimensionless_const,
+            ::glam::Vec2,
+            f32,
+            2
+        );
+        $crate::impl_serde_vector!(
+            $quantity,
+            $dimension,
+            $dimensionless_const,
+            ::glam::Vec3,
+            f32,
+            3
+        );
+        $crate::impl_serde_vector!(
+            $quantity,
+            $dimension,
+            $dimensionless_const,
+            ::glam::DVec2,
+            f64,
+            2
+        );
+        $crate::impl_serde_vector!(
+            $quantity,
+            $dimension,
+            $dimensionless_const,
+            ::glam::DVec3,
+            f64,
+            3
+        );
     };
 }
 
 #[macro_export]
 macro_rules! impl_serde_helpers {
-    ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $unit_names_array: ident) => {
+    ($quantity: ident, $dimension: ty, $dimensionless_const: ident, $unit_names_array: ident) => {
         use std::marker::PhantomData;
         use std::str::SplitWhitespace;
 

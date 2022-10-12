@@ -27,7 +27,7 @@ macro_rules! impl_float_methods {
         impl<const D: $dimension, S> $quantity<S, D> {
             pub fn in_units<F: num_traits::Float>(self, other: $quantity<F, D>) -> S
             where
-                S: Div<F, Output = S>,
+                S: std::ops::Div<F, Output = S>,
                 $quantity<S, { D.dimension_div(D) }>:,
             {
                 (self / other).value_unchecked()
@@ -61,9 +61,9 @@ macro_rules! impl_concrete_float_methods {
             }
         }
 
-        impl<S, const D: $dimension> Mul<$float_type> for $quantity<S, D>
+        impl<S, const D: $dimension> std::ops::Mul<$float_type> for $quantity<S, D>
         where
-            S: Mul<$float_type, Output = S>,
+            S: std::ops::Mul<$float_type, Output = S>,
         {
             type Output = $quantity<S, D>;
 
@@ -72,9 +72,9 @@ macro_rules! impl_concrete_float_methods {
             }
         }
 
-        impl<S, const D: $dimension> Mul<$quantity<S, D>> for $float_type
+        impl<S, const D: $dimension> std::ops::Mul<$quantity<S, D>> for $float_type
         where
-            $float_type: Mul<S, Output = S>,
+            $float_type: std::ops::Mul<S, Output = S>,
         {
             type Output = $quantity<S, D>;
 
@@ -83,9 +83,9 @@ macro_rules! impl_concrete_float_methods {
             }
         }
 
-        impl<S, const D: $dimension> Div<$float_type> for $quantity<S, D>
+        impl<S, const D: $dimension> std::ops::Div<$float_type> for $quantity<S, D>
         where
-            S: Div<$float_type, Output = S>,
+            S: std::ops::Div<$float_type, Output = S>,
         {
             type Output = $quantity<S, D>;
 
@@ -94,10 +94,10 @@ macro_rules! impl_concrete_float_methods {
             }
         }
 
-        impl<S, const D: $dimension> Div<$quantity<S, D>> for $float_type
+        impl<S, const D: $dimension> std::ops::Div<$quantity<S, D>> for $float_type
         where
             $quantity<S, { D.dimension_inv() }>:,
-            $float_type: Div<S, Output = S>,
+            $float_type: std::ops::Div<S, Output = S>,
         {
             type Output = $quantity<S, { D.dimension_inv() }>;
 

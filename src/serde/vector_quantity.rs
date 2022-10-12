@@ -1,6 +1,6 @@
 #[macro_export]
 macro_rules! impl_serde_vector {
-    ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $vector_type: ident, $float_type: ident, $num_dims: literal) => {
+    ($quantity: ident, $dimension: ty, $dimensionless_const: ident, $vector_type: ty, $float_type: ty, $num_dims: literal) => {
         impl<'de, const D: $dimension> serde::Deserialize<'de> for $quantity<$vector_type, D> {
             fn deserialize<DE>(deserializer: DE) -> Result<$quantity<$vector_type, D>, DE::Error>
             where
@@ -47,7 +47,7 @@ macro_rules! impl_serde_vector {
                             .map_err(|e| E::custom(format!("While parsing component {}: {}, '{}'", dim, e, string)))?;
 
                 }
-                let vector = $vector_type::from_array(array);
+                let vector = <$vector_type>::from_array(array);
                 let (total_dimension, total_factor) = read_unit_str(unit_part.split_whitespace())?;
                 get_quantity_if_dimensions_match::<$vector_type, D, E>(
                     value,

@@ -47,7 +47,7 @@ macro_rules! define_system {
             $dimension,
             $dimensionless_const,
             $unit_names_array,
-            Vec2,
+            glam::Vec2,
             f32,
             2
         );
@@ -56,7 +56,7 @@ macro_rules! define_system {
             $dimension,
             $dimensionless_const,
             $unit_names_array,
-            Vec3,
+            glam::Vec3,
             f32,
             3
         );
@@ -65,7 +65,7 @@ macro_rules! define_system {
             $dimension,
             $dimensionless_const,
             $unit_names_array,
-            DVec2,
+            glam::DVec2,
             f64,
             2
         );
@@ -74,14 +74,26 @@ macro_rules! define_system {
             $dimension,
             $dimensionless_const,
             $unit_names_array,
-            DVec3,
+            glam::DVec3,
             f64,
             3
         );
-        $crate::impl_vector2_methods!($quantity, $dimension, $dimensionless_const, Vec2, f32);
-        $crate::impl_vector3_methods!($quantity, $dimension, $dimensionless_const, Vec3, f32);
-        $crate::impl_vector2_methods!($quantity, $dimension, $dimensionless_const, DVec2, f64);
-        $crate::impl_vector3_methods!($quantity, $dimension, $dimensionless_const, DVec3, f64);
+        $crate::impl_vector2_methods!($quantity, $dimension, $dimensionless_const, glam::Vec2, f32);
+        $crate::impl_vector3_methods!($quantity, $dimension, $dimensionless_const, glam::Vec3, f32);
+        $crate::impl_vector2_methods!(
+            $quantity,
+            $dimension,
+            $dimensionless_const,
+            glam::DVec2,
+            f64
+        );
+        $crate::impl_vector3_methods!(
+            $quantity,
+            $dimension,
+            $dimensionless_const,
+            glam::DVec3,
+            f64
+        );
         $crate::impl_hdf5_gated!($quantity, $dimension, $dimensionless_const);
         $crate::impl_mpi_gated!($quantity, $dimension);
         $crate::impl_rand_gated!($quantity, $dimension, $dimensionless_const);

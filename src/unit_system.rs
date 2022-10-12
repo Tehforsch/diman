@@ -18,9 +18,9 @@ macro_rules! default_quantity {
 #[macro_export]
 macro_rules! default_vector {
     () => {
-        pub type MVec = Vec2;
-        pub type MVec2 = Vec2;
-        pub type MVec3 = Vec3;
+        pub type MVec = glam::Vec2;
+        pub type MVec2 = glam::Vec2;
+        pub type MVec3 = glam::Vec3;
     };
 }
 
@@ -28,9 +28,9 @@ macro_rules! default_vector {
 #[macro_export]
 macro_rules! default_vector {
     () => {
-        pub type MVec = Vec3;
-        pub type MVec2 = Vec2;
-        pub type MVec3 = Vec3;
+        pub type MVec = glam::Vec3;
+        pub type MVec2 = glam::Vec2;
+        pub type MVec3 = glam::Vec3;
     };
 }
 
@@ -38,9 +38,9 @@ macro_rules! default_vector {
 #[macro_export]
 macro_rules! default_vector {
     () => {
-        pub type MVec = DVec2;
-        pub type MVec2 = DVec2;
-        pub type MVec3 = DVec3;
+        pub type MVec = glam::DVec2;
+        pub type MVec2 = glam::DVec2;
+        pub type MVec3 = glam::DVec3;
     };
 }
 
@@ -48,9 +48,9 @@ macro_rules! default_vector {
 #[macro_export]
 macro_rules! default_vector {
     () => {
-        pub type MVec = DVec3;
-        pub type MVec2 = DVec2;
-        pub type MVec3 = DVec3;
+        pub type MVec = glam::DVec3;
+        pub type MVec2 = glam::DVec2;
+        pub type MVec3 = glam::DVec3;
     };
 }
 
@@ -137,7 +137,7 @@ macro_rules! unit_system {
                 )*
             }
 
-            impl<S> $quantity<S, $const> where S: Div<f64, Output = S> {
+            impl<S> $quantity<S, $const> where S: std::ops::Div<f64, Output = S> {
                 paste! {
                     $(
                         pub fn [<in_ $unit>](self) -> S {

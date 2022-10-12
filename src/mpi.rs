@@ -1,11 +1,13 @@
 #[macro_export]
 macro_rules! impl_mpi_float {
-    ($quantity: ident, $dimension: ident, $float_type: ident, $ffi_type: ident) => {
-        unsafe impl<const D: $dimension> Equivalence for $quantity<$float_type, D> {
-            type Out = SystemDatatype;
+    ($quantity: ident, $dimension: ident, $float_type: ty, $ffi_type: expr) => {
+        unsafe impl<const D: $dimension> ::mpi::traits::Equivalence for $quantity<$float_type, D> {
+            type Out = ::mpi::datatype::SystemDatatype;
 
             fn equivalent_datatype() -> Self::Out {
-                unsafe { DatatypeRef::from_raw($ffi_type) }
+                unsafe {
+                    <::mpi::datatype::DatatypeRef as ::mpi::raw::FromRaw>::from_raw($ffi_type)
+                }
             }
         }
     };
@@ -13,14 +15,18 @@ macro_rules! impl_mpi_float {
 
 #[macro_export]
 macro_rules! impl_mpi_vector {
-    ($quantity: ident, $dimension: ident, $vector_type: ident, $float_type: ident, $num_dims: literal) => {
-        unsafe impl<const D: $dimension> Equivalence for $quantity<$vector_type, D> {
-            type Out = DatatypeRef<'static>;
+    ($quantity: ident, $dimension: ident, $vector_type: ty, $float_type: ty, $num_dims: literal) => {
+        unsafe impl<const D: $dimension> ::mpi::traits::Equivalence for $quantity<$vector_type, D> {
+            type Out = ::mpi::datatype::DatatypeRef<'static>;
 
             fn equivalent_datatype() -> Self::Out {
-                static DATATYPE: Lazy<::mpi::datatype::UserDatatype> = Lazy::new(|| {
-                    UserDatatype::contiguous($num_dims, &$float_type::equivalent_datatype())
-                });
+                static DATATYPE: ::once_cell::sync::Lazy<::mpi::datatype::UserDatatype> =
+                    ::once_cell::sync::Lazy::new(|| {
+                        ::mpi::datatype::UserDatatype::contiguous(
+                            $num_dims,
+                            &<$float_type>::equivalent_datatype(),
+                        )
+                    });
                 DATATYPE.as_ref()
             }
         }
@@ -30,23 +36,13 @@ macro_rules! impl_mpi_vector {
 #[macro_export]
 macro_rules! impl_mpi {
     ($quantity: ident, $dimension: ident) => {
-        use ffi::RSMPI_DOUBLE;
-        use ffi::RSMPI_FLOAT;
-        use mpi::datatype::DatatypeRef;
-        use mpi::datatype::SystemDatatype;
-        use mpi::datatype::UserDatatype;
-        use mpi::ffi;
-        use mpi::traits::Equivalence;
-        use mpi::traits::FromRaw;
-        use once_cell::sync::Lazy;
+        $crate::impl_mpi_float!($quantity, $dimension, f32, ::mpi::ffi::RSMPI_FLOAT);
+        $crate::impl_mpi_float!($quantity, $dimension, f64, ::mpi::ffi::RSMPI_DOUBLE);
 
-        $crate::impl_mpi_float!($quantity, $dimension, f32, RSMPI_FLOAT);
-        $crate::impl_mpi_float!($quantity, $dimension, f64, RSMPI_DOUBLE);
-
-        $crate::impl_mpi_vector!($quantity, $dimension, Vec2, f32, 2);
-        $crate::impl_mpi_vector!($quantity, $dimension, DVec2, f64, 2);
-        $crate::impl_mpi_vector!($quantity, $dimension, Vec3, f32, 3);
-        $crate::impl_mpi_vector!($quantity, $dimension, DVec3, f64, 3);
+        $crate::impl_mpi_vector!($quantity, $dimension, ::glam::Vec2, f32, 2);
+        $crate::impl_mpi_vector!($quantity, $dimension, ::glam::DVec2, f64, 2);
+        $crate::impl_mpi_vector!($quantity, $dimension, ::glam::Vec3, f32, 3);
+        $crate::impl_mpi_vector!($quantity, $dimension, ::glam::DVec3, f64, 3);
     };
 }
 

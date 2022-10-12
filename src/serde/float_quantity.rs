@@ -1,6 +1,6 @@
 #[macro_export]
 macro_rules! impl_serde_float {
-    ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $unit_names_array: ident, $float_type: ident) => {
+    ($quantity: ident, $dimension: ty, $dimensionless_const: ident, $unit_names_array: ident, $float_type: ty) => {
         impl<'de, const D: $dimension> serde::Deserialize<'de> for $quantity<$float_type, D> {
             fn deserialize<DE>(deserializer: DE) -> Result<$quantity<$float_type, D>, DE::Error>
             where
