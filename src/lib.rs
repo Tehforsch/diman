@@ -94,6 +94,14 @@ macro_rules! define_system {
     };
 }
 
+#[macro_export]
+macro_rules! constant {
+    ($quantity: ident, $float_type: ident, $constant_name: ident, $dimension_expr: expr, $value_base: literal) => {
+        pub const $constant_name: $quantity<$float_type, $dimension_expr> =
+            Quantity::new_unchecked($value_base);
+    };
+}
+
 #[cfg(test)]
 mod tests {
     use crate::si::Dimension;
