@@ -26,6 +26,13 @@ macro_rules! impl_vector_methods {
                 Self(vec) * scale.0
             }
 
+            pub fn in_units(self, other: $quantity<$float_type, D>) -> $vector_type
+            where
+                $quantity<$float_type, { D.dimension_div(D) }>:,
+            {
+                (self / other).value_unchecked()
+            }
+
             pub fn x(&self) -> $quantity<$float_type, D> {
                 $quantity(self.0.x)
             }
