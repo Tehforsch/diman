@@ -14,16 +14,16 @@ macro_rules! impl_vector_methods {
         $crate::impl_div_quantity_type!($quantity, $dimension, $vector_type, $float_type);
         $crate::impl_div_type_quantity!($quantity, $dimension, $vector_type, $float_type);
 
+        $crate::impl_method!($quantity, $dimension, $vector_type, abs);
+
+        $crate::impl_method!($quantity, $dimension, $vector_type, exp);
+
         impl<const D: $dimension> $quantity<$vector_type, D> {
             pub fn from_vector_and_scale(
                 vec: $vector_type,
                 scale: $quantity<$float_type, D>,
             ) -> Self {
                 Self(vec) * scale.0
-            }
-
-            pub fn abs(&self) -> Self {
-                Self(self.0.abs())
             }
 
             pub fn x(&self) -> $quantity<$float_type, D> {

@@ -41,14 +41,6 @@ macro_rules! impl_concrete_float_methods {
             pub fn zero() -> Self {
                 Self(0.0)
             }
-
-            pub fn one() -> Self {
-                Self(1.0)
-            }
-
-            pub fn abs(&self) -> Self {
-                Self(self.0.abs())
-            }
         }
 
         $crate::impl_mul_quantity_quantity!($quantity, $dimension, $float_type, $float_type);
@@ -60,6 +52,32 @@ macro_rules! impl_concrete_float_methods {
 
         $crate::impl_div_quantity_type!($quantity, $dimension, $float_type, $float_type);
         $crate::impl_div_type_quantity!($quantity, $dimension, $float_type, $float_type);
+
+        $crate::impl_method!($quantity, $dimension, $float_type, abs);
+
+        $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, log2);
+        $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, ln);
+        $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, log10);
+        $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, exp);
+        $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, exp2);
+        $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, sqrt);
+        $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, cbrt);
+
+        $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, sin);
+        $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, cos);
+        $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, tan);
+        $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, asin);
+        $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, acos);
+        $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, atan);
+        $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, sinh);
+        $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, cosh);
+        $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, tanh);
+        $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, asinh);
+        $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, acosh);
+        $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, atanh);
+
+        $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, exp_m1);
+        $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, ln_1p);
 
         impl<const D: $dimension> $quantity<$float_type, D> {
             pub fn in_units(self, other: $quantity<$float_type, D>) -> $float_type

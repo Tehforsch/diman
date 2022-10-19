@@ -3,6 +3,7 @@
 #![feature(const_fn_floating_point_arithmetic)]
 
 mod floats;
+mod helpers;
 mod quantity;
 mod traits;
 mod unit_system;
