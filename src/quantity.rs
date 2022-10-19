@@ -6,7 +6,12 @@ macro_rules! define_quantity {
 
         impl<S> $quantity<S, { $dimensionless_const }> {
             /// Get the value of a dimensionless quantity
-            pub fn value(&self) -> &S {
+            pub fn value(self) -> S {
+                self.0
+            }
+
+            /// Get a reference to the value of a dimensionless quantity
+            pub fn value_ref(&self) -> &S {
                 &self.0
             }
         }
@@ -109,7 +114,7 @@ macro_rules! define_quantity {
             S: std::fmt::Display,
         {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                write!(f, "{}", self.value())
+                write!(f, "{}", self.value_ref())
             }
         }
     };
