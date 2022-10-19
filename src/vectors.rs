@@ -1,6 +1,19 @@
 #[macro_export]
 macro_rules! impl_vector_methods {
     ($quantity: ident, $dimension: ty, $dimensionless_const: ident, $unit_names_array: ident, $vector_type: ty, $float_type: ty, $num_dims: literal) => {
+        $crate::impl_mul_quantity_quantity!($quantity, $dimension, $vector_type, $float_type);
+        $crate::impl_mul_quantity_quantity!($quantity, $dimension, $float_type, $vector_type);
+
+        $crate::impl_div_quantity_quantity!($quantity, $dimension, $vector_type, $float_type);
+
+        $crate::impl_mul_quantity_type!($quantity, $dimension, $vector_type, $float_type);
+        $crate::impl_mul_quantity_type!($quantity, $dimension, $float_type, $vector_type);
+        $crate::impl_mul_type_quantity!($quantity, $dimension, $vector_type, $float_type);
+        $crate::impl_mul_type_quantity!($quantity, $dimension, $float_type, $vector_type);
+
+        $crate::impl_div_quantity_type!($quantity, $dimension, $vector_type, $float_type);
+        $crate::impl_div_type_quantity!($quantity, $dimension, $vector_type, $float_type);
+
         impl<const D: $dimension> $quantity<$vector_type, D> {
             pub fn from_vector_and_scale(
                 vec: $vector_type,
@@ -64,30 +77,6 @@ macro_rules! impl_vector_methods {
                 rhs: Quantity<$vector_type, DR>,
             ) -> $quantity<$float_type, { D.dimension_mul(DR) }> {
                 $quantity(self.0.dot(rhs.0))
-            }
-        }
-
-        impl<const D: $dimension> std::ops::Mul<Quantity<$float_type, D>> for $vector_type {
-            type Output = $quantity<$vector_type, D>;
-
-            fn mul(self, rhs: Quantity<$float_type, D>) -> Self::Output {
-                $quantity(self * rhs.0)
-            }
-        }
-
-        impl<const D: $dimension> std::ops::Div<Quantity<$float_type, D>> for $vector_type {
-            type Output = $quantity<$vector_type, D>;
-
-            fn div(self, rhs: Quantity<$float_type, D>) -> Self::Output {
-                $quantity(self / rhs.0)
-            }
-        }
-
-        impl<const D: $dimension> std::ops::Mul<$vector_type> for Quantity<$float_type, D> {
-            type Output = $quantity<$vector_type, D>;
-
-            fn mul(self, rhs: $vector_type) -> Self::Output {
-                $quantity(self.0 * rhs)
             }
         }
 
@@ -232,9 +221,10 @@ mod tests {
     #[test]
     fn div_vec3() {
         let divided = MVec3::new(1.0, 2.0, 3.0) / Length::meters(0.2);
-        assert_is_close(divided.x(), Length::meters(5.0));
-        assert_is_close(divided.y(), Length::meters(10.0));
-        assert_is_close(divided.z(), Length::meters(15.0));
+        let base = 1.0 / Length::meters(1.0);
+        assert_is_close(divided.x(), 5.0 * base);
+        assert_is_close(divided.y(), 10.0 * base);
+        assert_is_close(divided.z(), 15.0 * base);
     }
 
     #[test]
@@ -250,7 +240,8 @@ mod tests {
     #[test]
     fn div_vec2() {
         let divided = MVec2::new(1.0, 2.0) / Length::meters(0.2);
-        assert_is_close(divided.x(), Length::meters(5.0));
-        assert_is_close(divided.y(), Length::meters(10.0));
+        let base = 1.0 / Length::meters(1.0);
+        assert_is_close(divided.x(), 5.0 * base);
+        assert_is_close(divided.y(), 10.0 * base);
     }
 }

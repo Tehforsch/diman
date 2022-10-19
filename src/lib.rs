@@ -4,6 +4,7 @@
 
 mod floats;
 mod quantity;
+mod traits;
 mod unit_system;
 mod vectors;
 
@@ -125,9 +126,13 @@ mod tests {
     use crate::si::dimension::NONE;
     use crate::si::Dimension;
     use crate::si::Dimensionless;
+    use crate::si::Energy;
+    use crate::si::Force;
     use crate::si::Length;
     use crate::si::Mass;
     use crate::si::Quantity;
+    use crate::si::Time;
+    use crate::si::Velocity;
 
     #[cfg(feature = "default-f32")]
     pub(crate) fn assert_is_close<const U: Dimension>(x: Quantity<f32, U>, y: Quantity<f32, U>) {
@@ -171,10 +176,45 @@ mod tests {
     }
 
     #[test]
-    fn div_same_unit() {
-        let x = Length::meters(1.0);
-        let y = Length::meters(10.0);
-        assert_is_close(x / y, Dimensionless::dimensionless(0.1));
+    fn mul_quantity_quantity() {
+        let x = Force::newtons(2.0);
+        let y = Length::meters(3.0);
+        assert_is_close(x * y, Energy::joules(6.0));
+    }
+
+    #[test]
+    fn mul_quantity_float() {
+        let x = Force::newtons(2.0);
+        let y = 3.0;
+        assert_is_close(x * y, Force::newtons(6.0));
+    }
+
+    #[test]
+    fn mul_float_quantity() {
+        let x = 3.0;
+        let y = Force::newtons(2.0);
+        assert_is_close(x * y, Force::newtons(6.0));
+    }
+
+    #[test]
+    fn div_quantity_quantity() {
+        let x = Length::meters(6.0);
+        let y = Time::seconds(2.0);
+        assert_is_close(x / y, Velocity::meters_per_second(3.0));
+    }
+
+    #[test]
+    fn div_quantity_float() {
+        let x = Length::meters(6.0);
+        let y = 2.0;
+        assert_is_close(x / y, Length::meters(3.0));
+    }
+
+    #[test]
+    fn div_float_quantity() {
+        let x = 2.0;
+        let y = Velocity::meters_per_second(6.0);
+        assert_is_close(x / y, Time::seconds(2.0) / Length::meters(6.0));
     }
 
     #[test]

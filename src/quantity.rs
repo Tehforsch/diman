@@ -78,32 +78,6 @@ macro_rules! define_quantity {
             }
         }
 
-        impl<SL, SR, const DL: $dimension, const DR: $dimension> std::ops::Mul<$quantity<SR, DR>>
-            for $quantity<SL, DL>
-        where
-            $quantity<SL, { DL.dimension_mul(DR) }>:,
-            SL: std::ops::Mul<SR>,
-        {
-            type Output = $quantity<<SL as std::ops::Mul<SR>>::Output, { DL.dimension_mul(DR) }>;
-
-            fn mul(self, rhs: $quantity<SR, DR>) -> Self::Output {
-                $quantity(self.0 * rhs.0)
-            }
-        }
-
-        impl<SL, SR, const DL: $dimension, const DR: $dimension> std::ops::Div<$quantity<SR, DR>>
-            for $quantity<SL, DL>
-        where
-            $quantity<SL, { DL.dimension_div(DR) }>:,
-            SL: std::ops::Div<SR>,
-        {
-            type Output = $quantity<<SL as std::ops::Div<SR>>::Output, { DL.dimension_div(DR) }>;
-
-            fn div(self, rhs: $quantity<SR, DR>) -> Self::Output {
-                $quantity(self.0 / rhs.0)
-            }
-        }
-
         impl<const D: $dimension, S: Default + std::ops::AddAssign<S>> std::iter::Sum
             for $quantity<S, D>
         {

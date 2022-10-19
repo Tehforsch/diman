@@ -23,16 +23,6 @@ macro_rules! impl_float_methods {
                 $quantity::<S, { D.dimension_powi(I) }>(self.0.powi(I))
             }
         }
-
-        impl<const D: $dimension, S> $quantity<S, D> {
-            pub fn in_units<F: num_traits::Float>(self, other: $quantity<F, D>) -> S
-            where
-                S: std::ops::Div<F, Output = S>,
-                $quantity<S, { D.dimension_div(D) }>:,
-            {
-                (self / other).value_unchecked()
-            }
-        }
     };
 }
 
@@ -61,48 +51,22 @@ macro_rules! impl_concrete_float_methods {
             }
         }
 
-        impl<S, const D: $dimension> std::ops::Mul<$float_type> for $quantity<S, D>
-        where
-            S: std::ops::Mul<$float_type, Output = S>,
-        {
-            type Output = $quantity<S, D>;
+        $crate::impl_mul_quantity_quantity!($quantity, $dimension, $float_type, $float_type);
 
-            fn mul(self, rhs: $float_type) -> Self::Output {
-                $quantity(self.0 * rhs)
-            }
-        }
+        $crate::impl_mul_quantity_type!($quantity, $dimension, $float_type, $float_type);
+        $crate::impl_mul_type_quantity!($quantity, $dimension, $float_type, $float_type);
 
-        impl<S, const D: $dimension> std::ops::Mul<$quantity<S, D>> for $float_type
-        where
-            $float_type: std::ops::Mul<S, Output = S>,
-        {
-            type Output = $quantity<S, D>;
+        $crate::impl_div_quantity_quantity!($quantity, $dimension, $float_type, $float_type);
 
-            fn mul(self, rhs: $quantity<S, D>) -> Self::Output {
-                $quantity(self * rhs.0)
-            }
-        }
+        $crate::impl_div_quantity_type!($quantity, $dimension, $float_type, $float_type);
+        $crate::impl_div_type_quantity!($quantity, $dimension, $float_type, $float_type);
 
-        impl<S, const D: $dimension> std::ops::Div<$float_type> for $quantity<S, D>
-        where
-            S: std::ops::Div<$float_type, Output = S>,
-        {
-            type Output = $quantity<S, D>;
-
-            fn div(self, rhs: $float_type) -> Self::Output {
-                $quantity(self.0 / rhs)
-            }
-        }
-
-        impl<S, const D: $dimension> std::ops::Div<$quantity<S, D>> for $float_type
-        where
-            $quantity<S, { D.dimension_inv() }>:,
-            $float_type: std::ops::Div<S, Output = S>,
-        {
-            type Output = $quantity<S, { D.dimension_inv() }>;
-
-            fn div(self, rhs: $quantity<S, D>) -> Self::Output {
-                $quantity(self / rhs.0)
+        impl<const D: $dimension> $quantity<$float_type, D> {
+            pub fn in_units(self, other: $quantity<$float_type, D>) -> $float_type
+            where
+                $quantity<$float_type, { D.dimension_div(D) }>:,
+            {
+                (self / other).value_unchecked()
             }
         }
 
