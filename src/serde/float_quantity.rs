@@ -21,7 +21,7 @@ macro_rules! impl_serde_float {
             where
                 E: de::Error,
             {
-                if D == NONE {
+                if D == $dimensionless_const {
                     Ok($quantity::<$float_type, D>(value as $float_type))
                 } else {
                     Err(E::custom(format!(
@@ -34,7 +34,7 @@ macro_rules! impl_serde_float {
             where
                 E: de::Error,
             {
-                if D == NONE {
+                if D == $dimensionless_const {
                     Ok($quantity::<$float_type, D>(value as $float_type))
                 } else {
                     Err(E::custom(format!(
@@ -48,7 +48,7 @@ macro_rules! impl_serde_float {
             where
                 E: de::Error,
             {
-                if D == NONE {
+                if D == $dimensionless_const {
                     Ok($quantity::<$float_type, D>(value as $float_type))
                 } else {
                     Err(E::custom(format!(

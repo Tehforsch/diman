@@ -75,8 +75,8 @@ macro_rules! impl_vector_methods {
                 $quantity::<$float_type, { D.dimension_powi(2) }>(self.0.distance_squared(other.0))
             }
 
-            pub fn normalize(&self) -> $quantity<$vector_type, NONE> {
-                $quantity::<$vector_type, NONE>(self.0.normalize())
+            pub fn normalize(&self) -> $quantity<$vector_type, $dimensionless_const> {
+                $quantity::<$vector_type, $dimensionless_const>(self.0.normalize())
             }
 
             pub fn dot<const DR: Dimension>(
