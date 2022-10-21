@@ -128,9 +128,12 @@ macro_rules! impl_serde_helpers {
 
 #[cfg(test)]
 mod tests {
+    use serde::Deserialize;
+
     use crate::si::Dimensionless;
     use crate::si::Force;
     use crate::si::Length;
+    use crate::si::Velocity;
     use crate::tests::assert_is_close;
 
     #[test]
@@ -149,6 +152,30 @@ mod tests {
     fn deserialize_dimensionless_quantities() {
         let q: Dimensionless = serde_yaml::from_str("5.0").unwrap();
         assert_is_close(q, Dimensionless::dimensionless(5.0));
+    }
+
+    #[test]
+    fn deserialize_struct_with_quantities() {
+        #[derive(Deserialize)]
+        struct A {
+            x: Length,
+            v: Velocity,
+        }
+        let a: A = serde_yaml::from_str("x: 5.0 m\nv: 2.0 m s^-1").unwrap();
+        assert_is_close(a.x, Length::meters(5.0));
+        assert_is_close(a.v, Velocity::meters_per_second(2.0));
+    }
+
+    #[test]
+    fn deserialize_struct_with_dimensionless_quantities() {
+        #[derive(Deserialize)]
+        struct A {
+            x1: Dimensionless,
+            x2: Length,
+        }
+        let a: A = serde_yaml::from_str("x1: 5.0\nx2: 2.0 m").unwrap();
+        assert_is_close(a.x1, Dimensionless::dimensionless(5.0));
+        assert_is_close(a.x2, Length::meters(2.0));
     }
 
     #[test]
