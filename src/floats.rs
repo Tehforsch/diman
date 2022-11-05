@@ -63,6 +63,9 @@ macro_rules! impl_concrete_float_methods {
         $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, sqrt);
         $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, cbrt);
 
+        $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, ceil);
+        $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, floor);
+
         $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, sin);
         $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, cos);
         $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, tan);
