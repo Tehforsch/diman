@@ -28,6 +28,7 @@ macro_rules! impl_serde {
             $quantity,
             $dimension,
             $dimensionless_const,
+            $unit_names_array,
             ::glam::Vec2,
             f32,
             2
@@ -36,6 +37,7 @@ macro_rules! impl_serde {
             $quantity,
             $dimension,
             $dimensionless_const,
+            $unit_names_array,
             ::glam::Vec3,
             f32,
             3
@@ -44,6 +46,7 @@ macro_rules! impl_serde {
             $quantity,
             $dimension,
             $dimensionless_const,
+            $unit_names_array,
             ::glam::DVec2,
             f64,
             2
@@ -52,6 +55,7 @@ macro_rules! impl_serde {
             $quantity,
             $dimension,
             $dimensionless_const,
+            $unit_names_array,
             ::glam::DVec3,
             f64,
             3

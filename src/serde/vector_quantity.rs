@@ -1,6 +1,9 @@
+// I am settling for () notation for now, even though [] would be
+// prettier, since I am struggling with the visit_seq implementation
+// that will be called if I try to use [] notation.
 #[macro_export]
 macro_rules! impl_serde_vector {
-    ($quantity: ident, $dimension: ty, $dimensionless_const: ident, $vector_type: ty, $float_type: ty, $num_dims: literal) => {
+    ($quantity: ident, $dimension: ty, $dimensionless_const: ident, $unit_names_array: ident, $vector_type: ty, $float_type: ty, $num_dims: literal) => {
         impl<'de, const D: $dimension> serde::Deserialize<'de> for $quantity<$vector_type, D> {
             fn deserialize<DE>(deserializer: DE) -> Result<$quantity<$vector_type, D>, DE::Error>
             where
@@ -56,13 +59,42 @@ macro_rules! impl_serde_vector {
                 )
             }
         }
+
+        impl<const D: Dimension> serde::Serialize for $quantity<$vector_type, D> {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where
+                S: serde::Serializer,
+            {
+                let vec_to_string = |vec: $vector_type| {
+                    vec.to_string().replace("[", "(").replace("]", ")").replace(",", "")
+                };
+                if D == $dimensionless_const {
+                    paste! {
+                        serializer.serialize_str(&vec_to_string(self.0))
+                    }
+                } else {
+                    let unit_name = $unit_names_array
+                        .iter()
+                        .filter(|(d, _, _)| d == &D)
+                        .filter(|(_, _, val)| *val == 1.0)
+                        .map(|(_, name, _)| name)
+                        .next()
+                        .unwrap_or_else(|| {
+                            panic!("Attempt to deserialize quantity with unnamed unit.")
+                        });
+                    serializer.serialize_str(&format!("{} {}", vec_to_string(self.0), unit_name))
+                }
+            }
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::si::Length;
+    use crate::si::Vec2Dimensionless;
     use crate::si::Vec2Length;
+    use crate::si::Vec3Dimensionless;
     use crate::si::Vec3Length;
     use crate::tests::assert_is_close;
 
@@ -103,5 +135,33 @@ mod tests {
     #[should_panic]
     fn deserialize_vector_3_fails_with_more_than_3_components() {
         let _: Vec3Length = serde_yaml::from_str("(5.0 3.0 7.0 9.0) km").unwrap();
+    }
+
+    #[test]
+    fn serialize_vector_2() {
+        let x = Vec2Length::meters(5.3, 1.1);
+        let result: String = serde_yaml::to_string(&x).unwrap();
+        assert_eq!(result, "(5.3 1.1) m\n");
+    }
+
+    #[test]
+    fn serialize_vector_3() {
+        let x = Vec3Length::meters(5.3, 1.1, 2.2);
+        let result: String = serde_yaml::to_string(&x).unwrap();
+        assert_eq!(result, "(5.3 1.1 2.2) m\n");
+    }
+
+    #[test]
+    fn serialize_dimensionless_vector_2() {
+        let x = Vec2Dimensionless::dimensionless(5.3, 1.1);
+        let result: String = serde_yaml::to_string(&x).unwrap();
+        assert_eq!(result, "(5.3 1.1)\n");
+    }
+
+    #[test]
+    fn serialize_dimensionless_vector_3() {
+        let x = Vec3Dimensionless::dimensionless(5.3, 1.1, 2.2);
+        let result: String = serde_yaml::to_string(&x).unwrap();
+        assert_eq!(result, "(5.3 1.1 2.2)\n");
     }
 }
