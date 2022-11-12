@@ -51,6 +51,62 @@ macro_rules! impl_concrete_float_methods {
             }
         }
 
+        impl std::ops::Add<$float_type> for $quantity<$float_type, $dimensionless_const> {
+            type Output = $quantity<$float_type, $dimensionless_const>;
+
+            fn add(self, rhs: $float_type) -> Self::Output {
+                Self(self.0 + rhs)
+            }
+        }
+
+        impl std::ops::AddAssign<$float_type> for $quantity<$float_type, $dimensionless_const> {
+            fn add_assign(&mut self, rhs: $float_type) {
+                self.0 += rhs;
+            }
+        }
+
+        impl std::ops::Sub<$float_type> for $quantity<$float_type, $dimensionless_const> {
+            type Output = $quantity<$float_type, $dimensionless_const>;
+
+            fn sub(self, rhs: $float_type) -> Self::Output {
+                Self(self.0 - rhs)
+            }
+        }
+
+        impl std::ops::SubAssign<$float_type> for $quantity<$float_type, $dimensionless_const> {
+            fn sub_assign(&mut self, rhs: $float_type) {
+                self.0 -= rhs;
+            }
+        }
+
+        impl std::ops::Add<$quantity<$float_type, $dimensionless_const>> for $float_type {
+            type Output = $float_type;
+
+            fn add(self, rhs: $quantity<$float_type, $dimensionless_const>) -> Self::Output {
+                self + rhs.0
+            }
+        }
+
+        impl std::ops::AddAssign<$quantity<$float_type, $dimensionless_const>> for $float_type {
+            fn add_assign(&mut self, rhs: $quantity<$float_type, $dimensionless_const>) {
+                *self += rhs.0;
+            }
+        }
+
+        impl std::ops::Sub<$quantity<$float_type, $dimensionless_const>> for $float_type {
+            type Output = $float_type;
+
+            fn sub(self, rhs: $quantity<$float_type, $dimensionless_const>) -> Self::Output {
+                self - rhs.0
+            }
+        }
+
+        impl std::ops::SubAssign<$quantity<$float_type, $dimensionless_const>> for $float_type {
+            fn sub_assign(&mut self, rhs: $quantity<$float_type, $dimensionless_const>) {
+                *self -= rhs.0
+            }
+        }
+
         $crate::impl_mul_quantity_quantity!($quantity, $dimension, $float_type, $float_type);
 
         $crate::impl_mul_quantity_type!($quantity, $dimension, $float_type, $float_type);
