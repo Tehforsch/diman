@@ -41,6 +41,14 @@ macro_rules! impl_concrete_float_methods {
             pub fn zero() -> Self {
                 Self(0.0)
             }
+
+            pub fn is_positive(&self) -> bool {
+                self.0 > 0.0
+            }
+
+            pub fn is_negative(&self) -> bool {
+                self.0 < 0.0
+            }
         }
 
         $crate::impl_mul_quantity_quantity!($quantity, $dimension, $float_type, $float_type);
