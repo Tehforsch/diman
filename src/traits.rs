@@ -32,6 +32,17 @@ macro_rules! impl_mul_quantity_type {
 }
 
 #[macro_export]
+macro_rules! impl_mul_assign_quantity_type {
+    ($quantity: ident, $dimension: ty, $type_lhs: ty, $type_rhs: ty) => {
+        impl<const D: $dimension> std::ops::MulAssign<$type_rhs> for $quantity<$type_lhs, D> {
+            fn mul_assign(&mut self, rhs: $type_rhs) {
+                self.0 *= rhs;
+            }
+        }
+    };
+}
+
+#[macro_export]
 macro_rules! impl_mul_type_quantity {
     ($quantity: ident, $dimension: ty, $type_lhs: ty, $type_rhs: ty) => {
         impl<const D: $dimension> std::ops::Mul<$quantity<$type_rhs, D>> for $type_lhs {
@@ -72,6 +83,17 @@ macro_rules! impl_div_quantity_type {
 
             fn div(self, rhs: $type_rhs) -> Self::Output {
                 $quantity(self.0 / rhs)
+            }
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! impl_div_assign_quantity_type {
+    ($quantity: ident, $dimension: ty, $type_lhs: ty, $type_rhs: ty) => {
+        impl<const D: $dimension> std::ops::DivAssign<$type_rhs> for $quantity<$type_lhs, D> {
+            fn div_assign(&mut self, rhs: $type_rhs) {
+                self.0 /= rhs;
             }
         }
     };

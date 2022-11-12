@@ -46,6 +46,8 @@ macro_rules! impl_concrete_float_methods {
         $crate::impl_mul_quantity_quantity!($quantity, $dimension, $float_type, $float_type);
 
         $crate::impl_mul_quantity_type!($quantity, $dimension, $float_type, $float_type);
+        $crate::impl_mul_assign_quantity_type!($quantity, $dimension, $float_type, $float_type);
+        $crate::impl_div_assign_quantity_type!($quantity, $dimension, $float_type, $float_type);
         $crate::impl_mul_type_quantity!($quantity, $dimension, $float_type, $float_type);
 
         $crate::impl_div_quantity_quantity!($quantity, $dimension, $float_type, $float_type);

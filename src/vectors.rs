@@ -7,6 +7,8 @@ macro_rules! impl_vector_methods {
         $crate::impl_div_quantity_quantity!($quantity, $dimension, $vector_type, $float_type);
 
         $crate::impl_mul_quantity_type!($quantity, $dimension, $vector_type, $float_type);
+        $crate::impl_mul_assign_quantity_type!($quantity, $dimension, $vector_type, $float_type);
+        $crate::impl_div_assign_quantity_type!($quantity, $dimension, $vector_type, $float_type);
         $crate::impl_mul_quantity_type!($quantity, $dimension, $float_type, $vector_type);
         $crate::impl_mul_type_quantity!($quantity, $dimension, $vector_type, $float_type);
         $crate::impl_mul_type_quantity!($quantity, $dimension, $float_type, $vector_type);
@@ -214,6 +216,24 @@ mod tests {
     }
 
     #[test]
+    fn mul_assign_vec3() {
+        let mut vec = crate::si::Vec3Length::meters(1.0, 2.0, 3.0);
+        vec *= 3.0;
+        assert_is_close(vec.x(), Length::meters(3.0));
+        assert_is_close(vec.y(), Length::meters(6.0));
+        assert_is_close(vec.z(), Length::meters(9.0));
+    }
+
+    #[test]
+    fn div_assign_vec3() {
+        let mut vec = crate::si::Vec3Length::meters(1.0, 2.0, 3.0);
+        vec /= 2.0;
+        assert_is_close(vec.x(), Length::meters(0.5));
+        assert_is_close(vec.y(), Length::meters(1.0));
+        assert_is_close(vec.z(), Length::meters(1.5));
+    }
+
+    #[test]
     fn mul_quantity_vec3() {
         let multiplied = Vec3Velocity::meters_per_second(1.0, 2.0, 3.0) * Time::seconds(5.0);
         assert_is_close(multiplied.x(), Length::meters(5.0));
@@ -242,6 +262,22 @@ mod tests {
         let multiplied = Length::meters(5.0) * MVec2::new(1.0, 2.0);
         assert_is_close(multiplied.x(), Length::meters(5.0));
         assert_is_close(multiplied.y(), Length::meters(10.0));
+    }
+
+    #[test]
+    fn mul_assign_vec2() {
+        let mut vec = crate::si::Vec2Length::meters(1.0, 2.0);
+        vec *= 3.0;
+        assert_is_close(vec.x(), Length::meters(3.0));
+        assert_is_close(vec.y(), Length::meters(6.0));
+    }
+
+    #[test]
+    fn div_assign_vec2() {
+        let mut vec = crate::si::Vec2Length::meters(1.0, 2.0);
+        vec /= 2.0;
+        assert_is_close(vec.x(), Length::meters(0.5));
+        assert_is_close(vec.y(), Length::meters(1.0));
     }
 
     #[test]
