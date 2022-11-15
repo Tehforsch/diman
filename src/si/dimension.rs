@@ -55,6 +55,42 @@ impl Dimension {
         }
     }
 
+    pub const fn dimension_sqrt(self) -> Self {
+        if self.length % 2 != 0 {
+            panic!("Cannot take square root of quantity with a length dimension that is not divisible by 2");
+        } else if self.time % 2 != 0 {
+            panic!("Cannot take square root of quantity with a time dimension that is not divisible by 2");
+        } else if self.mass % 2 != 0 {
+            panic!("Cannot take square root of quantity with a mass dimension that is not divisible by 2");
+        } else if self.temperature % 2 != 0 {
+            panic!("Cannot take square root of quantity with a temperature dimension that is not divisible by 2");
+        }
+        Self {
+            length: self.length / 2,
+            mass: self.mass / 2,
+            time: self.time / 2,
+            temperature: self.temperature / 2,
+        }
+    }
+
+    pub const fn dimension_cbrt(self) -> Self {
+        if self.length % 3 != 0 {
+            panic!("Cannot take cube root of quantity with a length dimension that is not divisible by 3");
+        } else if self.time % 3 != 0 {
+            panic!("Cannot take cube root of quantity with a time dimension that is not divisible by 3");
+        } else if self.mass % 3 != 0 {
+            panic!("Cannot take cube root of quantity with a mass dimension that is not divisible by 3");
+        } else if self.temperature % 3 != 0 {
+            panic!("Cannot take cube root of quantity with a temperature dimension that is not divisible by 3");
+        }
+        Self {
+            length: self.length / 3,
+            mass: self.mass / 3,
+            time: self.time / 3,
+            temperature: self.temperature / 3,
+        }
+    }
+
     /// Get the base conversion factor of this dimension
     /// into SI units. As of now, this is always 1.0
     /// but will change if the base units are changed

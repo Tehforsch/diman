@@ -51,6 +51,64 @@ macro_rules! impl_concrete_float_methods {
             }
         }
 
+        impl<const D: $dimension> $quantity<$float_type, D>
+        where
+            $quantity<$float_type, { D.dimension_sqrt() }>:,
+        {
+            /// Returns the square root of a quantity.
+            /// ```
+            /// # #![allow(incomplete_features)]
+            /// # #![feature(generic_const_exprs)]
+            /// use diman::si::Mass;
+            /// use diman::si::Energy;
+            /// use diman::si::Velocity;
+            /// use diman::si::Dimensionless;
+            /// let energy = Energy::joules(4.0);
+            /// let velocity: Velocity = (energy / Mass::kilograms(1.0)).sqrt();
+            /// assert!(((velocity - Velocity::meters_per_second(2.0)) / velocity).abs() <= Dimensionless::EPSILON);
+            /// ```
+            /// This method will fail if the quantity is not divisible by 2
+            /// in all its components.
+            /// ```compile_fail
+            /// # #![allow(incomplete_features)]
+            /// # #![feature(generic_const_exprs)]
+            /// # use diman::si::Time;
+            /// let time = Time::seconds(5.0);
+            /// let x = time.sqrt();
+            /// ```
+            pub fn sqrt(self) -> $quantity<$float_type, { D.dimension_sqrt() }> {
+                $quantity::<$float_type, { D.dimension_sqrt() }>(self.0.sqrt())
+            }
+        }
+
+        impl<const D: $dimension> $quantity<$float_type, D>
+        where
+            $quantity<$float_type, { D.dimension_cbrt() }>:,
+        {
+            /// Returns the cube root of a quantity.
+            /// ```rust
+            /// # #![allow(incomplete_features)]
+            /// # #![feature(generic_const_exprs)]
+            /// # use diman::si::Velocity;
+            /// # use diman::si::Dimensionless;
+            /// let velocity_cubed = Velocity::meters_per_second(8.0) * Velocity::meters_per_second(1.0) * Velocity::meters_per_second(1.0);
+            /// let velocity: Velocity = velocity_cubed.cbrt();
+            /// assert!(((velocity - Velocity::meters_per_second(2.0)) / velocity).abs() <= Dimensionless::EPSILON);
+            /// ```
+            /// This method will fail if the quantity is not divisible by 3
+            /// in all its components.
+            /// ```compile_fail
+            /// # #![allow(incomplete_features)]
+            /// # #![feature(generic_const_exprs)]
+            /// # use diman::si::Time;
+            /// let time = Time::seconds(5.0).squared();
+            /// let x = time.cbrt();
+            /// ```
+            pub fn cbrt(self) -> $quantity<$float_type, { D.dimension_cbrt() }> {
+                $quantity::<$float_type, { D.dimension_cbrt() }>(self.0.cbrt())
+            }
+        }
+
         impl std::ops::Add<$float_type> for $quantity<$float_type, $dimensionless_const> {
             type Output = $quantity<$float_type, $dimensionless_const>;
 
@@ -126,8 +184,6 @@ macro_rules! impl_concrete_float_methods {
         $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, log10);
         $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, exp);
         $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, exp2);
-        $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, sqrt);
-        $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, cbrt);
 
         $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, ceil);
         $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, floor);
@@ -147,6 +203,10 @@ macro_rules! impl_concrete_float_methods {
 
         $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, exp_m1);
         $crate::impl_dimensionless_method!($quantity, $dimensionless_const, $float_type, ln_1p);
+
+        impl $quantity<$float_type, $dimensionless_const> {
+            pub const EPSILON: Self = Self($float_type::EPSILON);
+        }
 
         impl<const D: $dimension> $quantity<$float_type, D> {
             pub fn in_units(self, other: $quantity<$float_type, D>) -> $float_type

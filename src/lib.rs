@@ -219,6 +219,20 @@ mod tests {
     }
 
     #[test]
+    fn sqrt_float_quantity() {
+        let x = Length::meters(6.0).powi::<2>();
+        let y = Time::seconds(2.0).powi::<2>();
+        assert_is_close((x / y).sqrt(), Velocity::meters_per_second(3.0));
+    }
+
+    #[test]
+    fn cbrt_float_quantity() {
+        let x = Length::meters(4.0).powi::<3>();
+        let y = Time::seconds(1.0).powi::<3>();
+        assert_is_close((x / y).cbrt(), Velocity::meters_per_second(4.0));
+    }
+
+    #[test]
     fn constant() {
         #[cfg(not(feature = "default-f32"))]
         define_constant!(Quantity, f64, NONE, CONSTANT, 5.0, length: 1, mass: 1);
