@@ -168,6 +168,8 @@ macro_rules! impl_concrete_float_methods {
 
         impl $quantity<$float_type, $dimensionless_const> {
             pub const EPSILON: Self = Self($float_type::EPSILON);
+            pub const PI: Self = Self(::std::$float_type::consts::PI);
+            pub const E: Self = Self(::std::$float_type::consts::E);
         }
 
         impl<const D: $dimension> $quantity<$float_type, D> {
