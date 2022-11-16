@@ -1,35 +1,33 @@
 #[macro_export]
 macro_rules! impl_float_methods {
-    ($quantity: ident, $dimension: ident, $dimensionless_const: ident) => {
-        impl<const D: $dimension, S: num_traits::Float> $quantity<S, D> {
-            pub fn squared(&self) -> $quantity<S, { D.dimension_powi(2) }>
-            where
-                $quantity<S, { D.dimension_powi(2) }>:,
-            {
-                $quantity::<S, { D.dimension_powi(2) }>(self.0.powi(2))
-            }
-
-            pub fn cubed(&self) -> $quantity<S, { D.dimension_powi(3) }>
-            where
-                $quantity<S, { D.dimension_powi(3) }>:,
-            {
-                $quantity::<S, { D.dimension_powi(3) }>(self.0.powi(3))
-            }
-
-            pub fn powi<const I: i32>(&self) -> $quantity<S, { D.dimension_powi(I) }>
-            where
-                $quantity<S, { D.dimension_powi(I) }>:,
-            {
-                $quantity::<S, { D.dimension_powi(I) }>(self.0.powi(I))
-            }
-        }
-    };
+    ($quantity: ident, $dimension: ident, $dimensionless_const: ident) => {};
 }
 
 #[macro_export]
 macro_rules! impl_concrete_float_methods {
     ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $unit_names_array: ident, $float_type: ident) => {
         impl<const D: $dimension> $quantity<$float_type, D> {
+            pub fn squared(&self) -> $quantity<$float_type, { D.dimension_powi(2) }>
+            where
+                $quantity<$float_type, { D.dimension_powi(2) }>:,
+            {
+                $quantity::<$float_type, { D.dimension_powi(2) }>(self.0.powi(2))
+            }
+
+            pub fn cubed(&self) -> $quantity<$float_type, { D.dimension_powi(3) }>
+            where
+                $quantity<$float_type, { D.dimension_powi(3) }>:,
+            {
+                $quantity::<$float_type, { D.dimension_powi(3) }>(self.0.powi(3))
+            }
+
+            pub fn powi<const I: i32>(&self) -> $quantity<$float_type, { D.dimension_powi(I) }>
+            where
+                $quantity<$float_type, { D.dimension_powi(I) }>:,
+            {
+                $quantity::<$float_type, { D.dimension_powi(I) }>(self.0.powi(I))
+            }
+
             pub fn min(self, other: Self) -> Self {
                 Self(self.0.min(other.0))
             }

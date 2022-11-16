@@ -17,7 +17,6 @@ default-f32 = []
 
 [dependencies]
 paste = "1.0.8"
-num-traits = "0.2.15"
 glam = { version = "0.21.3" }
 rand = { version = "0.8.5", optional = true }
 serde = {version = "1.0.143", features = ["derive"], optional = true }

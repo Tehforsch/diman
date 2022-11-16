@@ -151,7 +151,6 @@ dependencies = [
  "hdf5",
  "lazy_static",
  "mpi",
- "num-traits",
  "once_cell",
  "paste",
  "rand",
