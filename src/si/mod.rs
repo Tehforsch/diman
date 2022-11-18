@@ -27,6 +27,7 @@ unit_system!(
     TIME, Time, time: 1,
     {
         seconds, 1.0, "s",
+        hours, 3600.0, "h",
         years, 31557600.0, "yr"
     },
     VELOCITY, Velocity, length: 1, time: -1,
