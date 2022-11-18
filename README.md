@@ -1,8 +1,7 @@
 # Diman
 Diman is a library for zero-cost compile time unit checking.
 
-```rust
-# #![feature(generic_const_exprs)]
+```rust ignore
 use diman::si::{Length, Time, Velocity};
 
 fn get_velocity(x: Length, t: Time) -> Velocity {
@@ -17,7 +16,8 @@ assert!(((v1 - v2) / (v1 + v2)).value() < 1e-10);
 
 Let's try to add quantities with incompatible units:
 ```rust compile_fail
-# use raxiom::units::{Time, Length, Velocity};
+use diman::si::{Length, Time, Velocity};
+
 let time = Time::seconds(1.0);
 let length = Length::meters(10.0);
 let velocity: Velocity = length * time;
