@@ -43,7 +43,7 @@ If you cannot use unstable Rust for your project or require a stable library for
 * Invalid operations between physical quantities turn into compile errors.
 * Systems of units and quantities can be user defined via the `unit_system!` macro. This gives the user complete freedom over the choice of quantities and makes them part of the user's library, so that arbitrary new methods can be implemented on them.
 * Vector storage types via [`glam`](https://crates.io/crates/glam/).
-* Serialization and Deserialization (behind the `serde` feature).
+* Serialization and Deserialization via [`serde`](https://crates.io/crates/serde) (behind the `serde` feature).
 * HDF5 support using [`hdf5-rs`](https://crates.io/crates/hdf5-rs/) (behind the `hdf5` feature).
 * Quantities can be sent via MPI using [`mpi`](https://crates.io/crates/mpi) (behind the `mpi` feature).
 * The default float storage type can be chosen via the `default-f32` feature (if the feature is off, `f64` is the default). For example, if the default is `f64`, `Length::meters(1.0)` would result in a length represented by a `f64`, but `F32Length::meters(1.0)` would still work as expected.
