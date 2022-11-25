@@ -14,20 +14,20 @@ let v2 = get_velocity(Length::meters(10.0), Time::seconds(1.0));
 assert!(((v1 - v2) / (v1 + v2)).value() < 1e-10);
 ```
 
-Let's try to add quantities with incompatible units:
+Let's try to assign add quantities with incompatible units:
 ```rust compile_fail
-use diman::si::{Length, Time, Velocity};
+use diman::si::{Length, Time};
 
 let time = Time::seconds(1.0);
 let length = Length::meters(10.0);
-let velocity: Velocity = length * time;
+let sum = length + time;
 ```
 This results in a compiler error:
 ```text
-let velocity: Velocity = length * time;
-                         ^^^^^^^^^^^^^
-expected `dimension::Dimension { length: 1, time: -1, mass: 0, temperature: 0 }`
-found `dimension::Dimension { length: 1, time: 1, mass: 0, temperature: 0 }`
+let sum = length + time;
+                   ^^^^
+= note: expected struct `Quantity<_, Dimension { length: 1, time: 0, mass: 0, temperature: 0 }>`
+        found struct `Quantity<_, Dimension { length: 0, time: 1, mass: 0, temperature: 0 }>`
 ```
 
 
