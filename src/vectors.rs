@@ -181,6 +181,7 @@ macro_rules! impl_vector3_methods {
 }
 
 #[cfg(test)]
+#[cfg(feature = "glam")]
 mod tests {
     use crate::{
         si::{Length, MVec2, MVec3, Time, Vec3Velocity},

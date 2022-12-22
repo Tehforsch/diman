@@ -34,15 +34,23 @@ macro_rules! impl_mpi_vector {
 }
 
 #[macro_export]
+macro_rules! impl_mpi_glam {
+    ($quantity: ident, $dimension: ident) => {
+        $crate::impl_mpi_vector!($quantity, $dimension, ::glam::Vec2, f32, 2);
+        $crate::impl_mpi_vector!($quantity, $dimension, ::glam::DVec2, f64, 2);
+        $crate::impl_mpi_vector!($quantity, $dimension, ::glam::Vec3, f32, 3);
+        $crate::impl_mpi_vector!($quantity, $dimension, ::glam::DVec3, f64, 3);
+    };
+}
+
+#[macro_export]
 macro_rules! impl_mpi {
     ($quantity: ident, $dimension: ident) => {
         $crate::impl_mpi_float!($quantity, $dimension, f32, ::mpi::ffi::RSMPI_FLOAT);
         $crate::impl_mpi_float!($quantity, $dimension, f64, ::mpi::ffi::RSMPI_DOUBLE);
 
-        $crate::impl_mpi_vector!($quantity, $dimension, ::glam::Vec2, f32, 2);
-        $crate::impl_mpi_vector!($quantity, $dimension, ::glam::DVec2, f64, 2);
-        $crate::impl_mpi_vector!($quantity, $dimension, ::glam::Vec3, f32, 3);
-        $crate::impl_mpi_vector!($quantity, $dimension, ::glam::DVec3, f64, 3);
+        #[cfg(feature = "glam")]
+        $crate::impl_mpi_glam!($quantity, $dimension);
     };
 }
 
@@ -54,7 +62,6 @@ mod tests {
     use mpi::Threading;
 
     use crate::si::Length;
-    use crate::si::Vec2Length;
 
     lazy_static::lazy_static! {
         pub static ref MPI_UNIVERSE: Universe = {
@@ -77,8 +84,10 @@ mod tests {
         assert_eq!(q1, q2);
     }
 
+    #[cfg(feature = "glam")]
     #[test]
     fn pack_unpack_vec_quantity() {
+        use crate::si::Vec2Length;
         let world = MPI_UNIVERSE.world();
         let q1 = Vec2Length::meters(1.0, 2.0);
         let mut q2 = Vec2Length::meters(3.0, 4.0);

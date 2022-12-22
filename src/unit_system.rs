@@ -78,8 +78,11 @@ macro_rules! unit_system {
             $crate::default_quantity!($quantity, $quantity_name, $const);
 
             paste! {
+                #[cfg(feature = "glam")]
                 pub type [<Vec2 $quantity_name>] = $quantity<MVec2, $const>;
+                #[cfg(feature = "glam")]
                 pub type [<Vec3 $quantity_name>] = $quantity<MVec3, $const>;
+                #[cfg(feature = "glam")]
                 pub type [<Vec $quantity_name>] = $quantity<MVec, $const>;
             }
 
@@ -105,6 +108,7 @@ macro_rules! unit_system {
                 )*
             }
 
+            #[cfg(feature = "glam")]
             impl $quantity<glam::Vec2, $const> {
                 $(
                     pub fn $unit(x: f32, y: f32) -> $quantity::<glam::Vec2, $const> {
@@ -113,6 +117,7 @@ macro_rules! unit_system {
                 )*
             }
 
+            #[cfg(feature = "glam")]
             impl $quantity<glam::Vec3, $const> {
                 $(
                     pub fn $unit(x: f32, y: f32, z: f32) -> $quantity::<glam::Vec3, $const> {
@@ -121,6 +126,7 @@ macro_rules! unit_system {
                 )*
             }
 
+            #[cfg(feature = "glam")]
             impl $quantity<glam::DVec2, $const> {
                 $(
                     pub fn $unit(x: f64, y: f64) -> $quantity::<glam::DVec2, $const> {
@@ -129,6 +135,7 @@ macro_rules! unit_system {
                 )*
             }
 
+            #[cfg(feature = "glam")]
             impl $quantity<glam::DVec3, $const> {
                 $(
                     pub fn $unit(x: f64, y: f64, z: f64) -> $quantity::<glam::DVec3, $const> {

@@ -24,11 +24,8 @@ macro_rules! impl_hdf5_vector {
 }
 
 #[macro_export]
-macro_rules! impl_hdf5 {
+macro_rules! impl_hdf5_glam {
     ($quantity: ident, $dimension: ident, $dimensionless_const: ident) => {
-        $crate::impl_hdf5_float!($quantity, $dimension, f32, hdf5::types::FloatSize::U4);
-        $crate::impl_hdf5_float!($quantity, $dimension, f64, hdf5::types::FloatSize::U8);
-
         $crate::impl_hdf5_vector!(
             $quantity,
             $dimension,
@@ -57,5 +54,16 @@ macro_rules! impl_hdf5 {
             hdf5::types::FloatSize::U8,
             3
         );
+    };
+}
+
+#[macro_export]
+macro_rules! impl_hdf5 {
+    ($quantity: ident, $dimension: ident, $dimensionless_const: ident) => {
+        $crate::impl_hdf5_float!($quantity, $dimension, f32, hdf5::types::FloatSize::U4);
+        $crate::impl_hdf5_float!($quantity, $dimension, f64, hdf5::types::FloatSize::U8);
+
+        #[cfg(feature = "glam")]
+        $crate::impl_hdf5_glam!($quantity, $dimension, $dimensionless_const);
     };
 }

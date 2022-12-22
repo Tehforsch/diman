@@ -44,7 +44,32 @@ macro_rules! define_system {
             $unit_names_array,
             f64
         );
+
+        #[cfg(feature = "glam")]
+        $crate::impl_glam!(
+            $quantity,
+            $dimension,
+            $dimensionless_const,
+            $unit_names_array
+        );
+
+        $crate::impl_hdf5_gated!($quantity, $dimension, $dimensionless_const);
+        $crate::impl_mpi_gated!($quantity, $dimension);
+        $crate::impl_rand_gated!($quantity, $dimension, $dimensionless_const);
+        $crate::impl_serde_gated!(
+            $quantity,
+            $dimension,
+            $dimensionless_const,
+            $unit_names_array
+        );
+    };
+}
+
+#[macro_export]
+macro_rules! impl_glam {
+    ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $unit_names_array: ident) => {
         $crate::default_vector!();
+
         $crate::impl_vector_methods!(
             $quantity,
             $dimension,
@@ -54,6 +79,7 @@ macro_rules! define_system {
             f32,
             2
         );
+
         $crate::impl_vector_methods!(
             $quantity,
             $dimension,
@@ -63,6 +89,7 @@ macro_rules! define_system {
             f32,
             3
         );
+
         $crate::impl_vector_methods!(
             $quantity,
             $dimension,
@@ -96,15 +123,6 @@ macro_rules! define_system {
             $dimensionless_const,
             glam::DVec3,
             f64
-        );
-        $crate::impl_hdf5_gated!($quantity, $dimension, $dimensionless_const);
-        $crate::impl_mpi_gated!($quantity, $dimension);
-        $crate::impl_rand_gated!($quantity, $dimension, $dimensionless_const);
-        $crate::impl_serde_gated!(
-            $quantity,
-            $dimension,
-            $dimensionless_const,
-            $unit_names_array
         );
     };
 }

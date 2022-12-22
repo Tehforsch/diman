@@ -5,19 +5,20 @@ edition = "2021"
 
 [features]
 si = []
+glam = ["dep:glam"]
 mpi = ["dep:once_cell", "dep:mpi"]
 hdf5 = ["dep:hdf5"]
 rand = ["dep:rand"]
 serde = ["dep:serde"]
-default = ["si"]
 default-2d = []
 default-f32 = []
+default = ["si"]
 
 [lib]
 
 [dependencies]
 paste = "1.0.8"
-glam = { version = "0.21.3" }
+glam = { version = "0.21.3", optional = true }
 rand = { version = "0.8.5", optional = true }
 serde = {version = "1.0.143", features = ["derive"], optional = true }
 hdf5 = {version = "0.8.1", optional = true }

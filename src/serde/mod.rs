@@ -1,29 +1,10 @@
 mod float_quantity;
+#[cfg(feature = "glam")]
 mod vector_quantity;
 
 #[macro_export]
-macro_rules! impl_serde {
+macro_rules! impl_serde_glam {
     ($quantity: ident, $dimension: ty, $dimensionless_const: ident, $unit_names_array: ident) => {
-        $crate::impl_serde_helpers!(
-            $quantity,
-            $dimension,
-            $dimensionless_const,
-            $unit_names_array
-        );
-        $crate::impl_serde_float!(
-            $quantity,
-            $dimension,
-            $dimensionless_const,
-            $unit_names_array,
-            f32
-        );
-        $crate::impl_serde_float!(
-            $quantity,
-            $dimension,
-            $dimensionless_const,
-            $unit_names_array,
-            f64
-        );
         $crate::impl_serde_vector!(
             $quantity,
             $dimension,
@@ -59,6 +40,40 @@ macro_rules! impl_serde {
             ::glam::DVec3,
             f64,
             3
+        );
+    };
+}
+
+#[macro_export]
+macro_rules! impl_serde {
+    ($quantity: ident, $dimension: ty, $dimensionless_const: ident, $unit_names_array: ident) => {
+        $crate::impl_serde_helpers!(
+            $quantity,
+            $dimension,
+            $dimensionless_const,
+            $unit_names_array
+        );
+        $crate::impl_serde_float!(
+            $quantity,
+            $dimension,
+            $dimensionless_const,
+            $unit_names_array,
+            f32
+        );
+        $crate::impl_serde_float!(
+            $quantity,
+            $dimension,
+            $dimensionless_const,
+            $unit_names_array,
+            f64
+        );
+
+        #[cfg(feature = "glam")]
+        $crate::impl_serde_glam!(
+            $quantity,
+            $dimension,
+            $dimensionless_const,
+            $unit_names_array
         );
     };
 }
