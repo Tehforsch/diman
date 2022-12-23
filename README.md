@@ -46,7 +46,7 @@ If you cannot use unstable Rust for your project or require a stable library for
 * Serialization and Deserialization via [`serde`](https://crates.io/crates/serde) (behind the `serde` feature).
 * HDF5 support using [`hdf5-rs`](https://crates.io/crates/hdf5-rs/) (behind the `hdf5` feature).
 * Quantities can be sent via MPI using [`mpi`](https://crates.io/crates/mpi) (behind the `mpi` feature).
-* The default float storage type can be chosen via the `default-f32` feature (if the feature is off, `f64` is the default). For example, if the default is `f64`, `Length::meters(1.0)` would result in a length represented by a `f64`, but `F32Length::meters(1.0)` would still work as expected.
+* The default float storage type can be chosen via the `default-f32`, `default-f64` features. For example, if the `default-f64` is activated, `Length::meters(1.0)` would result in a length represented by a `f64`, but `F32Length::meters(1.0)` would still work as expected.
 
 ## Design
 Diman aims to make it as easy as possible to add compile-time unit safety to Rust code. Physical quantities are represented by the `Quantity<S, D>` struct, where `S` is the underlying storage type (`f32`, `f64`, ...) and `D` is the  dimension of the quantity. For example, in order to represent the [SI system of units](https://www.nist.gov/pml/owm/metric-si/si-units), the type D would look as follows:
