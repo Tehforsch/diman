@@ -3,6 +3,12 @@
 #![feature(const_fn_floating_point_arithmetic)]
 #![doc = include_str!("../README.md")]
 
+#[cfg(all(feature = "default-f32", feature = "default-f64"))]
+compile_error!("Both 'default-f32' and 'default-f64' are activated. This is impossible.");
+
+#[cfg(all(feature = "default-2d", feature = "default-3d"))]
+compile_error!("Both 'default-2d' and 'default-3d' are activated. This is impossible.");
+
 mod floats;
 mod helpers;
 mod quantity;
