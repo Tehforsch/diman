@@ -90,13 +90,14 @@ macro_rules! impl_serde_vector {
 }
 
 #[cfg(test)]
+#[cfg(any(feature = "default-f32", feature = "default-f64"))]
 mod tests {
     use crate::si::Length;
     use crate::si::Vec2Dimensionless;
     use crate::si::Vec2Length;
     use crate::si::Vec3Dimensionless;
     use crate::si::Vec3Length;
-    use crate::tests::assert_is_close;
+    use crate::test_utils::assert_is_close;
 
     #[test]
     fn deserialize_vector_2() {

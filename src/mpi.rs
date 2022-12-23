@@ -56,6 +56,7 @@ macro_rules! impl_mpi {
 
 #[cfg(test)]
 #[cfg(feature = "mpi")]
+#[cfg(any(feature = "default-f32", feature = "default-f64"))]
 mod tests {
     use mpi::environment::Universe;
     use mpi::traits::Communicator;

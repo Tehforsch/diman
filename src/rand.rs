@@ -51,6 +51,7 @@ macro_rules! impl_rand_floats {
 }
 
 #[cfg(test)]
+#[cfg(any(feature = "default-f32", feature = "default-f64"))]
 mod tests {
     use rand::Rng;
 

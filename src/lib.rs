@@ -25,6 +25,9 @@ mod serde;
 #[cfg(feature = "rand")]
 mod rand;
 
+#[cfg(test)]
+mod test_utils;
+
 #[macro_export]
 macro_rules! define_system {
     ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $unit_names_array: ident) => {
@@ -68,6 +71,7 @@ macro_rules! define_system {
 #[macro_export]
 macro_rules! impl_glam {
     ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $unit_names_array: ident) => {
+        #[cfg(any(feature = "default-f32", feature = "default-f64"))]
         $crate::default_vector!();
 
         $crate::impl_vector_methods!(
@@ -142,6 +146,7 @@ macro_rules! define_constant {
 }
 
 #[cfg(test)]
+#[cfg(any(feature = "default-f32", feature = "default-f64"))]
 mod tests {
     use crate::si::dimension::NONE;
     use crate::si::Dimension;
@@ -153,26 +158,7 @@ mod tests {
     use crate::si::Quantity;
     use crate::si::Time;
     use crate::si::Velocity;
-
-    #[cfg(feature = "default-f32")]
-    pub(crate) fn assert_is_close<const U: Dimension>(x: Quantity<f32, U>, y: Quantity<f32, U>) {
-        assert!(
-            (x - y).abs().value_unchecked() < f32::EPSILON,
-            "{} {}",
-            x.value_unchecked(),
-            y.value_unchecked()
-        )
-    }
-
-    #[cfg(not(feature = "default-f32"))]
-    pub(crate) fn assert_is_close<const U: Dimension>(x: Quantity<f64, U>, y: Quantity<f64, U>) {
-        assert!(
-            (x - y).abs().value_unchecked() < f64::EPSILON,
-            "{} {}",
-            x.value_unchecked(),
-            y.value_unchecked()
-        )
-    }
+    use crate::test_utils::assert_is_close;
 
     #[test]
     fn add_same_unit() {
@@ -253,10 +239,10 @@ mod tests {
 
     #[test]
     fn constant() {
-        #[cfg(not(feature = "default-f32"))]
-        define_constant!(Quantity, f64, NONE, CONSTANT, 5.0, length: 1, mass: 1);
         #[cfg(feature = "default-f32")]
         define_constant!(Quantity, f32, NONE, CONSTANT, 5.0, length: 1, mass: 1);
+        #[cfg(feature = "default-f64")]
+        define_constant!(Quantity, f64, NONE, CONSTANT, 5.0, length: 1, mass: 1);
         assert_is_close(
             CONSTANT / Length::meters(5.0) / Mass::kilograms(1.0),
             Dimensionless::dimensionless(1.0),

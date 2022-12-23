@@ -182,12 +182,8 @@ macro_rules! impl_vector3_methods {
 
 #[cfg(test)]
 #[cfg(feature = "glam")]
+#[cfg(any(feature = "default-f32", feature = "default-f64"))]
 mod tests {
-    use crate::{
-        si::{Length, MVec2, MVec3, Time, Vec3Velocity},
-        tests::assert_is_close,
-    };
-
     #[test]
     fn debug_vector_2() {
         assert_eq!(
@@ -203,6 +199,9 @@ mod tests {
             "[1.0 5.0 6.0] m"
         );
     }
+
+    use crate::si::{Length, MVec2, MVec3, Time, Vec3Velocity};
+    use crate::test_utils::assert_is_close;
 
     #[test]
     fn mul_vec3() {

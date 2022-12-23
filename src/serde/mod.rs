@@ -146,13 +146,14 @@ macro_rules! impl_serde_helpers {
 }
 
 #[cfg(test)]
+#[cfg(any(feature = "default-f32", feature = "default-f64"))]
 mod tests {
     use serde::Deserialize;
 
     use crate::si::Dimensionless;
     use crate::si::Force;
     use crate::si::Length;
-    use crate::tests::assert_is_close;
+    use crate::test_utils::assert_is_close;
 
     #[test]
     fn deserialize_basic_units() {

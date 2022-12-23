@@ -6,11 +6,37 @@ macro_rules! default_quantity {
     };
 }
 
-#[cfg(not(feature = "default-f32"))]
+#[cfg(feature = "default-f64")]
 #[macro_export]
 macro_rules! default_quantity {
     ($quantity: ident, $quantity_name: ident, $const: ident) => {
         pub type $quantity_name = $quantity<f64, $const>;
+    };
+}
+
+#[cfg(all(
+    not(feature = "default-2d"),
+    not(feature = "default-3d"),
+    feature = "default-f32"
+))]
+#[macro_export]
+macro_rules! default_vector {
+    () => {
+        pub type MVec2 = glam::Vec2;
+        pub type MVec3 = glam::Vec3;
+    };
+}
+
+#[cfg(all(
+    not(feature = "default-2d"),
+    not(feature = "default-3d"),
+    feature = "default-f64"
+))]
+#[macro_export]
+macro_rules! default_vector {
+    () => {
+        pub type MVec2 = glam::DVec2;
+        pub type MVec3 = glam::DVec3;
     };
 }
 
@@ -24,7 +50,7 @@ macro_rules! default_vector {
     };
 }
 
-#[cfg(all(not(feature = "default-2d"), feature = "default-f32"))]
+#[cfg(all(feature = "default-3d", feature = "default-f32"))]
 #[macro_export]
 macro_rules! default_vector {
     () => {
@@ -34,7 +60,7 @@ macro_rules! default_vector {
     };
 }
 
-#[cfg(all(feature = "default-2d", not(feature = "default-f32")))]
+#[cfg(all(feature = "default-2d", feature = "default-f64"))]
 #[macro_export]
 macro_rules! default_vector {
     () => {
@@ -44,7 +70,7 @@ macro_rules! default_vector {
     };
 }
 
-#[cfg(all(not(feature = "default-2d"), not(feature = "default-f32")))]
+#[cfg(all(feature = "default-3d", feature = "default-f64"))]
 #[macro_export]
 macro_rules! default_vector {
     () => {
@@ -75,14 +101,19 @@ macro_rules! unit_system {
                 )*
                 .. $dimensionless_const };
 
+
+
+            #[cfg(any(feature = "default-f32", feature = "default-f64"))]
             $crate::default_quantity!($quantity, $quantity_name, $const);
 
             paste! {
                 #[cfg(feature = "glam")]
+                #[cfg(any(feature = "default-f32", feature = "default-f64"))]
                 pub type [<Vec2 $quantity_name>] = $quantity<MVec2, $const>;
                 #[cfg(feature = "glam")]
+                #[cfg(any(feature = "default-f32", feature = "default-f64"))]
                 pub type [<Vec3 $quantity_name>] = $quantity<MVec3, $const>;
-                #[cfg(feature = "glam")]
+                #[cfg(all(feature = "glam", any(feature = "default-2d", feature = "default-3d"), any(feature = "default-f32", feature = "default-f64")))]
                 pub type [<Vec $quantity_name>] = $quantity<MVec, $const>;
             }
 
