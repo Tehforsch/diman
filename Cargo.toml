@@ -14,7 +14,7 @@ default-2d = []
 default-3d = []
 default-f32 = []
 default-f64 = []
-default = ["si"]
+default = []
 
 [lib]
 
