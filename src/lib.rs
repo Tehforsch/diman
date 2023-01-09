@@ -34,6 +34,8 @@ mod rand;
 #[cfg(test)]
 mod test_utils;
 
+pub use derive_dimension::diman_dimension;
+
 #[macro_export]
 macro_rules! define_system {
     ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $unit_names_array: ident) => {
