@@ -14,6 +14,18 @@ macro_rules! default_quantity {
     };
 }
 
+#[cfg(all(not(feature = "default-f32"), not(feature = "default-f64")))]
+#[macro_export]
+macro_rules! default_quantity {
+    ($quantity: ident, $quantity_name: ident, $const: ident) => {};
+}
+
+#[cfg(all(not(feature = "default-f32"), not(feature = "default-f64")))]
+#[macro_export]
+macro_rules! default_vector {
+    () => {};
+}
+
 #[cfg(all(
     not(feature = "default-2d"),
     not(feature = "default-3d"),
@@ -103,19 +115,9 @@ macro_rules! unit_system {
 
 
 
-            #[cfg(any(feature = "default-f32", feature = "default-f64"))]
             $crate::default_quantity!($quantity, $quantity_name, $const);
 
-            paste! {
-                #[cfg(feature = "glam")]
-                #[cfg(any(feature = "default-f32", feature = "default-f64"))]
-                pub type [<Vec2 $quantity_name>] = $quantity<MVec2, $const>;
-                #[cfg(feature = "glam")]
-                #[cfg(any(feature = "default-f32", feature = "default-f64"))]
-                pub type [<Vec3 $quantity_name>] = $quantity<MVec3, $const>;
-                #[cfg(all(feature = "glam", any(feature = "default-2d", feature = "default-3d"), any(feature = "default-f32", feature = "default-f64")))]
-                pub type [<Vec $quantity_name>] = $quantity<MVec, $const>;
-            }
+            $crate::default_vector_quantities!($quantity, $quantity_name, $const);
 
             paste!{
                 pub type [<F32 $quantity_name>] = $quantity<f32, $const>;
@@ -139,41 +141,9 @@ macro_rules! unit_system {
                 )*
             }
 
-            #[cfg(feature = "glam")]
-            impl $quantity<glam::Vec2, $const> {
-                $(
-                    pub fn $unit(x: f32, y: f32) -> $quantity::<glam::Vec2, $const> {
-                        $quantity::<glam::Vec2, $const>(glam::Vec2::new(x, y) * $factor)
-                    }
-                )*
-            }
-
-            #[cfg(feature = "glam")]
-            impl $quantity<glam::Vec3, $const> {
-                $(
-                    pub fn $unit(x: f32, y: f32, z: f32) -> $quantity::<glam::Vec3, $const> {
-                        $quantity::<glam::Vec3, $const>(glam::Vec3::new(x, y, z) * $factor)
-                    }
-                )*
-            }
-
-            #[cfg(feature = "glam")]
-            impl $quantity<glam::DVec2, $const> {
-                $(
-                    pub fn $unit(x: f64, y: f64) -> $quantity::<glam::DVec2, $const> {
-                        $quantity::<glam::DVec2, $const>(glam::DVec2::new(x, y) * $factor)
-                    }
-                )*
-            }
-
-            #[cfg(feature = "glam")]
-            impl $quantity<glam::DVec3, $const> {
-                $(
-                    pub fn $unit(x: f64, y: f64, z: f64) -> $quantity::<glam::DVec3, $const> {
-                        $quantity::<glam::DVec3, $const>(glam::DVec3::new(x, y, z) * $factor)
-                    }
-                )*
-            }
+            $(
+                $crate::vector_unit_constructors!($quantity, $const, $unit, $factor);
+            )*
 
             impl<S> $quantity<S, $const> where S: std::ops::Div<f64, Output = S> {
                 paste! {

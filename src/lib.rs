@@ -56,7 +56,6 @@ macro_rules! define_system {
             f64
         );
 
-        #[cfg(feature = "glam")]
         $crate::impl_glam!(
             $quantity,
             $dimension,
@@ -77,9 +76,15 @@ macro_rules! define_system {
 }
 
 #[macro_export]
+#[cfg(not(feature = "glam"))]
+macro_rules! impl_glam {
+    ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $unit_names_array: ident) => {};
+}
+
+#[macro_export]
+#[cfg(feature = "glam")]
 macro_rules! impl_glam {
     ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $unit_names_array: ident) => {
-        #[cfg(any(feature = "default-f32", feature = "default-f64"))]
         $crate::default_vector!();
 
         $crate::impl_vector_methods!(

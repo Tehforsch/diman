@@ -33,6 +33,7 @@ macro_rules! impl_mpi_vector {
     };
 }
 
+#[cfg(feature = "glam")]
 #[macro_export]
 macro_rules! impl_mpi_glam {
     ($quantity: ident, $dimension: ident) => {
@@ -43,13 +44,18 @@ macro_rules! impl_mpi_glam {
     };
 }
 
+#[cfg(not(feature = "glam"))]
+#[macro_export]
+macro_rules! impl_mpi_glam {
+    ($quantity: ident, $dimension: ident) => {};
+}
+
 #[macro_export]
 macro_rules! impl_mpi {
     ($quantity: ident, $dimension: ident) => {
         $crate::impl_mpi_float!($quantity, $dimension, f32, ::mpi::ffi::RSMPI_FLOAT);
         $crate::impl_mpi_float!($quantity, $dimension, f64, ::mpi::ffi::RSMPI_DOUBLE);
 
-        #[cfg(feature = "glam")]
         $crate::impl_mpi_glam!($quantity, $dimension);
     };
 }

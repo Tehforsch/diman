@@ -2,6 +2,7 @@ mod float_quantity;
 #[cfg(feature = "glam")]
 mod vector_quantity;
 
+#[cfg(feature = "glam")]
 #[macro_export]
 macro_rules! impl_serde_glam {
     ($quantity: ident, $dimension: ty, $dimensionless_const: ident, $unit_names_array: ident) => {
@@ -44,6 +45,12 @@ macro_rules! impl_serde_glam {
     };
 }
 
+#[cfg(not(feature = "glam"))]
+#[macro_export]
+macro_rules! impl_serde_glam {
+    ($quantity: ident, $dimension: ty, $dimensionless_const: ident, $unit_names_array: ident) => {};
+}
+
 #[macro_export]
 macro_rules! impl_serde {
     ($quantity: ident, $dimension: ty, $dimensionless_const: ident, $unit_names_array: ident) => {
@@ -68,7 +75,6 @@ macro_rules! impl_serde {
             f64
         );
 
-        #[cfg(feature = "glam")]
         $crate::impl_serde_glam!(
             $quantity,
             $dimension,

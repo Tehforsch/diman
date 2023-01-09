@@ -1,3 +1,85 @@
+#[cfg(all(
+    feature = "glam",
+    any(feature = "default-2d", feature = "default-3d"),
+    any(feature = "default-f32", feature = "default-f64")
+))]
+#[macro_export]
+macro_rules! default_vector_quantity {
+    ($quantity: ident, $quantity_name: ident, $const: ident) => {
+        paste! {
+            pub type [<Vec $quantity_name>] = $quantity<MVec, $const>;
+        }
+    };
+}
+
+#[cfg(not(all(
+    feature = "glam",
+    any(feature = "default-2d", feature = "default-3d"),
+    any(feature = "default-f32", feature = "default-f64")
+)))]
+#[macro_export]
+macro_rules! default_vector_quantity {
+    ($quantity: ident, $quantity_name: ident, $const: ident) => {};
+}
+
+#[cfg(all(
+    feature = "glam",
+    any(feature = "default-f32", feature = "default-f64")
+))]
+#[macro_export]
+macro_rules! default_vector_quantities {
+    ($quantity: ident, $quantity_name: ident, $const: ident) => {
+        paste! {
+            pub type [<Vec2 $quantity_name>] = $quantity<MVec2, $const>;
+            pub type [<Vec3 $quantity_name>] = $quantity<MVec3, $const>;
+        }
+
+        $crate::default_vector_quantity!($quantity, $quantity_name, $const);
+    };
+}
+
+#[cfg(not(all(
+    feature = "glam",
+    any(feature = "default-f32", feature = "default-f64")
+)))]
+#[macro_export]
+macro_rules! default_vector_quantities {
+    ($quantity: ident, $quantity_name: ident, $const: ident) => {};
+}
+
+#[cfg(feature = "glam")]
+#[macro_export]
+macro_rules! vector_unit_constructors {
+    ($quantity: ident, $const: ident, $unit: ident, $factor: literal) => {
+        impl $quantity<glam::Vec2, $const> {
+            pub fn $unit(x: f32, y: f32) -> $quantity<glam::Vec2, $const> {
+                $quantity::<glam::Vec2, $const>(glam::Vec2::new(x, y) * $factor)
+            }
+        }
+        impl $quantity<glam::Vec3, $const> {
+            pub fn $unit(x: f32, y: f32, z: f32) -> $quantity<glam::Vec3, $const> {
+                $quantity::<glam::Vec3, $const>(glam::Vec3::new(x, y, z) * $factor)
+            }
+        }
+        impl $quantity<glam::DVec2, $const> {
+            pub fn $unit(x: f64, y: f64) -> $quantity<glam::DVec2, $const> {
+                $quantity::<glam::DVec2, $const>(glam::DVec2::new(x, y) * $factor)
+            }
+        }
+        impl $quantity<glam::DVec3, $const> {
+            pub fn $unit(x: f64, y: f64, z: f64) -> $quantity<glam::DVec3, $const> {
+                $quantity::<glam::DVec3, $const>(glam::DVec3::new(x, y, z) * $factor)
+            }
+        }
+    };
+}
+
+#[cfg(not(feature = "glam"))]
+#[macro_export]
+macro_rules! vector_unit_constructors {
+    ($quantity: ident, $const: ident, $unit: ident, $factor: literal) => {};
+}
+
 #[macro_export]
 macro_rules! impl_vector_methods {
     ($quantity: ident, $dimension: ty, $dimensionless_const: ident, $unit_names_array: ident, $vector_type: ty, $float_type: ty, $num_dims: literal) => {
