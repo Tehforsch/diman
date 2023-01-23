@@ -191,14 +191,26 @@ macro_rules! impl_concrete_float_methods {
 
         impl<const D: $dimension> std::fmt::Debug for $quantity<$float_type, D> {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                let unit_name = $unit_names_array
+                let closeness = |value: f64, unit_factor: f64| {
+                    if value == 0.0 {
+                        1.0
+                    } else {
+                        (value / unit_factor).abs().ln().abs()
+                    }
+                };
+                let (unit_name, unit_value) = $unit_names_array
                     .iter()
                     .filter(|(d, _, _)| d == &D)
-                    .filter(|(_, _, val)| *val == 1.0)
-                    .map(|(_, name, _)| name)
-                    .next()
-                    .unwrap_or(&"unknown unit");
-                self.0.fmt(f).and_then(|_| write!(f, " {}", unit_name))
+                    .min_by(|(_, _, x), (_, _, y)| {
+                        closeness(self.0 as f64, *x)
+                            .partial_cmp(&closeness(self.0 as f64, *y))
+                            .unwrap()
+                    })
+                    .map(|(_, name, val)| (name, val))
+                    .unwrap_or((&"unknown unit", &1.0));
+                (self.0 as f64 / unit_value)
+                    .fmt(f)
+                    .and_then(|_| write!(f, " {}", unit_name))
             }
         }
     };
