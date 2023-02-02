@@ -49,9 +49,12 @@ If you cannot use unstable Rust for your project or require a stable library for
 * The default float storage type can be chosen via the `default-f32`, `default-f64` features. For example, if the `default-f64` is activated, `Length::meters(1.0)` would result in a length represented by a `f64`, but `F32Length::meters(1.0)` would still work as expected.
 
 ## Design
-Diman aims to make it as easy as possible to add compile-time unit safety to Rust code. Physical quantities are represented by the `Quantity<S, D>` struct, where `S` is the underlying storage type (`f32`, `f64`, ...) and `D` is the  dimension of the quantity. For example, in order to represent the [SI system of units](https://www.nist.gov/pml/owm/metric-si/si-units), the type D would look as follows:
+Diman aims to make it as easy as possible to add compile-time unit safety to Rust code. Physical quantities are represented by the `Quantity<S, D>` struct, where `S` is the underlying storage type (`f32`, `f64`, ...) and `D` is the  dimension of the quantity. For example, in order to represent the [SI system of units](https://www.nist.gov/pml/owm/metric-si/si-units), the dimension type would look as follows:
 ```rust
+use derive_dimension::diman_dimension;
+
 #[derive(PartialEq, Eq, Debug, Clone)]
+#[diman_dimension]
 pub struct Dimension {
     pub length: i32,
     pub time: i32,
@@ -62,4 +65,4 @@ pub struct Dimension {
     pub luminous_intensity: i32,
 }
 ```
-Addition and subtraction of two quantities is only allowed when the `D` type is the same. During multiplication of two quantities, all the entries of the two dimension are added.
+Addition and subtraction of two quantities is only allowed when the `D` type is the same. During multiplication of two quantities, all the entries of the two dimension are added. This functionality is implemented automatically by the `#[diman_dimension]` macro.
