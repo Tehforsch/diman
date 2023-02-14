@@ -204,7 +204,7 @@ macro_rules! impl_concrete_float_methods {
                     .min_by(|(_, _, x), (_, _, y)| {
                         closeness(self.0 as f64, *x)
                             .partial_cmp(&closeness(self.0 as f64, *y))
-                            .unwrap()
+                            .unwrap_or(std::cmp::Ordering::Equal)
                     })
                     .map(|(_, name, val)| (name, val))
                     .unwrap_or((&"unknown unit", &1.0));
