@@ -2,6 +2,7 @@
 macro_rules! define_quantity {
     ($quantity: ident, $dimension: ident, $dimensionless_const: ident) => {
         #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Default)]
+        #[repr(transparent)]
         pub struct $quantity<S: 'static, const D: $dimension>(pub(crate) S);
 
         impl<S> $quantity<S, { $dimensionless_const }> {
