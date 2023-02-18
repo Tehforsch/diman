@@ -59,6 +59,10 @@ macro_rules! impl_concrete_float_methods {
             pub fn is_negative_or_zero(&self) -> bool {
                 self.0 <= 0.0
             }
+
+            pub fn is_nan(&self) -> bool {
+                self.0.is_nan()
+            }
         }
 
         impl<const D: $dimension> $quantity<$float_type, D>
