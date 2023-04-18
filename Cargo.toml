@@ -23,7 +23,7 @@ paste = "1.0.8"
 glam = { version = "0.21.3", optional = true }
 rand = { version = "0.8.5", optional = true }
 serde = {version = "1.0.143", features = ["derive"], optional = true }
-hdf5 = {version = "0.8.1", optional = true }
+hdf5 = { rev = "7eb87b800e2806fcd416e5f76dc16998bf311525", git = "https://github.com/aldanor/hdf5-rust", optional = true}
 mpi = { version = "0.6", default-features = false, features = ["derive"], optional = true }
 once_cell = { version = "1.13.0", optional = true }
 derive_dimension = { path = "crates/derive_dimension" }
