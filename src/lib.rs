@@ -13,6 +13,7 @@ mod floats;
 mod helpers;
 mod quantity;
 mod traits;
+mod type_aliases;
 mod unit_system;
 mod vectors;
 
@@ -35,6 +36,8 @@ mod rand;
 mod test_utils;
 
 pub use derive_dimension::diman_dimension;
+pub use type_aliases::Product;
+pub use type_aliases::Quotient;
 
 #[macro_export]
 macro_rules! define_system {
