@@ -5,6 +5,10 @@ macro_rules! define_quantity {
         #[repr(transparent)]
         pub struct $quantity<S: 'static, const D: $dimension>(pub(crate) S);
 
+        impl<S, const D: $dimension> $crate::QProduct for $quantity<S, D> {
+            type Output = $quantity<S, D>;
+        }
+
         impl<S> $quantity<S, { $dimensionless_const }> {
             /// Get the value of a dimensionless quantity
             pub fn value(self) -> S {
