@@ -1,5 +1,5 @@
 use proc_macro2::Span;
-use quote::quote;
+use quote::{format_ident, quote};
 use syn::{
     parse::{Parse, ParseBuffer, ParseStream},
     punctuated::Punctuated,
@@ -10,7 +10,100 @@ use syn::{
 #[proc_macro]
 pub fn unit_system_2(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let defs = parse_macro_input!(item as Defs);
-    proc_macro::TokenStream::new()
+
+    // Only temporary to make the transition less menacing
+    let dimension_type = &defs.dimension_type;
+    let unit_names_array_gen: proc_macro2::TokenStream = defs
+        .quantities
+        .iter()
+        .flat_map(|quantity| {
+            let dimension = get_dimension_definition(&defs.dimension_type, &quantity);
+            quantity.units_def.units.iter().map(move |unit| {
+                let unit_symbol = unit.symbol.as_ref().unwrap();
+                let unit_factor = unit.factor;
+                quote! {
+                    ({ #dimension }, #unit_symbol, #unit_factor),
+                }
+            })
+        })
+        .collect();
+
+    let unit_names_array_gen = quote! {
+        pub const UNIT_NAMES: &[(#dimension_type, &str, f64)] = &[
+            #unit_names_array_gen
+        ];
+    };
+
+    let stream: proc_macro2::TokenStream = defs
+        .quantities
+        .iter()
+        .map(|quantity| {
+            let dimension = get_dimension_definition(&defs.dimension_type, &quantity);
+            let quantity_type = &defs.quantity_type;
+            let quantity_name = &quantity.name;
+            let _vec2_ident = format_ident!("Vec2{}", quantity_name);
+            let _vec3_ident = format_ident!("Vec2{}", quantity_name);
+            let quantity_def = quote! {
+                #[cfg(feature = "default-f64")]
+                pub type #quantity_name = #quantity_type::<f64, { #dimension }>;
+                #[cfg(feature = "default-f32")]
+                pub type #quantity_name = #quantity_type::<f32, { #dimension }>;
+
+                #[cfg(all(
+                    feature = "glam",
+                    any(feature = "default-f32", feature = "default-f64")
+                ))]
+                pub type vec2_ident = #quantity_type<MVec2, { #dimension }>;
+                #[cfg(all(
+                    feature = "glam",
+                    any(feature = "default-f32", feature = "default-f64")
+                ))]
+                pub type vec3_ident = #quantity_type<MVec3, { #dimension }>;
+            };
+
+            let units_def = quantity
+                .units_def
+                .units
+                .iter()
+                .map(|unit| {
+                    let unit_name = &unit.name;
+                    let factor = &unit.factor;
+                    quote! {
+                        impl<S> #quantity_type::<S, {#dimension}> {
+                            pub fn #unit_name(v: f64) -> #quantity_type<f64, { #dimension }> {
+                                #quantity_type::<f64, { #dimension }>(v * #factor)
+                            }
+                        }
+                    }
+                })
+                .collect::<proc_macro2::TokenStream>();
+            [quantity_def, units_def]
+                .into_iter()
+                .collect::<proc_macro2::TokenStream>()
+        })
+        .collect();
+    [unit_names_array_gen, stream]
+        .into_iter()
+        .collect::<proc_macro2::TokenStream>().into()
+}
+
+fn get_dimension_definition(dimension_ty: &Type, q: &QuantityEntry) -> proc_macro2::TokenStream {
+    let field_updates: proc_macro2::TokenStream = q
+        .dimensions_def
+        .fields
+        .iter()
+        .map(|field| {
+            let ident = &field.ident;
+            let value = &field.value.val;
+            quote! { #ident: #value, }
+        })
+        .collect();
+    quote! {
+        #dimension_ty {
+            #field_updates
+            ..#dimension_ty::none()
+        }
+    }
 }
 
 struct Defs {
@@ -19,16 +112,46 @@ struct Defs {
     pub quantities: Vec<QuantityEntry>,
 }
 
+struct DimensionInt {
+    val: i32,
+}
+
+impl Parse for DimensionInt {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let lit: Lit = input.parse()?;
+        let val = match lit {
+            Lit::Int(x) => x.base10_parse(),
+
+            _ => Err(Error::new(input.span(), "Expected int literal.")),
+        }?;
+        Ok(Self { val })
+    }
+}
+
+struct DimensionEntry {
+    ident: Ident,
+    value: DimensionInt,
+}
+
+impl Parse for DimensionEntry {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let ident: Ident = input.parse()?;
+        let _: Token![:] = input.parse()?;
+        let value: DimensionInt = input.parse()?;
+        Ok(Self { ident, value })
+    }
+}
+
 struct DimensionsEntry {
-    fields: Punctuated<FieldValue, Token![,]>,
+    fields: Punctuated<DimensionEntry, Token![,]>,
 }
 
 impl Parse for DimensionsEntry {
     fn parse(input: ParseStream) -> Result<Self> {
         let content;
         let _: token::Brace = braced!(content in input);
-        let fields: Punctuated<FieldValue, Token![,]> =
-            content.parse_terminated(FieldValue::parse)?;
+        let fields: Punctuated<DimensionEntry, Token![,]> =
+            content.parse_terminated(DimensionEntry::parse)?;
         Ok(Self { fields })
     }
 }
@@ -122,15 +245,24 @@ impl Parse for UnitEntry {
             content.parse_terminated(UnitDefinitionEntry::parse)?;
         for entry in entries.into_iter() {
             match entry {
-                UnitDefinitionEntry::Name(def_name) => {
-                    set_option_and_throw_error_if_is_some(&mut name, def_name, "name", input.span())?
-                }
-                UnitDefinitionEntry::Factor(def_factor) => {
-                    set_option_and_throw_error_if_is_some(&mut factor, def_factor, "factor", input.span())?
-                }
-                UnitDefinitionEntry::Symbol(def_symbol) => {
-                    set_option_and_throw_error_if_is_some(&mut symbol, def_symbol, "symbol", input.span())?
-                }
+                UnitDefinitionEntry::Name(def_name) => set_option_and_throw_error_if_is_some(
+                    &mut name,
+                    def_name,
+                    "name",
+                    input.span(),
+                )?,
+                UnitDefinitionEntry::Factor(def_factor) => set_option_and_throw_error_if_is_some(
+                    &mut factor,
+                    def_factor,
+                    "factor",
+                    input.span(),
+                )?,
+                UnitDefinitionEntry::Symbol(def_symbol) => set_option_and_throw_error_if_is_some(
+                    &mut symbol,
+                    def_symbol,
+                    "symbol",
+                    input.span(),
+                )?,
                 UnitDefinitionEntry::Prefixes(def_prefixes) => {
                     set_option_and_throw_error_if_is_some(
                         &mut prefixes,
@@ -165,8 +297,7 @@ fn set_option_and_throw_error_if_is_some<T>(
             span,
             format!("More than one definition of {} given.", name),
         ))
-    }
-    else {
+    } else {
         *item = Some(new_item);
         Ok(())
     }

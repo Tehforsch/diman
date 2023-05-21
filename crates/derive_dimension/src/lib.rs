@@ -49,6 +49,12 @@ pub(crate) fn dimension_methods_impl(
         }
     }
 
+    let none_gen: proc_macro2::TokenStream = field_names.iter().map(|ident| {
+        quote! {
+            #ident: 0,
+        }
+    }).collect();
+
     let mul_gen: proc_macro2::TokenStream = field_names.iter().map(|ident| {
         quote! {
             #ident: self.#ident + other.#ident,
@@ -103,6 +109,12 @@ pub(crate) fn dimension_methods_impl(
 
     let gen = quote! {
         impl #impl_generics #type_name #type_generics #where_clause {
+            pub const fn none() -> Self {
+                Self {
+                    #none_gen
+                }
+            }
+
             pub const fn dimension_mul(self, other: Self) -> Self {
                 Self {
                     #mul_gen
