@@ -7,7 +7,6 @@ if [[ ${result} -ne 0 ]] ; then
     cat <<\EOF
 There are some code style issues, run `cargo fmt` first.
 EOF
-    exit 1
 fi
 
 for float in default-f32, default-f64, "" ; do
@@ -24,3 +23,13 @@ for float in default-f32, default-f64, "" ; do
 done
 
 exit 0
+
+diff=$(cargo fmt -- --check)
+result=$?
+
+if [[ ${result} -ne 0 ]] ; then
+    cat <<\EOF
+There are some code style issues, run `cargo fmt` first.
+EOF
+    exit 1
+fi

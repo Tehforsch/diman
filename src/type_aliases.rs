@@ -4,7 +4,7 @@ pub trait QProduct {
 
 pub type Product<Q1> = <Q1 as QProduct>::Output;
 pub type Quotient<Q1, Q2> =
-<<Q1 as QProduct>::Output as std::ops::Div<<Q2 as QProduct>::Output>>::Output;
+    <<Q1 as QProduct>::Output as std::ops::Div<<Q2 as QProduct>::Output>>::Output;
 
 impl<Q1: QProduct, Q2: QProduct> QProduct for (Q1, Q2)
 where
@@ -25,11 +25,11 @@ where
 #[cfg(test)]
 #[cfg(any(feature = "default-f32", feature = "default-f64"))]
 mod tests {
-    use crate::si::Length;
-    use crate::si::Volume;
     use crate::si::Area;
-    use crate::si::Velocity;
+    use crate::si::Length;
     use crate::si::Time;
+    use crate::si::Velocity;
+    use crate::si::Volume;
     use crate::type_aliases::Product;
     use crate::type_aliases::Quotient;
 

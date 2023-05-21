@@ -5,6 +5,7 @@ use dimension::NONE;
 
 use crate::define_system;
 use crate::unit_system;
+use ::unit_system::unit_system_2;
 
 define_system!(Quantity, Dimension, NONE, UNIT_NAMES);
 
@@ -89,3 +90,23 @@ unit_system!(
     {
     }
     );
+
+unit_system_2!(
+    Dimension,
+    Quantity,
+    [
+        Dimensionless = {
+            dimension: {
+                length: 0
+            }
+        },
+        Length = { dimension: { length: 1 } },
+        Dimensionless = {
+            dimension: { length: 0 },
+            units: [
+                { name: meters, factor: 1.0, symbol: "m", prefixes: [k, m] }
+            ]
+        },
+        // Area = { dimension: (Length, Length) }
+    ]
+);

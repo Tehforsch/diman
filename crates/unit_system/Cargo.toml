@@ -1,0 +1,15 @@
+[package]
+name = "unit_system"
+version = "0.1.0"
+edition = "2021"
+authors = [
+    "Toni Peter <mail@tonipeter.de>",
+]
+
+[dependencies]
+syn = { version = "1.0", features = ["full"] }
+quote = "1.0"
+proc-macro2 = "1.0"
+
+[lib]
+proc-macro = true
