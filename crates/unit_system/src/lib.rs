@@ -68,10 +68,22 @@ pub fn unit_system_2(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 .map(|unit| {
                     let unit_name = &unit.name;
                     let factor = &unit.factor;
+                    let conversion_method_name = format_ident!("in_{}", unit_name);
                     quote! {
-                        impl<S> #quantity_type::<S, {#dimension}> {
+                        impl #quantity_type::<f64, {#dimension}> {
                             pub fn #unit_name(v: f64) -> #quantity_type<f64, { #dimension }> {
                                 #quantity_type::<f64, { #dimension }>(v * #factor)
+                            }
+
+                        }
+                        impl #quantity_type::<f32, {#dimension}> {
+                            pub fn #unit_name(v: f32) -> #quantity_type<f32, { #dimension }> {
+                                #quantity_type::<f32, { #dimension }>(v * (#factor as f32))
+                            }
+                        }
+                        impl<S> #quantity_type<S, {#dimension}> where S: std::ops::Div<f64, Output = S> {
+                            pub fn #conversion_method_name(self) -> S {
+                                self.0 / #factor
                             }
                         }
                     }
