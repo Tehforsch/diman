@@ -24,6 +24,9 @@ unit_system!(
         kilometers, 1000.0, "km",
         astronomical_units, 1.495978707e11, "au"
     },
+    AREA, Area, length: 2,
+    {
+    },
     TIME, Time, time: 1,
     {
         seconds, 1.0, "s",
