@@ -17,8 +17,8 @@ mod type_aliases;
 mod unit_system;
 mod vectors;
 
-#[cfg(feature = "si")]
-pub mod si;
+#[cfg(test)]
+mod test_system;
 
 #[cfg(feature = "hdf5")]
 mod hdf5;

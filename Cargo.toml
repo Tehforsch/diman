@@ -4,7 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-si = []
 glam = ["dep:glam"]
 mpi = ["dep:once_cell", "dep:mpi"]
 hdf5 = ["dep:hdf5"]

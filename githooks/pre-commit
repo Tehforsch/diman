@@ -12,8 +12,8 @@ fi
 for float in default-f32, default-f64, "" ; do
     for glam in glam, "" ; do
         for dim in default-2d, default-3d, "" ; do
-            echo cargo test --no-default-features --features "si,${dim}${float}${glam},mpi,rand,serde,hdf5"
-            if ! cargo test --no-default-features --features "si,${dim}${float}${glam},mpi,rand,serde,hdf5"
+            echo cargo test --no-default-features --features "${dim}${float}${glam},mpi,rand,serde,hdf5"
+            if ! cargo test --no-default-features --features "${dim}${float}${glam},mpi,rand,serde,hdf5"
             then
                 echo "There are some test issues."
                 exit 1

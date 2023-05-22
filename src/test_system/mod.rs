@@ -1,10 +1,7 @@
 pub(crate) mod dimension;
 
 pub use dimension::Dimension;
-use dimension::NONE;
 
-use crate::define_system;
-use crate::unit_system;
 use ::unit_system::unit_system_2;
 
 // The macro will import things from diman::* which would not exist in this scope.
