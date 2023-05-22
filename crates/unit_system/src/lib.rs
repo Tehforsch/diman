@@ -2,11 +2,8 @@ mod gen_traits;
 mod parse;
 mod types;
 mod utils;
-mod gen_float_methods;
-mod gen_generic_methods;
 mod storage_types;
-mod gen_vector_methods;
-mod gen_debug;
+mod codegen;
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -30,6 +27,14 @@ pub fn unit_system_2(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
         defs.float_methods(),
         defs.vector_methods(),
         defs.generic_methods(),
+        #[cfg(feature = "serde")]
+        defs.serde_impl(),
+        #[cfg(feature = "hdf5")]
+        defs.hdf5_impl(),
+        #[cfg(feature = "mpi")]
+        defs.mpi_impl(),
+        #[cfg(feature = "rand")]
+        defs.rand_impl(),
     ])
     .into()
 }

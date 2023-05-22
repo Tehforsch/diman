@@ -14,6 +14,10 @@ glam-vec3 = []
 glam-dvec3 = []
 f32 = []
 f64 = []
+mpi = []
+serde = []
+rand = []
+hdf5 = []
 
 [dependencies]
 syn = { version = "1.0", features = ["full"] }
