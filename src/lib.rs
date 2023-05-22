@@ -12,6 +12,7 @@ compile_error!("Both 'default-2d' and 'default-3d' are activated. This is imposs
 mod floats;
 mod helpers;
 mod quantity;
+mod storage_type;
 mod traits;
 mod type_aliases;
 mod unit_system;

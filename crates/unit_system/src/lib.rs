@@ -6,6 +6,7 @@ mod gen_float_methods;
 mod gen_generic_methods;
 mod storage_types;
 mod gen_vector_methods;
+mod gen_debug;
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -25,6 +26,7 @@ pub fn unit_system_2(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
         defs.unit_constructors(),
         defs.qproduct_trait(),
         defs.numeric_traits(),
+        defs.debug_trait(),
         defs.float_methods(),
         defs.vector_methods(),
         defs.generic_methods(),
@@ -103,7 +105,7 @@ impl Defs {
         }
     }
 
-    pub(crate) fn vector_quantity_definitions(&self) -> TokenStream {
+    pub fn vector_quantity_definitions(&self) -> TokenStream {
         self.vector_types()
             .iter()
             .map(|vector_type| {
@@ -112,7 +114,7 @@ impl Defs {
             .collect()
     }
 
-    pub(crate) fn float_quantity_definitions(&self) -> TokenStream {
+    pub fn float_quantity_definitions(&self) -> TokenStream {
         self.float_types()
             .iter()
             .map(|float_type| {
@@ -121,7 +123,7 @@ impl Defs {
             .collect()
     }
 
-    pub(crate) fn quantity_definitions_for_type(
+    pub fn quantity_definitions_for_type(
         &self,
         type_: &TokenStream,
         module_name: &TokenStream,
@@ -155,42 +157,40 @@ impl Defs {
         }
     }
 
-    pub(crate) fn unit_constructors(&self) -> TokenStream {
+    pub fn iter_units(&self) -> impl Iterator<Item=(&QuantityEntry, &UnitEntry)> {
         self
-        .quantities
-        .iter()
-        .flat_map(|quantity| {
+            .quantities
+            .iter()
+            .flat_map(|quantity| quantity.units_def.units.iter().map(move |unit| (quantity, unit)))
+
+    }
+
+    pub fn unit_constructors(&self) -> TokenStream {
+        self.iter_units().map(|(quantity, unit)| {
             let dimension = self.get_dimension_definition(&quantity);
             let quantity_type = &self.quantity_type;
-
-            quantity
-                .units_def
-                .units
+            let unit_name = &unit.name;
+            let factor = &unit.factor;
+            let conversion_method_name = format_ident!("in_{}", unit_name);
+            let vector_impls: TokenStream = self
+                .vector_types()
                 .iter()
-                .map(move |unit| {
-                    let unit_name = &unit.name;
-                    let factor = &unit.factor;
-                    let conversion_method_name = format_ident!("in_{}", unit_name);
-                    let vector_impls: TokenStream = self
-                        .vector_types()
-                        .iter()
-                        .map(|vector_type| self.vector_unit_constructor(vector_type, &unit, &dimension))
-                        .collect();
-                    let float_impls: TokenStream = self
-                        .float_types()
-                        .iter()
-                        .map(|float_type| self.float_unit_constructor(float_type, &unit, &dimension))
-                        .collect();
-                    quote! {
-                        impl<S> #quantity_type<S, {#dimension}> where S: std::ops::Div<f64, Output = S> {
-                            pub fn #conversion_method_name(self) -> S {
-                                self.0 / #factor
-                            }
-                        }
-                        #float_impls
-                        #vector_impls
+                .map(|vector_type| self.vector_unit_constructor(vector_type, &unit, &dimension))
+                .collect();
+            let float_impls: TokenStream = self
+                .float_types()
+                .iter()
+                .map(|float_type| self.float_unit_constructor(float_type, &unit, &dimension))
+                .collect();
+            quote! {
+                impl<S> #quantity_type<S, {#dimension}> where S: std::ops::Div<f64, Output = S> {
+                    pub fn #conversion_method_name(self) -> S {
+                        self.0 / #factor
                     }
-                })
+                }
+                #float_impls
+                #vector_impls
+            }
         }).collect()
     }
 

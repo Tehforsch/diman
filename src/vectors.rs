@@ -270,8 +270,6 @@ macro_rules! impl_vector3_methods {
     feature = "f64"
 ))]
 mod tests {
-    use crate::test_system::dvec2::Length as Vec2Length;
-    use crate::test_system::dvec3::Length as Vec3Length;
     use crate::test_system::dvec3::Velocity as Vec3Velocity;
     use crate::test_system::f64::{Length, Time};
     use glam::DVec2;
@@ -279,21 +277,31 @@ mod tests {
 
     use crate::test_utils::assert_is_close_f64 as assert_is_close;
 
-    // #[test]
-    // fn debug_vector_2() {
-    //     assert_eq!(
-    //         format!("{:?}", crate::test_system::dvec2::Length::meters(1.0, 5.0)),
-    //         "[1.0 5.0] m"
-    //     );
-    // }
+    #[test]
+    fn debug_vector_2() {
+        assert_eq!(
+            format!("{:?}", crate::test_system::dvec2::Length::meters(1.0, 5.0)),
+            "[1, 5] m"
+        );
+        assert_eq!(
+            format!(
+                "{:?}",
+                crate::test_system::dvec2::Length::kilometers(1.0, 5.0)
+            ),
+            "[1, 5] km"
+        );
+    }
 
-    // #[test]
-    // fn debug_vector_3() {
-    //     assert_eq!(
-    //         format!("{:?}", crate::test_system::dvec3::Length::meters(1.0, 5.0, 6.0)),
-    //         "[1.0 5.0 6.0] m"
-    //     );
-    // }
+    #[test]
+    fn debug_vector_3() {
+        assert_eq!(
+            format!(
+                "{:?}",
+                crate::test_system::dvec3::Length::meters(1.0, 5.0, 6.0)
+            ),
+            "[1, 5, 6] m"
+        );
+    }
 
     #[test]
     fn mul_vec3() {
