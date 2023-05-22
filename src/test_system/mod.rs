@@ -2,12 +2,12 @@ pub(crate) mod dimension;
 
 pub use dimension::Dimension;
 
-use ::unit_system::unit_system_2;
+use ::unit_system::unit_system;
 
 // The macro will import things from diman::* which would not exist in this scope.
 use crate as diman;
 
-unit_system_2!(
+unit_system!(
     Dimension,
     Quantity,
     [

@@ -10,7 +10,7 @@ use syn::*;
 use types::{Defs, QuantityEntry, UnitEntry};
 
 #[proc_macro]
-pub fn unit_system_2(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn unit_system(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let defs = parse_macro_input!(item as Defs);
     defs.code_gen().into()
 }
