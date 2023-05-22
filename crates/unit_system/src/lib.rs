@@ -1,3 +1,4 @@
+mod utils;
 mod types;
 mod parse;
 mod gen_traits;
@@ -6,11 +7,13 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::*;
 use types::{Defs, QuantityEntry};
+use utils::join;
 
 #[proc_macro]
 pub fn unit_system_2(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let defs = parse_macro_input!(item as Defs);
-    let stream: TokenStream = [
+    join(
+    [
         defs.type_definition(),
         defs.type_functions(),
         defs.unit_array(),
@@ -18,9 +21,7 @@ pub fn unit_system_2(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
         defs.unit_definitions(),
         defs.qproduct_trait(),
         defs.numeric_traits(),
-    ].into_iter().collect();
-
-    stream.into()
+    ]).into()
 }
 
 impl Defs {
@@ -95,6 +96,15 @@ impl Defs {
     }
 
     pub(crate) fn quantity_definitions(&self) -> TokenStream {
+        join(
+            [
+            self.quantity_definitions_for_type(quote! { f32 }),
+            self.quantity_definitions_for_type(quote! { f64 }),
+            ]
+        )
+    }
+
+    pub(crate) fn quantity_definitions_for_type(&self, type_: TokenStream) -> TokenStream {
         self
             .quantities
             .iter()

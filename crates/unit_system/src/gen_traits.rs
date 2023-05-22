@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::types::Defs;
+use crate::{types::Defs, utils::join};
 
 impl Defs {
     pub(crate) fn qproduct_trait(&self) -> TokenStream {
@@ -18,34 +18,27 @@ impl Defs {
     }
 
     pub(crate) fn numeric_traits(&self) -> TokenStream {
-        let add_impl = self.add_sub_impl(
+        join([ self.add_sub_impl(
             quote! {std::ops::Add},
             quote! {add},
             quote! {Self(self.0 + rhs.0)},
-        );
-        let sub_impl = self.add_sub_impl(
+        ),
+         self.add_sub_impl(
             quote! {std::ops::Sub},
             quote! {sub},
             quote! {Self(self.0 - rhs.0)},
-        );
-        let add_assign_impl = self.add_sub_assign_impl(
+        ),
+         self.add_sub_assign_impl(
             quote! {std::ops::AddAssign},
             quote! {add_assign},
             quote! {self.0 += rhs.0;},
-        );
-        let sub_assign_impl = self.add_sub_assign_impl(
+        ),
+         self.add_sub_assign_impl(
             quote! {std::ops::SubAssign},
             quote! {sub_assign},
             quote! {self.0 -= rhs.0;},
-        );
-        let neg_impl = self.neg_impl();
-        quote! {
-            #add_impl
-            #add_assign_impl
-            #sub_impl
-            #sub_assign_impl
-            #neg_impl
-        }
+        ),
+         self.neg_impl()])
     }
 
     fn add_sub_impl(
