@@ -185,6 +185,71 @@ impl NumericTrait {
         }
     }
 
+    /// For an impl of Mul or Div between a concrete storage type and a quantity
+    fn div_type_quantity(
+        defs: &Defs,
+        name: TokenStream,
+        fn_name: TokenStream,
+        fn_return_expr: TokenStream,
+        storage_type: &TokenStream,
+    ) -> NumericTrait {
+        let Defs {
+            quantity_type,
+            ..
+        } = defs;
+        Self {
+            trait_bound_impl: quote! {
+                #storage_type: #name<RHS>,
+                #quantity_type<#storage_type, { D.dimension_inv() }>:, 
+            },
+            output_type_def: quote! {
+                type Output = #quantity_type<
+                    <#storage_type as #name<RHS>>::Output,
+                    { D.dimension_inv() },
+                >;
+            },
+            ..Self::mul_type_quantity(defs, name, fn_name, fn_return_expr, storage_type)
+        }
+    }
+
+    /// For an impl of Mul or Div between a concrete storage type and a quantity
+    fn mul_type_quantity(
+        defs: &Defs,
+        name: TokenStream,
+        fn_name: TokenStream,
+        fn_return_expr: TokenStream,
+        storage_type: &TokenStream,
+    ) -> NumericTrait {
+        let Defs {
+            quantity_type,
+            dimension_type,
+            ..
+        } = defs;
+        let rhs = quote! { #quantity_type<RHS, D> };
+        let lhs = quote! { #storage_type };
+        Self {
+            name: name.clone(),
+            fn_name,
+            fn_return_expr,
+            lhs,
+            rhs: rhs.clone(),
+            fn_return_type: quote! { Self::Output },
+            fn_args: quote! { self, rhs: #rhs },
+            trait_bound_impl: quote! {
+                #storage_type: #name<RHS>,
+            },
+            output_type_def: quote! {
+                type Output = #quantity_type<
+                    <#storage_type as #name<RHS>>::Output,
+                    D,
+                >;
+            },
+            impl_generics: quote! { const D: #dimension_type, RHS},
+        }
+    }
+
+
+
     /// For an impl of MulAssign or DivAssign between two quantities (only for
     /// dimensionless right hand side)
     fn mul_or_div_assign_quantity_quantity(
@@ -324,6 +389,20 @@ impl Defs {
                     quote! { std::ops::Div },
                     quote! { div },
                     quote! { #quantity_type(self.0 / rhs) },
+                    &float_type.name,
+                ),
+                NumericTrait::mul_type_quantity(
+                    &self,
+                    quote! { std::ops::Mul },
+                    quote! { mul },
+                    quote! { #quantity_type(self * rhs.0) },
+                    &float_type.name,
+                ),
+                NumericTrait::div_type_quantity(
+                    &self,
+                    quote! { std::ops::Div },
+                    quote! { div },
+                    quote! { #quantity_type(self / rhs.0) },
                     &float_type.name,
                 ),
             ].into_iter()
