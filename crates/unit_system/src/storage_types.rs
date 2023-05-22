@@ -16,6 +16,8 @@ pub struct FloatType {
     pub mpi_type: TokenStream,
     #[cfg(feature = "hdf5")]
     pub hdf5_type: TokenStream,
+    #[cfg(feature = "serde")]
+    pub serialize_method: TokenStream,
 }
 
 impl Defs {
@@ -68,6 +70,8 @@ impl Defs {
             mpi_type: quote::quote! { ::mpi::ffi::RSMPI_FLOAT },
             #[cfg(feature = "hdf5")]
             hdf5_type: quote::quote! { hdf5::types::FloatSize::U4 },
+            #[cfg(feature = "serde")]
+            serialize_method: quote::quote! { serialize_f32 },
         }
     }
 
@@ -79,6 +83,8 @@ impl Defs {
             mpi_type: quote::quote! { ::mpi::ffi::RSMPI_DOUBLE },
             #[cfg(feature = "hdf5")]
             hdf5_type: quote::quote! { hdf5::types::FloatSize::U8 },
+            #[cfg(feature = "serde")]
+            serialize_method: quote::quote! { serialize_f64 },
         }
     }
 

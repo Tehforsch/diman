@@ -5,8 +5,7 @@ use crate::types::Defs;
 
 
 impl Defs {
-    pub fn debug_trait(&self) -> TokenStream {
-        let Defs { quantity_type, dimension_type, .. } = &self;
+    pub fn units_array(&self) -> TokenStream {
         let units: TokenStream = self.iter_units().filter_map(|(quantity, unit)| {
             let dim = self.get_dimension_definition(quantity);
             let factor = unit.factor;
@@ -15,7 +14,12 @@ impl Defs {
                 (#dim, #symbol, #factor),
             })
         }).collect();
-        let units = quote! { [ #units ] };
+        quote! { [ #units ] }
+    }
+
+    pub fn debug_trait(&self) -> TokenStream {
+        let Defs { quantity_type, dimension_type, .. } = &self;
+        let units = self.units_array();
         quote! {
             impl<const D: #dimension_type, S: diman::storage_type::StorageType + std::fmt::Display> std::fmt::Debug for #quantity_type<S, D> {
                 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
