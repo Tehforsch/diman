@@ -199,6 +199,14 @@ mod tests {
     }
 
     #[test]
+    fn add_assign_quantity_type() {
+        let mut x = Dimensionless::dimensionless(1.0);
+        let y = 10.0;
+        x += y;
+        assert_is_close(x, Dimensionless::dimensionless(11.0));
+    }
+
+    #[test]
     fn add_quantity_type() {
         let x = Dimensionless::dimensionless(1.0);
         let y = 10.0;
@@ -218,6 +226,14 @@ mod tests {
         let y = Length::kilometers(10.0);
         x -= y;
         assert_is_close(x, Length::meters(-9999.0));
+    }
+
+    #[test]
+    fn sub_assign_quantity_type() {
+        let mut x = Dimensionless::dimensionless(1.0);
+        let y = 10.0;
+        x -= y;
+        assert_is_close(x, Dimensionless::dimensionless(-9.0));
     }
 
     #[test]
