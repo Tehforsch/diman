@@ -3,6 +3,77 @@ use quote::quote;
 
 use crate::{storage_types::FloatType, types::Defs, utils::join};
 
+struct NumericTrait {
+    name: TokenStream,
+    fn_name: TokenStream,
+    fn_return_type: TokenStream,
+    fn_args: TokenStream,
+    fn_return_expr: TokenStream,
+    trait_bound_impl: TokenStream,
+    output_type_def: TokenStream,
+    inner_trait_spec: TokenStream,
+    impl_generics: TokenStream,
+    const_generic_bound: TokenStream,
+    rhs: TokenStream,
+    lhs: TokenStream,
+}
+
+impl NumericTrait {
+    fn add_or_sub(
+        defs: &Defs,
+        name: TokenStream,
+        fn_name: TokenStream,
+        fn_return_expr: TokenStream,
+    ) -> Self {
+        let Defs {
+            quantity_type,
+            dimension_type,
+            ..
+        } = defs;
+        Self {
+            name,
+            fn_name,
+            fn_return_expr,
+            fn_return_type: quote! { Self },
+            fn_args: quote! {self, rhs: Self},
+            trait_bound_impl: quote! {},
+            inner_trait_spec: quote! {Output = S},
+            output_type_def: quote! { type Output = Self; },
+            impl_generics: quote! { const D: #dimension_type, S },
+            const_generic_bound: quote! {},
+            rhs: quote! { #quantity_type<S, D> },
+            lhs: quote! { #quantity_type<S, D> },
+        }
+    }
+
+    fn add_or_sub_assign(
+        defs: &Defs,
+        name: TokenStream,
+        fn_name: TokenStream,
+        fn_return_expr: TokenStream,
+    ) -> Self {
+        let Defs {
+            quantity_type,
+            dimension_type,
+            ..
+        } = defs;
+        Self {
+            name,
+            fn_name,
+            fn_return_expr,
+            fn_return_type: quote! {()},
+            fn_args: quote! {&mut self, rhs: Self},
+            trait_bound_impl: quote! {},
+            inner_trait_spec: quote! {S},
+            output_type_def: quote! {},
+            impl_generics: quote! { const D: #dimension_type, S },
+            const_generic_bound: quote! {},
+            rhs: quote! { #quantity_type<S, D> },
+            lhs: quote! { #quantity_type<S, D> },
+        }
+    }
+}
+
 impl Defs {
     pub(crate) fn qproduct_trait(&self) -> TokenStream {
         let Self {
@@ -17,177 +88,159 @@ impl Defs {
         }
     }
 
-    pub(crate) fn numeric_traits(&self) -> TokenStream {
-        join([
-            self.add_sub_impl(
-                quote! {std::ops::Add},
-                quote! {add},
-                quote! {Self(self.0 + rhs.0)},
+    fn iter_numeric_traits(&self) -> impl Iterator<Item = NumericTrait> {
+        // join([
+        //     self.add_sub_impl(
+        //         quote! {std::ops::Add},
+        //         quote! {add},
+        //         quote! {Self(self.0 + rhs.0)},
+        //     ),
+        //     self.add_sub_impl(
+        //         quote! {std::ops::Sub},
+        //         quote! {sub},
+        //         quote! {Self(self.0 - rhs.0)},
+        //     ),
+        //     self.add_sub_assign_impl(
+        //         quote! {std::ops::AddAssign},
+        //         quote! {add_assign},
+        //         quote! {self.0 += rhs.0;},
+        //     ),
+        //     self.add_sub_assign_impl(
+        //         quote! {std::ops::SubAssign},
+        //         quote! {sub_assign},
+        //         quote! {self.0 -= rhs.0;},
+        //     ),
+        //     self.neg_impl(),
+        //     self.quantity_quantity_mul_impl(),
+        //     self.quantity_quantity_mul_assign_impl(),
+        //     self.quantity_quantity_div_impl(),
+        // ])
+        vec![
+            NumericTrait::add_or_sub(
+                &self,
+                quote! { std::ops::Add },
+                quote! { add },
+                quote! { Self(self.0 + rhs.0) },
             ),
-            self.add_sub_impl(
-                quote! {std::ops::Sub},
-                quote! {sub},
-                quote! {Self(self.0 - rhs.0)},
+            NumericTrait::add_or_sub(
+                &self,
+                quote! { std::ops::Sub },
+                quote! { sub },
+                quote! { Self(self.0 - rhs.0) },
             ),
-            self.add_sub_assign_impl(
-                quote! {std::ops::AddAssign},
-                quote! {add_assign},
-                quote! {self.0 += rhs.0;},
+            NumericTrait::add_or_sub_assign(
+                &self,
+                quote! { std::ops::AddAssign },
+                quote! { add_assign },
+                quote! { self.0 += rhs.0; },
             ),
-            self.add_sub_assign_impl(
-                quote! {std::ops::SubAssign},
-                quote! {sub_assign},
-                quote! {self.0 -= rhs.0;},
+            NumericTrait::add_or_sub_assign(
+                &self,
+                quote! { std::ops::SubAssign },
+                quote! { sub_assign },
+                quote! { self.0 -= rhs.0; },
             ),
-            self.neg_impl(),
-            self.mul_impls(),
-            self.div_impls(),
-        ])
+        ]
+        .into_iter()
     }
 
-    fn add_sub_impl(
-        &self,
-        trait_type: TokenStream,
-        fn_name: TokenStream,
-        inner_code: TokenStream,
-    ) -> TokenStream {
-        let Self { quantity_type, .. } = &self;
-        let output_type_def = quote! {
-            type Output = #quantity_type<S, D>;
-        };
-        self.generic_impl(
-            trait_type,
-            quote! {Output = S},
-            quote! {Self},
+    pub fn numeric_traits(&self) -> TokenStream {
+        self.iter_numeric_traits()
+            .into_iter()
+            .map(|num_trait| self.generic_numeric_trait_impl(num_trait))
+            .collect()
+    }
+
+    fn generic_numeric_trait_impl(&self, numeric_trait: NumericTrait) -> TokenStream {
+        let NumericTrait {
+            name,
             fn_name,
-            quote! {self, rhs: Self},
-            inner_code,
+            fn_return_type,
+            fn_args,
+            trait_bound_impl,
+            fn_return_expr,
+            inner_trait_spec,
             output_type_def,
-        )
-    }
-
-    fn add_sub_assign_impl(
-        &self,
-        trait_type: TokenStream,
-        fn_name: TokenStream,
-        inner_code: TokenStream,
-    ) -> TokenStream {
-        self.generic_impl(
-            trait_type,
-            quote! {S},
-            quote! {()},
-            fn_name,
-            quote! {&mut self, rhs: Self},
-            inner_code,
-            quote! {},
-        )
-    }
-
-    fn neg_impl(&self) -> TokenStream {
-        let Self { quantity_type, .. } = &self;
-        self.generic_impl(
-            quote! {std::ops::Neg},
-            quote! {Output = S},
-            quote! {Self},
-            quote! {neg},
-            quote! {self},
-            quote! {Self(-self.0)},
-            quote! {type Output = #quantity_type<S, D>;},
-        )
-    }
-
-    fn generic_impl(
-        &self,
-        trait_type: TokenStream,
-        inner_trait_spec: TokenStream,
-        return_type: TokenStream,
-        fn_name: TokenStream,
-        fn_args: TokenStream,
-        inner_code: TokenStream,
-        output_type_def: TokenStream,
-    ) -> TokenStream {
-        let Self {
-            quantity_type,
-            dimension_type,
-            ..
-        } = &self;
+            impl_generics,
+            rhs,
+            lhs,
+            const_generic_bound,
+        } = &numeric_trait;
         quote! {
-            impl<S, const D: #dimension_type> #trait_type for #quantity_type<S, D>
+            impl<#impl_generics> #name<#rhs> for #lhs
             where
-                S: #trait_type<#inner_trait_spec>,
+                S: #name<#inner_trait_spec>,
+                #const_generic_bound
+                #trait_bound_impl
             {
                 #output_type_def
-                fn #fn_name(#fn_args) -> #return_type {
-                    #inner_code
+                fn #fn_name(#fn_args) -> #fn_return_type {
+                    #fn_return_expr
                 }
             }
         }
     }
 
-    fn mul_impls(&self) -> TokenStream {
-        self.float_types()
-            .iter()
-            .map(|float_type| self.mul_quantity_quantity_impl(float_type))
-            .collect()
-    }
+    // // Generate an impl like Quantity<DimL, L> * Quantity<DimR, R> = Quantity<DimL * DimR, L * R>
+    // fn mul_div_assign_generic_quantity_quantity_impl(
+    //     &self,
+    //     trait_name: TokenStream,
+    //     fn_name: TokenStream,
+    //     dimension_fn: TokenStream,
+    //     expression: TokenStream,
+    // ) -> TokenStream {
+    //     let Self {
+    //         quantity_type,
+    //         dimension_type,
+    //         ..
+    //     } = &self;
+    //     quote! {
+    //         impl<const DL: #dimension_type, const DR: #dimension_type, LHS, RHS> #trait_name<#quantity_type<RHS, DR>>
+    //             for #quantity_type<LHS, DL>
+    //         where
+    //             LHS: #trait_name<RHS>,
+    //             #quantity_type<LHS, { DL.#dimension_fn(DR) }>:,
+    //         {
+    //             type Output = #quantity_type<
+    //                 <LHS as #trait_name<RHS>>::Output,
+    //                 { DL.#dimension_fn(DR) },
+    //             >;
 
-    fn div_impls(&self) -> TokenStream {
-        self.float_types()
-            .iter()
-            .map(|float_type| self.div_quantity_quantity_impl(float_type))
-            .collect()
-    }
+    //             fn #fn_name(#fn_args) -> #fn_return_type {
+    //                 #fn_return_expr
+    //             }
+    //         }
+    //     }
+    // }
 
-    fn mul_quantity_quantity_impl(&self, float_type: &FloatType) -> TokenStream {
-        self.mul_div_quantity_quantity_impl(
-            float_type,
-            quote! { std::ops::Mul },
-            quote! { mul },
-            quote! { dimension_mul },
-            quote! { self.0 * rhs.0},
-        )
-    }
+    // // Generate an impl like Quantity<Dim, L> * R = Quantity<Dim, L * R>
+    // fn mul_div_quantity_storage_impl(
+    //     &self,
+    //     trait_name: TokenStream,
+    //     fn_name: TokenStream,
+    //     dimension_fn: TokenStream,
+    //     expression: TokenStream,
+    // ) -> TokenStream {
+    //     let Self {
+    //         quantity_type,
+    //         dimension_type,
+    //         ..
+    //     } = &self;
+    //     quote! {
+    //         impl<const DL: #dimension_type, LHS, RHS> #trait_name<RHS>
+    //             for #quantity_type<LHS, DL>
+    //         where
+    //             LHS: #trait_name<RHS>,
+    //         {
+    //             type Output = #quantity_type<
+    //                 <LHS as #trait_name<RHS>>::Output,
+    //                 { DL.#dimension_fn(DR) },
+    //             >;
 
-    fn div_quantity_quantity_impl(&self, float_type: &FloatType) -> TokenStream {
-        self.mul_div_quantity_quantity_impl(
-            float_type,
-            quote! { std::ops::Div },
-            quote! { div },
-            quote! { dimension_div },
-            quote! { self.0 / rhs.0},
-        )
-    }
-
-    fn mul_div_quantity_quantity_impl(
-        &self,
-        float_type: &FloatType,
-        trait_name: TokenStream,
-        fn_name: TokenStream,
-        dimension_fn: TokenStream,
-        expression: TokenStream,
-    ) -> TokenStream {
-        let Self {
-            quantity_type,
-            dimension_type,
-            ..
-        } = &self;
-        let type_lhs = &float_type.name;
-        let type_rhs = &float_type.name;
-        quote! {
-            impl<const DL: #dimension_type, const DR: #dimension_type> #trait_name<#quantity_type<#type_rhs, DR>>
-                for #quantity_type<#type_lhs, DL>
-            where
-                #quantity_type<#type_lhs, { DL.#dimension_fn(DR) }>:,
-            {
-                type Output = #quantity_type<
-                    <#type_lhs as #trait_name<#type_rhs>>::Output,
-                    { DL.#dimension_fn(DR) },
-                >;
-
-                fn #fn_name(self, rhs: #quantity_type<#type_rhs, DR>) -> Self::Output {
-                    #quantity_type(#expression)
-                }
-            }
-        }
-    }
+    //             fn #fn_name(self, rhs: #quantity_type<RHS, DR>) -> Self::Output {
+    //                 #quantity_type(#expression)
+    //             }
+    //         }
+    //     }
+    // }
 }

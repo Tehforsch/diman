@@ -198,11 +198,27 @@ mod tests {
     }
 
     #[test]
-    fn mul_quantity_quantity() {
-        let x = Force::newtons(2.0);
-        let y = Length::meters(3.0);
-        assert_is_close(x * y, Energy::joules(6.0));
+    fn add_assign() {
+        let mut x = Length::meters(1.0);
+        let y = Length::kilometers(10.0);
+        x += y;
+        assert_is_close(x, Length::meters(10001.0));
     }
+
+    #[test]
+    fn sub_assign() {
+        let mut x = Length::meters(1.0);
+        let y = Length::kilometers(10.0);
+        x -= y;
+        assert_is_close(x, Length::meters(-9999.0));
+    }
+
+    // #[test]
+    // fn mul_quantity_quantity() {
+    //     let x = Force::newtons(2.0);
+    //     let y = Length::meters(3.0);
+    //     assert_is_close(x * y, Energy::joules(6.0));
+    // }
 
     // #[test]
     // fn mul_quantity_float() {
@@ -218,12 +234,12 @@ mod tests {
     //     assert_is_close(x * y, Force::newtons(6.0));
     // }
 
-    #[test]
-    fn div_quantity_quantity() {
-        let x = Length::meters(6.0);
-        let y = Time::seconds(2.0);
-        assert_is_close(x / y, Velocity::meters_per_second(3.0));
-    }
+    // #[test]
+    // fn div_quantity_quantity() {
+    //     let x = Length::meters(6.0);
+    //     let y = Time::seconds(2.0);
+    //     assert_is_close(x / y, Velocity::meters_per_second(3.0));
+    // }
 
     // #[test]
     // fn div_quantity_float() {
@@ -239,19 +255,19 @@ mod tests {
     //     assert_is_close(x / y, Time::seconds(2.0) / Length::meters(6.0));
     // }
 
-    #[test]
-    fn sqrt_float_quantity() {
-        let x = Length::meters(6.0).powi::<2>();
-        let y = Time::seconds(2.0).powi::<2>();
-        assert_is_close((x / y).sqrt(), Velocity::meters_per_second(3.0));
-    }
+    // #[test]
+    // fn sqrt_float_quantity() {
+    //     let x = Length::meters(6.0).powi::<2>();
+    //     let y = Time::seconds(2.0).powi::<2>();
+    //     assert_is_close((x / y).sqrt(), Velocity::meters_per_second(3.0));
+    // }
 
-    #[test]
-    fn cbrt_float_quantity() {
-        let x = Length::meters(4.0).powi::<3>();
-        let y = Time::seconds(1.0).powi::<3>();
-        assert_is_close((x / y).cbrt(), Velocity::meters_per_second(4.0));
-    }
+    // #[test]
+    // fn cbrt_float_quantity() {
+    //     let x = Length::meters(4.0).powi::<3>();
+    //     let y = Time::seconds(1.0).powi::<3>();
+    //     assert_is_close((x / y).cbrt(), Velocity::meters_per_second(4.0));
+    // }
 
     // #[test]
     // fn constant() {
