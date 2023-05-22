@@ -30,6 +30,7 @@ mod rand;
 mod test_utils;
 
 pub use derive_dimension::diman_dimension;
+pub use unit_system::unit_system;
 pub use type_aliases::Product;
 pub use type_aliases::QProduct;
 pub use type_aliases::Quotient;
