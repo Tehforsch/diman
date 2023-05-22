@@ -5,6 +5,7 @@ mod utils;
 mod gen_float_methods;
 mod gen_generic_methods;
 mod storage_types;
+mod gen_vector_methods;
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -26,6 +27,7 @@ pub fn unit_system_2(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
         defs.qproduct_trait(),
         defs.numeric_traits(),
         defs.float_methods(),
+        defs.vector_methods(),
         defs.generic_methods(),
     ])
     .into()

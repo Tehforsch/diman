@@ -263,8 +263,7 @@ macro_rules! impl_vector3_methods {
 }
 
 #[cfg(test)]
-#[cfg(feature = "glam")]
-#[cfg(any(feature = "default-f32", feature = "default-f64"))]
+#[cfg(all(feature = "glam", feature = "glam-dvec3", feature = "f64"))]
 mod tests {
     #[test]
     fn debug_vector_2() {
