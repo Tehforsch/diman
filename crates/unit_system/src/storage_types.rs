@@ -62,6 +62,7 @@ impl Defs {
         ]
     }
 
+    #[cfg(feature = "f32")]
     fn f32_type(&self) -> FloatType {
         FloatType {
             name: quote::quote! { f32 },
@@ -75,6 +76,7 @@ impl Defs {
         }
     }
 
+    #[cfg(feature = "f64")]
     fn f64_type(&self) -> FloatType {
         FloatType {
             name: quote::quote! { f64 },
