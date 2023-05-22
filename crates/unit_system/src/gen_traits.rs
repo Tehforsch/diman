@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::{types::Defs, utils::join};
+use crate::{types::Defs, utils::join, float_type::FloatType};
 
 impl Defs {
     pub(crate) fn qproduct_trait(&self) -> TokenStream {
@@ -40,7 +40,40 @@ impl Defs {
                 quote! {self.0 -= rhs.0;},
             ),
             self.neg_impl(),
+            self.mul_impls(),
         ])
+    }
+
+    fn mul_impls(&self) -> TokenStream {
+        self.float_types().iter().map(|float_type| {
+            self.mul_quantity_quantity_impl(float_type)
+        }).collect()
+    }
+
+    fn mul_quantity_quantity_impl(&self, float_type: &FloatType) -> TokenStream {
+        let Self {
+            quantity_type,
+            dimension_type,
+            ..
+        } = &self;
+        let type_lhs = &float_type.name;
+        let type_rhs = &float_type.name;
+        quote! { 
+            impl<const DL: #dimension_type, const DR: #dimension_type> std::ops::Mul<#quantity_type<#type_rhs, DR>>
+                for #quantity_type<#type_lhs, DL>
+            where
+                #quantity_type<#type_lhs, { DL.dimension_mul(DR) }>:,
+            {
+                type Output = #quantity_type<
+                    <#type_lhs as std::ops::Mul<#type_rhs>>::Output,
+                    { DL.dimension_mul(DR) },
+                >;
+
+                fn mul(self, rhs: #quantity_type<#type_rhs, DR>) -> Self::Output {
+                    #quantity_type(self.0 * rhs.0)
+                }
+            }
+        }
     }
 
     fn add_sub_impl(
