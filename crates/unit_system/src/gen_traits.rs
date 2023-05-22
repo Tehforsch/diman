@@ -38,11 +38,13 @@ impl Defs {
             quote! {sub_assign},
             quote! {self.0 -= rhs.0;},
         );
+        let neg_impl = self.neg_impl();
         quote! {
             #add_impl
             #add_assign_impl
             #sub_impl
             #sub_assign_impl
+            #neg_impl
         }
     }
 
@@ -62,6 +64,7 @@ impl Defs {
             quote! {Output = S},
             quote! {Self},
             fn_name,
+            quote! {self, rhs: Self},
             inner_code,
             output_type_def
         )
@@ -76,10 +79,24 @@ impl Defs {
         self.generic_impl(
             trait_type,
             quote! {S},
-            quote! {Self},
+            quote! {()},
             fn_name,
+            quote! {&mut self, rhs: Self},
             inner_code,
             quote! {}
+        )
+    }
+
+    fn neg_impl(&self) -> TokenStream {
+        let Self { quantity_type, .. } = &self;
+        self.generic_impl(
+            quote! {std::ops::Neg},
+            quote! {Output = S},
+            quote! {Self}, 
+            quote! {neg},
+            quote! {self},
+            quote! {Self(-self.0)},
+            quote! {type Output = #quantity_type<S, D>;},
         )
     }
 
@@ -89,6 +106,7 @@ impl Defs {
         inner_trait_spec: TokenStream,
         return_type: TokenStream,
         fn_name: TokenStream,
+        fn_args: TokenStream,
         inner_code: TokenStream,
         output_type_def: TokenStream,
     ) -> TokenStream {
@@ -103,7 +121,7 @@ impl Defs {
                 S: #trait_type<#inner_trait_spec>,
             {
                 #output_type_def
-                fn #fn_name(self, rhs: Self) -> #return_type {
+                fn #fn_name(#fn_args) -> #return_type {
                     #inner_code
                 }
             }
