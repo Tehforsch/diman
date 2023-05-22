@@ -14,6 +14,8 @@ pub struct FloatType {
     pub module_name: TokenStream,
     #[cfg(feature = "mpi")]
     pub mpi_type: TokenStream,
+    #[cfg(feature = "hdf5")]
+    pub hdf5_type: TokenStream,
 }
 
 impl Defs {
@@ -64,6 +66,8 @@ impl Defs {
             module_name: quote::quote! { f32 },
             #[cfg(feature = "mpi")]
             mpi_type: quote::quote! { ::mpi::ffi::RSMPI_FLOAT },
+            #[cfg(feature = "hdf5")]
+            hdf5_type: quote::quote! { hdf5::types::FloatSize::U4 },
         }
     }
 
@@ -73,6 +77,8 @@ impl Defs {
             module_name: quote::quote! { f64 },
             #[cfg(feature = "mpi")]
             mpi_type: quote::quote! { ::mpi::ffi::RSMPI_DOUBLE },
+            #[cfg(feature = "hdf5")]
+            hdf5_type: quote::quote! { hdf5::types::FloatSize::U8 },
         }
     }
 

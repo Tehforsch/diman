@@ -17,9 +17,6 @@ mod vectors;
 #[cfg(test)]
 mod test_system;
 
-#[cfg(feature = "hdf5")]
-mod hdf5;
-
 #[cfg(feature = "mpi")]
 mod mpi;
 
