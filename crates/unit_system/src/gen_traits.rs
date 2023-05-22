@@ -375,35 +375,35 @@ impl Defs {
             ),
         ]
         .into_iter().chain(
-        self.float_types().into_iter().flat_map(move |float_type| {
+        self.storage_type_names().into_iter().flat_map(move |storage_type| {
             [
                 NumericTrait::mul_or_div_quantity_type(
                     &self,
                     quote! { std::ops::Mul },
                     quote! { mul },
                     quote! { #quantity_type(self.0 * rhs) },
-                    &float_type.name,
+                    &storage_type,
                 ),
                 NumericTrait::mul_or_div_quantity_type(
                     &self,
                     quote! { std::ops::Div },
                     quote! { div },
                     quote! { #quantity_type(self.0 / rhs) },
-                    &float_type.name,
+                    &storage_type,
                 ),
                 NumericTrait::mul_type_quantity(
                     &self,
                     quote! { std::ops::Mul },
                     quote! { mul },
                     quote! { #quantity_type(self * rhs.0) },
-                    &float_type.name,
+                    &storage_type,
                 ),
                 NumericTrait::div_type_quantity(
                     &self,
                     quote! { std::ops::Div },
                     quote! { div },
                     quote! { #quantity_type(self / rhs.0) },
-                    &float_type.name,
+                    &storage_type,
                 ),
             ].into_iter()
         }))

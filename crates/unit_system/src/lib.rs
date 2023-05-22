@@ -246,7 +246,7 @@ impl Defs {
         quote! {
             impl #quantity_type<#name, {#quantity_dimension}> {
                 pub fn #unit_name(#fn_args) -> #quantity_type<#name, {#quantity_dimension}> {
-                    #quantity_type::<#name, {#quantity_dimension}>(#name::new(#call_args) * #factor)
+                    #quantity_type::<#name, {#quantity_dimension}>(#name::new(#call_args) * (#factor as #float_type))
                 }
             }
         }
