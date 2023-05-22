@@ -92,8 +92,8 @@ impl NumericTrait {
             fn_return_type: quote! { #quantity_type< <LHS as #name<RHS>>::Output, { DL.#dimension_fn(DR) }> },
             fn_args: quote! { self, rhs: #rhs },
             trait_bound_impl: quote! {
-                    LHS: #name<RHS>,
-                    #quantity_type<LHS, { DL.#dimension_fn(DR) }>:,
+                LHS: #name<RHS>,
+                #quantity_type<LHS, { DL.#dimension_fn(DR) }>:,
             },
             output_type_def: quote! {
                 type Output = #quantity_type<
@@ -102,6 +102,37 @@ impl NumericTrait {
                 >;
             },
             impl_generics: quote! { const DL: #dimension_type, const DR: #dimension_type, LHS, RHS },
+            rhs,
+            lhs,
+        }
+    }
+
+    /// For an impl of MulAssign or DivAssign between two quantities (only for
+    /// dimensionless right hand side)
+    fn mul_or_div_assign_quantity_quantity(
+        defs: &Defs,
+        name: TokenStream,
+        fn_name: TokenStream,
+        fn_return_expr: TokenStream,
+    ) -> Self {
+        let Defs {
+            quantity_type,
+            dimension_type,
+            ..
+        } = defs;
+        let lhs = quote! { #quantity_type<LHS, DL> };
+        let rhs = quote! { #quantity_type<RHS, { #dimension_type::none() }> };
+        Self {
+            name: name.clone(),
+            fn_name,
+            fn_return_expr,
+            fn_return_type: quote! {()},
+            fn_args: quote! { &mut self, rhs: #rhs },
+            trait_bound_impl: quote! {
+                LHS: #name<RHS>,
+            },
+            output_type_def: quote! {},
+            impl_generics: quote! { const DL: #dimension_type, LHS, RHS },
             rhs,
             lhs,
         }
@@ -162,6 +193,18 @@ impl Defs {
                 quote! { div },
                 quote! { #quantity_type(self.0 / rhs.0) },
                 quote! { dimension_div },
+            ),
+            NumericTrait::mul_or_div_assign_quantity_quantity(
+                &self,
+                quote! { std::ops::MulAssign },
+                quote! { mul_assign },
+                quote! { self.0 *= rhs.0; },
+            ),
+            NumericTrait::mul_or_div_assign_quantity_quantity(
+                &self,
+                quote! { std::ops::DivAssign },
+                quote! { div_assign },
+                quote! { self.0 /= rhs.0; },
             ),
         ]
         .into_iter()
