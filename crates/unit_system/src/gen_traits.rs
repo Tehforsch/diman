@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::{types::Defs, utils::join, storage_types::FloatType};
+use crate::{storage_types::FloatType, types::Defs, utils::join};
 
 impl Defs {
     pub(crate) fn qproduct_trait(&self) -> TokenStream {
@@ -41,39 +41,8 @@ impl Defs {
             ),
             self.neg_impl(),
             self.mul_impls(),
+            self.div_impls(),
         ])
-    }
-
-    fn mul_impls(&self) -> TokenStream {
-        self.float_types().iter().map(|float_type| {
-            self.mul_quantity_quantity_impl(float_type)
-        }).collect()
-    }
-
-    fn mul_quantity_quantity_impl(&self, float_type: &FloatType) -> TokenStream {
-        let Self {
-            quantity_type,
-            dimension_type,
-            ..
-        } = &self;
-        let type_lhs = &float_type.name;
-        let type_rhs = &float_type.name;
-        quote! { 
-            impl<const DL: #dimension_type, const DR: #dimension_type> std::ops::Mul<#quantity_type<#type_rhs, DR>>
-                for #quantity_type<#type_lhs, DL>
-            where
-                #quantity_type<#type_lhs, { DL.dimension_mul(DR) }>:,
-            {
-                type Output = #quantity_type<
-                    <#type_lhs as std::ops::Mul<#type_rhs>>::Output,
-                    { DL.dimension_mul(DR) },
-                >;
-
-                fn mul(self, rhs: #quantity_type<#type_rhs, DR>) -> Self::Output {
-                    #quantity_type(self.0 * rhs.0)
-                }
-            }
-        }
     }
 
     fn add_sub_impl(
@@ -150,6 +119,73 @@ impl Defs {
                 #output_type_def
                 fn #fn_name(#fn_args) -> #return_type {
                     #inner_code
+                }
+            }
+        }
+    }
+
+    fn mul_impls(&self) -> TokenStream {
+        self.float_types()
+            .iter()
+            .map(|float_type| self.mul_quantity_quantity_impl(float_type))
+            .collect()
+    }
+
+    fn div_impls(&self) -> TokenStream {
+        self.float_types()
+            .iter()
+            .map(|float_type| self.div_quantity_quantity_impl(float_type))
+            .collect()
+    }
+
+    fn mul_quantity_quantity_impl(&self, float_type: &FloatType) -> TokenStream {
+        self.mul_div_quantity_quantity_impl(
+            float_type,
+            quote! { std::ops::Mul },
+            quote! { mul },
+            quote! { dimension_mul },
+            quote! { self.0 * rhs.0},
+        )
+    }
+
+    fn div_quantity_quantity_impl(&self, float_type: &FloatType) -> TokenStream {
+        self.mul_div_quantity_quantity_impl(
+            float_type,
+            quote! { std::ops::Div },
+            quote! { div },
+            quote! { dimension_div },
+            quote! { self.0 / rhs.0},
+        )
+    }
+
+    fn mul_div_quantity_quantity_impl(
+        &self,
+        float_type: &FloatType,
+        trait_name: TokenStream,
+        fn_name: TokenStream,
+        dimension_fn: TokenStream,
+        expression: TokenStream,
+    ) -> TokenStream {
+        let Self {
+            quantity_type,
+            dimension_type,
+            ..
+        } = &self;
+        let type_lhs = &float_type.name;
+        let type_rhs = &float_type.name;
+        quote! {
+            impl<const DL: #dimension_type, const DR: #dimension_type> #trait_name<#quantity_type<#type_rhs, DR>>
+                for #quantity_type<#type_lhs, DL>
+            where
+                #quantity_type<#type_lhs, { DL.#dimension_fn(DR) }>:,
+            {
+                type Output = #quantity_type<
+                    <#type_lhs as #trait_name<#type_rhs>>::Output,
+                    { DL.#dimension_fn(DR) },
+                >;
+
+                fn #fn_name(self, rhs: #quantity_type<#type_rhs, DR>) -> Self::Output {
+                    #quantity_type(#expression)
                 }
             }
         }

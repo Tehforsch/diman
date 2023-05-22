@@ -1,5 +1,4 @@
 use proc_macro2::TokenStream;
-use quote::quote;
 
 use crate::types::Defs;
 
@@ -28,30 +27,30 @@ impl Defs {
         vec![
             #[cfg(feature = "glam-vec2")]
             VectorType {
-                name: quote! {::glam::Vec2},
-                module_name: quote! { vec2 },
-                float_type: quote! { f32 },
+                name: quote::quote! {::glam::Vec2},
+                module_name: quote::quote! { vec2 },
+                float_type: quote::quote! { f32 },
                 num_dims: 2,
             },
             #[cfg(feature = "glam-dvec2")]
             VectorType {
-                name: quote! {::glam::DVec2},
-                module_name: quote! { dvec2 },
-                float_type: quote! { f64 },
+                name: quote::quote! {::glam::DVec2},
+                module_name: quote::quote! { dvec2 },
+                float_type: quote::quote! { f64 },
                 num_dims: 2,
             },
             #[cfg(feature = "glam-vec3")]
             VectorType {
-                name: quote! {::glam::Vec3},
-                module_name: quote! { vec3 },
-                float_type: quote! { f32 },
+                name: quote::quote! {::glam::Vec3},
+                module_name: quote::quote! { vec3 },
+                float_type: quote::quote! { f32 },
                 num_dims: 3,
             },
             #[cfg(feature = "glam-dvec3")]
             VectorType {
-                name: quote! {::glam::DVec3},
-                module_name: quote! { dvec3 },
-                float_type: quote! { f64 },
+                name: quote::quote! {::glam::DVec3},
+                module_name: quote::quote! { dvec3 },
+                float_type: quote::quote! { f64 },
                 num_dims: 3,
             },
         ]
@@ -61,13 +60,13 @@ impl Defs {
         vec![
             #[cfg(feature = "f32")]
             FloatType {
-                name: quote! { f32 },
-                module_name: quote! { f32 },
+                name: quote::quote! { f32 },
+                module_name: quote::quote! { f32 },
             },
             #[cfg(feature = "f64")]
             FloatType {
-                name: quote! { f64 },
-                module_name: quote! { f64 },
+                name: quote::quote! { f64 },
+                module_name: quote::quote! { f64 },
             },
         ]
     }

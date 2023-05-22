@@ -57,6 +57,94 @@ impl Defs {
             self.dimensionless_float_method_for_all_float_types(&quote! { atanh }),
             self.dimensionless_float_method_for_all_float_types(&quote! { exp_m1 }),
             self.dimensionless_float_method_for_all_float_types(&quote! { ln_1p }),
+
+            self.specific_float_methods_for_all_float_types()
         ])
+    }
+
+    fn specific_float_methods_for_all_float_types(&self) -> TokenStream {
+        self.float_types()
+            .iter()
+            .map(|float_type| self.specific_float_methods(float_type))
+            .collect()
+    }
+
+    fn specific_float_methods(&self, float_type: &FloatType) -> TokenStream {
+        let float_type = &float_type.name;
+        let Self {
+            dimension_type,
+            quantity_type,
+            ..
+        } = &self;
+        quote! {
+            impl<const D: #dimension_type> #quantity_type<#float_type, D> {
+                pub fn squared(&self) -> #quantity_type<#float_type, { D.dimension_powi(2) }>
+                where
+                    #quantity_type::<#float_type, { D.dimension_powi(2) }>:
+                {
+                    #quantity_type::<#float_type, { D.dimension_powi(2) }>(self.0.powi(2))
+                }
+
+                pub fn cubed(&self) -> #quantity_type<#float_type, { D.dimension_powi(3) }>
+                where
+                    #quantity_type::<#float_type, { D.dimension_powi(3) }>:
+                {
+                    #quantity_type::<#float_type, { D.dimension_powi(3) }>(self.0.powi(3))
+                }
+
+                pub fn powi<const I: i32>(&self) -> #quantity_type<#float_type, { D.dimension_powi(I) }>
+                where
+                    #quantity_type::<#float_type, { D.dimension_powi(I) }>:
+                {
+                    #quantity_type::<#float_type, { D.dimension_powi(I) }>(self.0.powi(I))
+                }
+
+                pub fn sqrt(&self) -> #quantity_type<#float_type, { D.dimension_sqrt() }>
+                {
+                    #quantity_type::<#float_type, { D.dimension_sqrt() }>(self.0.sqrt())
+                }
+
+                pub fn cbrt(&self) -> #quantity_type<#float_type, { D.dimension_cbrt() }>
+                {
+                    #quantity_type::<#float_type, { D.dimension_cbrt() }>(self.0.cbrt())
+                }
+
+                pub fn min(self, other: Self) -> Self {
+                    Self(self.0.min(other.0))
+                }
+
+                pub fn max(self, other: Self) -> Self {
+                    Self(self.0.max(other.0))
+                }
+
+                pub fn clamp(self, min: Self, max: Self) -> Self {
+                    Self(self.0.clamp(min.0, max.0))
+                }
+
+                pub fn zero() -> Self {
+                    Self(0.0)
+                }
+
+                pub fn is_positive(&self) -> bool {
+                    self.0 > 0.0
+                }
+
+                pub fn is_positive_or_zero(&self) -> bool {
+                    self.0 >= 0.0
+                }
+
+                pub fn is_negative(&self) -> bool {
+                    self.0 < 0.0
+                }
+
+                pub fn is_negative_or_zero(&self) -> bool {
+                    self.0 <= 0.0
+                }
+
+                pub fn is_nan(&self) -> bool {
+                    self.0.is_nan()
+                }
+            }
+        }
     }
 }
