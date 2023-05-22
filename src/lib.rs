@@ -9,13 +9,9 @@ compile_error!("Both 'default-f32' and 'default-f64' are activated. This is impo
 #[cfg(all(feature = "default-2d", feature = "default-3d"))]
 compile_error!("Both 'default-2d' and 'default-3d' are activated. This is impossible.");
 
-mod floats;
-mod helpers;
 mod quantity;
 mod storage_type;
-mod traits;
 mod type_aliases;
-mod unit_system;
 mod vectors;
 
 #[cfg(test)]
@@ -45,21 +41,6 @@ pub use type_aliases::Quotient;
 macro_rules! define_system {
     ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $unit_names_array: ident) => {
         $crate::define_quantity!($quantity, $dimension, $dimensionless_const);
-        $crate::impl_float_methods!($quantity, $dimension, $dimensionless_const);
-        $crate::impl_concrete_float_methods!(
-            $quantity,
-            $dimension,
-            $dimensionless_const,
-            $unit_names_array,
-            f32
-        );
-        $crate::impl_concrete_float_methods!(
-            $quantity,
-            $dimension,
-            $dimensionless_const,
-            $unit_names_array,
-            f64
-        );
 
         $crate::impl_glam!(
             $quantity,
@@ -84,83 +65,6 @@ macro_rules! define_system {
 #[cfg(not(feature = "glam"))]
 macro_rules! impl_glam {
     ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $unit_names_array: ident) => {};
-}
-
-#[macro_export]
-#[cfg(feature = "glam")]
-macro_rules! impl_glam {
-    ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $unit_names_array: ident) => {
-        $crate::default_vector!();
-
-        $crate::impl_vector_methods!(
-            $quantity,
-            $dimension,
-            $dimensionless_const,
-            $unit_names_array,
-            glam::Vec2,
-            f32,
-            2
-        );
-
-        $crate::impl_vector_methods!(
-            $quantity,
-            $dimension,
-            $dimensionless_const,
-            $unit_names_array,
-            glam::Vec3,
-            f32,
-            3
-        );
-
-        $crate::impl_vector_methods!(
-            $quantity,
-            $dimension,
-            $dimensionless_const,
-            $unit_names_array,
-            glam::DVec2,
-            f64,
-            2
-        );
-        $crate::impl_vector_methods!(
-            $quantity,
-            $dimension,
-            $dimensionless_const,
-            $unit_names_array,
-            glam::DVec3,
-            f64,
-            3
-        );
-        $crate::impl_vector2_methods!($quantity, $dimension, $dimensionless_const, glam::Vec2, f32);
-        $crate::impl_vector3_methods!($quantity, $dimension, $dimensionless_const, glam::Vec3, f32);
-        $crate::impl_vector2_methods!(
-            $quantity,
-            $dimension,
-            $dimensionless_const,
-            glam::DVec2,
-            f64
-        );
-        $crate::impl_vector3_methods!(
-            $quantity,
-            $dimension,
-            $dimensionless_const,
-            glam::DVec3,
-            f64
-        );
-    };
-}
-
-#[macro_export]
-macro_rules! define_constant {
-    ($quantity: ident, $float_type: ident, $dimensionless_const: ident, $constant_name: ident, $value_base: expr, $($dimension_ident: ident: $dimension_expr: literal),*) => {
-        #[allow(clippy::needless_update)]
-        pub const $constant_name: $quantity<$float_type, {Dimension {
-            $(
-                $dimension_ident: $dimension_expr,
-            )*
-                ..$dimensionless_const
-        }}> =
-            Quantity::new_unchecked($value_base);
-    };
 }
 
 #[cfg(test)]
