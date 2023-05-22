@@ -1,5 +1,6 @@
 mod types;
 mod parse;
+mod gen_traits;
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -10,9 +11,13 @@ use types::{Defs, QuantityEntry};
 pub fn unit_system_2(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let defs = parse_macro_input!(item as Defs);
     let stream: TokenStream = [
-        defs.gen_unit_array(),
-        defs.gen_quantity_definitions(),
-        defs.gen_unit_definitions()
+        defs.type_definition(),
+        defs.type_functions(),
+        defs.unit_array(),
+        defs.quantity_definitions(),
+        defs.unit_definitions(),
+        defs.qproduct_trait(),
+        defs.numeric_traits(),
     ].into_iter().collect();
 
     stream.into()
@@ -39,7 +44,57 @@ impl Defs {
         }
     }
 
-    pub(crate) fn gen_quantity_definitions(&self) -> TokenStream {
+    pub(crate) fn type_definition(&self) -> TokenStream {
+        let Self {
+            quantity_type,
+            dimension_type,
+            ..
+        } = &self;
+        quote! {
+            #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Default)]
+            #[repr(transparent)]
+            pub struct #quantity_type<S: 'static, const D: #dimension_type>(pub(crate) S);
+        }
+    }
+
+    pub(crate) fn type_functions(&self) -> TokenStream {
+        let Self {
+            quantity_type,
+            dimension_type,
+            ..
+        } = &self;
+        quote! {
+            impl<S> #quantity_type<S, { #dimension_type::none() }> {
+                /// Get the value of a dimensionless quantity
+                pub fn value(self) -> S {
+                    self.0
+                }
+
+                /// Get a reference to the value of a dimensionless quantity
+                pub fn value_ref(&self) -> &S {
+                    &self.0
+                }
+            }
+
+            impl<S, const D: #dimension_type> #quantity_type<S, D> {
+                /// Return the value of a quantity, regardless of whether
+                /// it is dimensionless or not. Use this carefully, since the
+                /// result depends on the underlying base units
+                pub fn value_unchecked(self) -> S {
+                    self.0
+                }
+
+                /// Create a new quantity for the dimension with a given value.
+                /// Use carefully, since the constructed quantity depends on the
+                /// used base units.
+                pub const fn new_unchecked(s: S) -> Self {
+                    Self(s)
+                }
+            }
+        }
+    }
+
+    pub(crate) fn quantity_definitions(&self) -> TokenStream {
         self
             .quantities
             .iter()
@@ -80,7 +135,7 @@ impl Defs {
         }).collect()
     }
 
-    pub(crate) fn gen_unit_definitions(&self) -> TokenStream {
+    pub(crate) fn unit_definitions(&self) -> TokenStream {
     self
         .quantities
         .iter()
@@ -148,7 +203,7 @@ impl Defs {
     }
 
     // Only temporary to make the transition less menacing
-    pub(crate) fn gen_unit_array(&self) -> TokenStream {
+    pub(crate) fn unit_array(&self) -> TokenStream {
         let dimension_type = &self.dimension_type;
         let unit_names_type = &self.unit_names_type;
         let unit_names_array_gen: TokenStream = self
