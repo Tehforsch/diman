@@ -191,14 +191,7 @@ mod tests {
     }
 
     #[test]
-    fn sub_different_units() {
-        let x = Length::meters(1.0);
-        let y = Length::kilometers(10.0);
-        assert_is_close(x - y, Length::meters(-9999.0));
-    }
-
-    #[test]
-    fn add_assign() {
+    fn add_assign_quantity_quantity() {
         let mut x = Length::meters(1.0);
         let y = Length::kilometers(10.0);
         x += y;
@@ -206,11 +199,32 @@ mod tests {
     }
 
     #[test]
-    fn sub_assign() {
+    fn add_quantity_type() {
+        let x = Dimensionless::dimensionless(1.0);
+        let y = 10.0;
+        assert_is_close(x + y, Dimensionless::dimensionless(11.0));
+    }
+
+    #[test]
+    fn sub_different_units() {
+        let x = Length::meters(1.0);
+        let y = Length::kilometers(10.0);
+        assert_is_close(x - y, Length::meters(-9999.0));
+    }
+
+    #[test]
+    fn sub_assign_quantity_quantity() {
         let mut x = Length::meters(1.0);
         let y = Length::kilometers(10.0);
         x -= y;
         assert_is_close(x, Length::meters(-9999.0));
+    }
+
+    #[test]
+    fn sub_quantity_type() {
+        let x = Dimensionless::dimensionless(1.0);
+        let y = 10.0;
+        assert_is_close(x - y, Dimensionless::dimensionless(-9.0));
     }
 
     #[test]

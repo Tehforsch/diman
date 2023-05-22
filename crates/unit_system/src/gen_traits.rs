@@ -70,6 +70,28 @@ impl NumericTrait {
         }
     }
 
+    /// For an impl of Add or Sub between a dimensionless quantity and a storage type
+    fn add_or_sub_quantity_type(
+        defs: &Defs,
+        name: TokenStream,
+        fn_name: TokenStream,
+        fn_return_expr: TokenStream,
+    ) -> Self {
+        let Defs {
+            quantity_type,
+            dimension_type,
+            ..
+        } = defs;
+        Self {
+            impl_generics: quote! { S },
+            rhs: quote! { S },
+            lhs: quote! { #quantity_type<S, { #dimension_type::none() }> },
+            fn_args: quote! {self, rhs: S},
+            ..Self::add_or_sub_quantity_quantity(defs, name, fn_name, fn_return_expr)
+        }
+    }
+
+
     /// For an impl of Mul or Div between two quantities
     fn mul_or_div_quantity_quantity(
         defs: &Defs,
@@ -179,6 +201,18 @@ impl Defs {
                 quote! { std::ops::SubAssign },
                 quote! { sub_assign },
                 quote! { self.0 -= rhs.0; },
+            ),
+            NumericTrait::add_or_sub_quantity_type(
+                &self,
+                quote! { std::ops::Add },
+                quote! { add },
+                quote! { Self(self.0 + rhs) },
+            ),
+            NumericTrait::add_or_sub_quantity_type(
+                &self,
+                quote! { std::ops::Sub },
+                quote! { sub },
+                quote! { Self(self.0 - rhs) },
             ),
             NumericTrait::mul_or_div_quantity_quantity(
                 &self,
