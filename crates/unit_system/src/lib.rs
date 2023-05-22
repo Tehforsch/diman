@@ -1,18 +1,17 @@
-mod float_type;
 mod gen_traits;
 mod parse;
 mod types;
 mod utils;
-mod vector_type;
+mod gen_float_methods;
+mod gen_generic_methods;
+mod storage_types;
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
+use storage_types::{FloatType, VectorType};
 use syn::*;
 use types::{Defs, QuantityEntry, UnitEntry};
 use utils::join;
-use vector_type::VectorType;
-
-use crate::float_type::FloatType;
 
 #[proc_macro]
 pub fn unit_system_2(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -26,6 +25,8 @@ pub fn unit_system_2(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
         defs.unit_constructors(),
         defs.qproduct_trait(),
         defs.numeric_traits(),
+        defs.float_methods(),
+        defs.generic_methods(),
     ])
     .into()
 }
@@ -99,54 +100,6 @@ impl Defs {
                 }
             }
         }
-    }
-
-    fn vector_types(&self) -> Vec<VectorType> {
-        vec![
-            #[cfg(feature = "glam-vec2")]
-            VectorType {
-                name: quote! {::glam::Vec2},
-                module_name: quote! { vec2 },
-                float_type: quote! { f32 },
-                num_dims: 2,
-            },
-            #[cfg(feature = "glam-dvec2")]
-            VectorType {
-                name: quote! {::glam::DVec2},
-                module_name: quote! { dvec2 },
-                float_type: quote! { f64 },
-                num_dims: 2,
-            },
-            #[cfg(feature = "glam-vec3")]
-            VectorType {
-                name: quote! {::glam::Vec3},
-                module_name: quote! { vec3 },
-                float_type: quote! { f32 },
-                num_dims: 3,
-            },
-            #[cfg(feature = "glam-dvec3")]
-            VectorType {
-                name: quote! {::glam::DVec3},
-                module_name: quote! { dvec3 },
-                float_type: quote! { f64 },
-                num_dims: 3,
-            },
-        ]
-    }
-
-    fn float_types(&self) -> Vec<FloatType> {
-        vec![
-            #[cfg(feature = "f32")]
-            FloatType {
-                name: quote! { f32 },
-                module_name: quote! { f32 },
-            },
-            #[cfg(feature = "f64")]
-            FloatType {
-                name: quote! { f64 },
-                module_name: quote! { f64 },
-            },
-        ]
     }
 
     pub(crate) fn vector_quantity_definitions(&self) -> TokenStream {

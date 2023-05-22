@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::{types::Defs, utils::join, float_type::FloatType};
+use crate::{types::Defs, utils::join, storage_types::FloatType};
 
 impl Defs {
     pub(crate) fn qproduct_trait(&self) -> TokenStream {
