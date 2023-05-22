@@ -23,6 +23,7 @@ impl Defs {
             num_dims,
             ..
         } = vector_type;
+        let float_type = &float_type.name;
         let z_impl = if *num_dims == 3 {
             quote! {
                 pub fn z(&self) -> #quantity_type<#float_type, D> {

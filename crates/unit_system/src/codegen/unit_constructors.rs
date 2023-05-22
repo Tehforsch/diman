@@ -73,6 +73,7 @@ impl Defs {
             num_dims,
             ..
         } = &vector_type;
+        let float_type = &float_type.name;
         let fn_args = match num_dims {
             2 => quote! { x: #float_type, y: #float_type },
             3 => quote! { x: #float_type, y: #float_type, z: #float_type },
