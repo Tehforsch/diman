@@ -264,4 +264,10 @@ mod tests {
     //         Dimensionless::dimensionless(1.0),
     //     )
     // }
+
+    #[test]
+    fn log2() {
+        let x = Dimensionless::dimensionless(128.0);
+        assert_is_close(x.log2(), Dimensionless::dimensionless(7.0));
+    }
 }
