@@ -1,7 +1,9 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::{storage_types::FloatType, types::Defs, utils::join};
+use crate::{storage_types::FloatType, types::Defs};
+
+use super::utils::join;
 
 impl Defs {
     fn dimensionless_float_method(
