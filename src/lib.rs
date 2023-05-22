@@ -35,36 +35,6 @@ pub use type_aliases::Product;
 pub use type_aliases::QProduct;
 pub use type_aliases::Quotient;
 
-#[macro_export]
-macro_rules! define_system {
-    ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $unit_names_array: ident) => {
-        $crate::define_quantity!($quantity, $dimension, $dimensionless_const);
-
-        $crate::impl_glam!(
-            $quantity,
-            $dimension,
-            $dimensionless_const,
-            $unit_names_array
-        );
-
-        $crate::impl_hdf5_gated!($quantity, $dimension, $dimensionless_const);
-        $crate::impl_mpi_gated!($quantity, $dimension);
-        $crate::impl_rand_gated!($quantity, $dimension, $dimensionless_const);
-        $crate::impl_serde_gated!(
-            $quantity,
-            $dimension,
-            $dimensionless_const,
-            $unit_names_array
-        );
-    };
-}
-
-#[macro_export]
-#[cfg(not(feature = "glam"))]
-macro_rules! impl_glam {
-    ($quantity: ident, $dimension: ident, $dimensionless_const: ident, $unit_names_array: ident) => {};
-}
-
 #[cfg(test)]
 #[cfg(any(feature = "f64"))]
 mod tests {
