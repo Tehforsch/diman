@@ -2,12 +2,14 @@ mod gen_traits;
 mod parse;
 mod types;
 mod utils;
+mod vector_type;
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::*;
-use types::{Defs, QuantityEntry};
+use types::{Defs, QuantityEntry, UnitEntry};
 use utils::join;
+use vector_type::VectorType;
 
 #[proc_macro]
 pub fn unit_system_2(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -18,7 +20,7 @@ pub fn unit_system_2(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
         defs.unit_array(),
         defs.float_quantity_definitions(),
         defs.vector_quantity_definitions(),
-        defs.unit_definitions(),
+        defs.unit_constructors(),
         defs.qproduct_trait(),
         defs.numeric_traits(),
     ])
@@ -96,37 +98,45 @@ impl Defs {
         }
     }
 
-    fn vector_types(&self) -> Vec<TokenStream> {
+    fn vector_types(&self) -> Vec<VectorType> {
         vec![
             #[cfg(feature = "glam-vec2")]
-            quote! {glam::Vec2},
+            VectorType {
+                name: quote! {::glam::Vec2},
+                module_name: quote! { vec2 },
+                float_type: quote! { f32 },
+                num_dims: 2,
+            },
             #[cfg(feature = "glam-dvec2")]
-            quote! {glam::DVec2},
+            VectorType {
+                name: quote! {::glam::DVec2},
+                module_name: quote! { dvec2 },
+                float_type: quote! { f64 },
+                num_dims: 2,
+            },
             #[cfg(feature = "glam-vec3")]
-            quote! {glam::Vec3},
+            VectorType {
+                name: quote! {::glam::Vec3},
+                module_name: quote! { vec3 },
+                float_type: quote! { f32 },
+                num_dims: 3,
+            },
             #[cfg(feature = "glam-dvec3")]
-            quote! {glam::DVec3},
-        ]
-    }
-
-    fn vector_module_names(&self) -> Vec<TokenStream> {
-        vec![
-            #[cfg(feature = "glam-vec2")]
-            quote! {vec2},
-            #[cfg(feature = "glam-dvec2")]
-            quote! {dvec2},
-            #[cfg(feature = "glam-vec3")]
-            quote! {vec3},
-            #[cfg(feature = "glam-dvec3")]
-            quote! {dvec3},
+            VectorType {
+                name: quote! {::glam::DVec3},
+                module_name: quote! { dvec3 },
+                float_type: quote! { f64 },
+                num_dims: 3,
+            },
         ]
     }
 
     pub(crate) fn vector_quantity_definitions(&self) -> TokenStream {
         self.vector_types()
             .iter()
-            .zip(self.vector_module_names().iter())
-            .map(|(type_, module_name)| self.quantity_definitions_for_type(type_, module_name))
+            .map(|vector_type| {
+                self.quantity_definitions_for_type(&vector_type.name, &vector_type.module_name)
+            })
             .collect()
     }
 
@@ -171,17 +181,13 @@ impl Defs {
         }
     }
 
-    pub(crate) fn unit_definitions(&self) -> TokenStream {
+    pub(crate) fn unit_constructors(&self) -> TokenStream {
         self
         .quantities
         .iter()
         .flat_map(|quantity| {
             let dimension = self.get_dimension_definition(&quantity);
             let quantity_type = &self.quantity_type;
-            let quantity_name = &quantity.name;
-            let _vec2_ident = format_ident!("Vec2{}", quantity_name);
-            let _vec3_ident = format_ident!("Vec2{}", quantity_name);
-            let _vec_ident = format_ident!("Vec{}", quantity_name);
 
             quantity
                 .units_def
@@ -191,6 +197,7 @@ impl Defs {
                     let unit_name = &unit.name;
                     let factor = &unit.factor;
                     let conversion_method_name = format_ident!("in_{}", unit_name);
+                    let vector_impls: TokenStream = self.vector_types().iter().map(|vector_type| self.vector_unit_constructor(vector_type, &unit, &dimension)).collect();
                     quote! {
                         impl #quantity_type::<f64, {#dimension}> {
                             pub fn #unit_name(v: f64) -> #quantity_type<f64, { #dimension }> {
@@ -208,35 +215,47 @@ impl Defs {
                                 self.0 / #factor
                             }
                         }
-
-                        #[cfg(feature = "glam")]
-                        impl #quantity_type<::glam::Vec2, {#dimension}> {
-                            pub fn #unit_name(x: f32, y: f32) -> #quantity_type<::glam::Vec2, {#dimension}> {
-                                #quantity_type::<::glam::Vec2, {#dimension}>(::glam::Vec2::new(x, y) * #factor)
-                            }
-                        }
-                        #[cfg(feature = "glam")]
-                        impl #quantity_type<::glam::Vec3, {#dimension}> {
-                            pub fn #unit_name(x: f32, y: f32, z: f32) -> #quantity_type<::glam::Vec3, {#dimension}> {
-                                #quantity_type::<::glam::Vec3, {#dimension}>(::glam::Vec3::new(x, y, z) * #factor)
-                            }
-                        }
-                        #[cfg(feature = "glam")]
-                        impl #quantity_type<::glam::DVec2, {#dimension}> {
-                            pub fn #unit_name(x: f64, y: f64) -> #quantity_type<::glam::DVec2, {#dimension}> {
-                                #quantity_type::<::glam::DVec2, {#dimension}>(::glam::DVec2::new(x, y) * #factor)
-                            }
-                        }
-                        #[cfg(feature = "glam")]
-                        impl #quantity_type<::glam::DVec3, {#dimension}> {
-                            pub fn #unit_name(x: f64, y: f64, z: f64) -> #quantity_type<::glam::DVec3, {#dimension}> {
-                                #quantity_type::<::glam::DVec3, {#dimension}>(::glam::DVec3::new(x, y, z) * #factor)
-                            }
-                        }
+                        #vector_impls
                     }
                 })
         }).collect()
     }
+
+    fn vector_unit_constructor(&self, vector_type: &VectorType, unit: &UnitEntry, quantity_dimension: &TokenStream) -> TokenStream {
+        let Defs {
+            quantity_type,
+            ..
+        } = &self;
+        let UnitEntry {
+            name: unit_name,
+            factor,
+            ..
+        } = unit;
+        let VectorType {
+            name,
+            float_type,
+            num_dims,
+            ..
+        } = &vector_type;
+        let fn_args = match num_dims {
+            2 => quote! { x: #float_type, y: #float_type },
+            3 => quote! { x: #float_type, y: #float_type, z: #float_type },
+            _ => unreachable!(),
+        };
+        let call_args = match num_dims {
+            2 => quote! { x, y },
+            3 => quote! { x, y, z },
+            _ => unreachable!(),
+        };
+        quote! {
+            impl #quantity_type<#name, {#quantity_dimension}> {
+                pub fn #unit_name(#fn_args) -> #quantity_type<#name, {#quantity_dimension}> {
+                    #quantity_type::<#name, {#quantity_dimension}>(#name::new(#call_args) * #factor)
+                }
+            }
+        }
+    }
+
 
     // Only temporary to make the transition less menacing
     pub(crate) fn unit_array(&self) -> TokenStream {
