@@ -3,9 +3,13 @@ mod float_methods;
 mod generic_methods;
 mod vector_methods;
 mod debug;
+#[cfg(feature="mpi")]
 mod mpi;
+#[cfg(feature="serde")]
 mod serde;
+#[cfg(feature="rand")]
 mod rand;
+#[cfg(feature="hdf5")]
 mod hdf5;
 mod unit_constructors;
 
