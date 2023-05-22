@@ -149,6 +149,42 @@ impl NumericTrait {
         }
     }
 
+    /// For an impl of Mul or Div between a quantity and a concrete storage type
+    fn mul_or_div_quantity_type(
+        defs: &Defs,
+        name: TokenStream,
+        fn_name: TokenStream,
+        fn_return_expr: TokenStream,
+        storage_type: &TokenStream,
+    ) -> NumericTrait {
+        let Defs {
+            quantity_type,
+            dimension_type,
+            ..
+        } = defs;
+        let lhs = quote! { #quantity_type<LHS, D> };
+        let rhs = quote! { #storage_type };
+        Self {
+            name: name.clone(),
+            fn_name,
+            fn_return_expr,
+            lhs,
+            rhs: rhs.clone(),
+            fn_return_type: quote! { Self::Output },
+            fn_args: quote! { self, rhs: #rhs },
+            trait_bound_impl: quote! {
+                LHS: #name<#storage_type>,
+            },
+            output_type_def: quote! {
+                type Output = #quantity_type<
+                    <LHS as #name<#storage_type>>::Output,
+                    D,
+                >;
+            },
+            impl_generics: quote! { const D: #dimension_type, LHS},
+        }
+    }
+
     /// For an impl of MulAssign or DivAssign between two quantities (only for
     /// dimensionless right hand side)
     fn mul_or_div_assign_quantity_quantity(
@@ -195,7 +231,7 @@ impl Defs {
         }
     }
 
-    fn iter_numeric_traits(&self) -> impl Iterator<Item = NumericTrait> {
+    fn iter_numeric_traits(&self) -> impl Iterator<Item = NumericTrait> + '_ {
         let Self { quantity_type, .. } = self;
         vec![
             NumericTrait::add_or_sub_quantity_quantity(
@@ -273,7 +309,25 @@ impl Defs {
                 quote! { self.0 /= rhs.0; },
             ),
         ]
-        .into_iter()
+        .into_iter().chain(
+        self.float_types().into_iter().flat_map(move |float_type| {
+            [
+                NumericTrait::mul_or_div_quantity_type(
+                    &self,
+                    quote! { std::ops::Mul },
+                    quote! { mul },
+                    quote! { #quantity_type(self.0 * rhs) },
+                    &float_type.name,
+                ),
+                NumericTrait::mul_or_div_quantity_type(
+                    &self,
+                    quote! { std::ops::Div },
+                    quote! { div },
+                    quote! { #quantity_type(self.0 / rhs) },
+                    &float_type.name,
+                ),
+            ].into_iter()
+        }))
     }
 
     pub fn numeric_traits(&self) -> TokenStream {

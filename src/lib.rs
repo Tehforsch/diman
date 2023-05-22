@@ -258,12 +258,12 @@ mod tests {
         assert_is_close(x, Force::newtons(6.0));
     }
 
-    // #[test]
-    // fn mul_quantity_float() {
-    //     let x = Force::newtons(2.0);
-    //     let y = 3.0;
-    //     assert_is_close(x * y, Force::newtons(6.0));
-    // }
+    #[test]
+    fn mul_quantity_float() {
+        let x = Force::newtons(2.0);
+        let y = 3.0;
+        assert_is_close(x * y, Force::newtons(6.0));
+    }
 
     // #[test]
     // fn mul_float_quantity() {
@@ -287,12 +287,12 @@ mod tests {
         assert_is_close(x, Force::newtons(0.5));
     }
 
-    // #[test]
-    // fn div_quantity_float() {
-    //     let x = Length::meters(6.0);
-    //     let y = 2.0;
-    //     assert_is_close(x / y, Length::meters(3.0));
-    // }
+    #[test]
+    fn div_quantity_float() {
+        let x = Length::meters(6.0);
+        let y = 2.0;
+        assert_is_close(x / y, Length::meters(3.0));
+    }
 
     // #[test]
     // fn div_float_quantity() {
