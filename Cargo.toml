@@ -4,7 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-glam = ["dep:glam"]
+glam = ["dep:glam", "unit_system/glam"]
+glam-vec2 = ["glam", "unit_system/glam-vec2"]
+glam-dvec2 = ["glam", "unit_system/glam-dvec2"]
+glam-vec3 = ["glam", "unit_system/glam-vec3"]
+glam-dvec3 = ["glam", "unit_system/glam-dvec3"]
+
 mpi = ["dep:once_cell", "dep:mpi"]
 hdf5 = ["dep:hdf5"]
 rand = ["dep:rand"]

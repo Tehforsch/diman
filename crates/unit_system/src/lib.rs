@@ -1,7 +1,7 @@
-mod utils;
-mod types;
-mod parse;
 mod gen_traits;
+mod parse;
+mod types;
+mod utils;
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -12,16 +12,17 @@ use utils::join;
 #[proc_macro]
 pub fn unit_system_2(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let defs = parse_macro_input!(item as Defs);
-    join(
-    [
+    join([
         defs.type_definition(),
         defs.type_functions(),
         defs.unit_array(),
-        defs.quantity_definitions(),
+        defs.float_quantity_definitions(),
+        defs.vector_quantity_definitions(),
         defs.unit_definitions(),
         defs.qproduct_trait(),
         defs.numeric_traits(),
-    ]).into()
+    ])
+    .into()
 }
 
 impl Defs {
@@ -95,61 +96,86 @@ impl Defs {
         }
     }
 
-    pub(crate) fn quantity_definitions(&self) -> TokenStream {
-        join(
-            [
-            self.quantity_definitions_for_type(quote! { f32 }),
-            self.quantity_definitions_for_type(quote! { f64 }),
-            ]
-        )
+    fn vector_types(&self) -> Vec<TokenStream> {
+        vec![
+            #[cfg(feature = "glam-vec2")]
+            quote! {glam::Vec2},
+            #[cfg(feature = "glam-dvec2")]
+            quote! {glam::DVec2},
+            #[cfg(feature = "glam-vec3")]
+            quote! {glam::Vec3},
+            #[cfg(feature = "glam-dvec3")]
+            quote! {glam::DVec3},
+        ]
     }
 
-    pub(crate) fn quantity_definitions_for_type(&self, type_: TokenStream) -> TokenStream {
-        self
+    fn vector_module_names(&self) -> Vec<TokenStream> {
+        vec![
+            #[cfg(feature = "glam-vec2")]
+            quote! {vec2},
+            #[cfg(feature = "glam-dvec2")]
+            quote! {dvec2},
+            #[cfg(feature = "glam-vec3")]
+            quote! {vec3},
+            #[cfg(feature = "glam-dvec3")]
+            quote! {dvec3},
+        ]
+    }
+
+    pub(crate) fn vector_quantity_definitions(&self) -> TokenStream {
+        self.vector_types()
+            .iter()
+            .zip(self.vector_module_names().iter())
+            .map(|(type_, module_name)| self.quantity_definitions_for_type(type_, module_name))
+            .collect()
+    }
+
+    pub(crate) fn float_quantity_definitions(&self) -> TokenStream {
+        join([
+            self.quantity_definitions_for_type(&quote! { f32 }, &quote! { f32 }),
+            self.quantity_definitions_for_type(&quote! { f64 }, &quote! { f64 }),
+        ])
+    }
+
+    pub(crate) fn quantity_definitions_for_type(
+        &self,
+        type_: &TokenStream,
+        module_name: &TokenStream,
+    ) -> TokenStream {
+        let Self {
+            dimension_type,
+            quantity_type,
+            ..
+        } = &self;
+        let quantities: TokenStream = self
             .quantities
             .iter()
             .map(|quantity| {
                 let dimension = self.get_dimension_definition(&quantity);
                 let quantity_type = &self.quantity_type;
                 let quantity_name = &quantity.name;
-                let _vec2_ident = format_ident!("Vec2{}", quantity_name);
-                let _vec3_ident = format_ident!("Vec2{}", quantity_name);
-                let _vec_ident = format_ident!("Vec{}", quantity_name);
                 quote! {
-                    #[cfg(feature = "default-f64")]
-                    pub type #quantity_name = #quantity_type::<f64, { #dimension }>;
-                    #[cfg(feature = "default-f32")]
-                    pub type #quantity_name = #quantity_type::<f32, { #dimension }>;
-
-                    #[cfg(all(
-                        feature = "glam",
-                        any(feature = "default-f32", feature = "default-f64")
-                    ))]
-                    pub type #_vec2_ident = #quantity_type<MVec2, { #dimension }>;
-                    #[cfg(all(
-                        feature = "glam",
-                        any(feature = "default-f32", feature = "default-f64")
-                    ))]
-                    pub type #_vec3_ident = #quantity_type<MVec3, { #dimension }>;
-                    #[cfg(all(
-                        feature = "glam",
-                        feature = "default-f32")
-                    )]
-                    pub type #_vec_ident = #quantity_type<MVec, { #dimension }>;
-                    #[cfg(all(
-                        feature = "glam",
-                        feature = "default-f64")
-                    )]
-                    pub type #_vec_ident = #quantity_type<MVec, { #dimension }>;
+                    pub type #quantity_name = #quantity_type::<#type_, { #dimension }>;
                 }
-        }).collect()
+            })
+            .collect();
+        // TODO: The use statements here are quite hacky and will probably
+        // not work if dimension is declared in a different place from
+        // the macro invocation.
+        quote! {
+            pub mod #module_name {
+                use super::#dimension_type;
+                use super::#quantity_type;
+                #quantities
+            }
+        }
     }
 
     pub(crate) fn unit_definitions(&self) -> TokenStream {
-    self
+        self
         .quantities
         .iter()
-        .map(|quantity| {
+        .flat_map(|quantity| {
             let dimension = self.get_dimension_definition(&quantity);
             let quantity_type = &self.quantity_type;
             let quantity_name = &quantity.name;
@@ -161,7 +187,7 @@ impl Defs {
                 .units_def
                 .units
                 .iter()
-                .map(|unit| {
+                .map(move |unit| {
                     let unit_name = &unit.name;
                     let factor = &unit.factor;
                     let conversion_method_name = format_ident!("in_{}", unit_name);
@@ -208,7 +234,7 @@ impl Defs {
                             }
                         }
                     }
-                }).collect::<TokenStream>()
+                })
         }).collect()
     }
 
