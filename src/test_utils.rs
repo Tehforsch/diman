@@ -1,5 +1,5 @@
 #[cfg(feature = "f32")]
-pub(crate) fn assert_is_close<const U: crate::test_system::Dimension>(
+pub(crate) fn assert_is_close_f32<const U: crate::test_system::Dimension>(
     x: crate::test_system::Quantity<f32, U>,
     y: crate::test_system::Quantity<f32, U>,
 ) {
@@ -12,7 +12,7 @@ pub(crate) fn assert_is_close<const U: crate::test_system::Dimension>(
 }
 
 #[cfg(feature = "f64")]
-pub(crate) fn assert_is_close<const U: crate::test_system::Dimension>(
+pub(crate) fn assert_is_close_f64<const U: crate::test_system::Dimension>(
     x: crate::test_system::Quantity<f64, U>,
     y: crate::test_system::Quantity<f64, U>,
 ) {

@@ -288,8 +288,6 @@ impl QuantityDefinitionEntry {
 
 impl Parse for Defs {
     fn parse(input: ParseStream) -> Result<Self> {
-        let unit_names_type: Type = input.parse()?;
-        let _: Token![,] = input.parse()?;
         let dimension_type: Type = input.parse()?;
         let _: Token![,] = input.parse()?;
         let quantity_type: Type = input.parse()?;
@@ -299,7 +297,6 @@ impl Parse for Defs {
         let quantities: Punctuated<_, Token![,]> =
             content.parse_terminated(QuantityEntry::parse_named)?;
         Ok(Self {
-            unit_names_type,
             dimension_type,
             quantity_type,
             quantities: quantities.into_iter().collect(),

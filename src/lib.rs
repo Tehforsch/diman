@@ -169,12 +169,9 @@ mod tests {
     use crate::test_system::f64::Energy;
     use crate::test_system::f64::Force;
     use crate::test_system::f64::Length;
-    use crate::test_system::f64::Mass;
     use crate::test_system::f64::Time;
     use crate::test_system::f64::Velocity;
-    use crate::test_system::Dimension;
-    use crate::test_system::Quantity;
-    use crate::test_utils::assert_is_close;
+    use crate::test_utils::assert_is_close_f64 as assert_is_close;
 
     #[test]
     fn add_same_unit() {

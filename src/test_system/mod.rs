@@ -8,7 +8,6 @@ use ::unit_system::unit_system_2;
 use crate as diman;
 
 unit_system_2!(
-    UNIT_NAMES,
     Dimension,
     Quantity,
     [
@@ -64,5 +63,3 @@ unit_system_2!(
         },
     ]
 );
-
-// define_system!(Quantity, Dimension, NONE, UNIT_NAMES);

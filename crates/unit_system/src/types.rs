@@ -43,7 +43,6 @@ pub struct QuantityEntry {
 }
 
 pub struct Defs {
-    pub unit_names_type: Type,
     pub dimension_type: Type,
     pub quantity_type: Type,
     pub quantities: Vec<QuantityEntry>,

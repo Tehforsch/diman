@@ -20,7 +20,6 @@ pub fn unit_system_2(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
     join([
         defs.type_definition(),
         defs.type_functions(),
-        defs.unit_array(),
         defs.float_quantity_definitions(),
         defs.vector_quantity_definitions(),
         defs.unit_constructors(),
@@ -211,7 +210,7 @@ impl Defs {
         quote! {
             impl #quantity_type<#name, {#quantity_dimension}> {
                 pub fn #unit_name(val: #name) -> #quantity_type<#name, {#quantity_dimension}> {
-                    #quantity_type::<#name, {#quantity_dimension}>(val * #factor)
+                    #quantity_type::<#name, {#quantity_dimension}>(val * (#factor as #name))
                 }
             }
         }
@@ -251,32 +250,6 @@ impl Defs {
                     #quantity_type::<#name, {#quantity_dimension}>(#name::new(#call_args) * (#factor as #float_type))
                 }
             }
-        }
-    }
-
-    // Only temporary to make the transition less menacing
-    pub(crate) fn unit_array(&self) -> TokenStream {
-        let dimension_type = &self.dimension_type;
-        let unit_names_type = &self.unit_names_type;
-        let unit_names_array_gen: TokenStream = self
-            .quantities
-            .iter()
-            .flat_map(|quantity| {
-                let dimension = self.get_dimension_definition(&quantity);
-                quantity.units_def.units.iter().map(move |unit| {
-                    let unit_symbol = unit.symbol.as_ref().unwrap();
-                    let unit_factor = unit.factor;
-                    quote! {
-                        ({ #dimension }, #unit_symbol, #unit_factor),
-                    }
-                })
-            })
-            .collect();
-
-        quote! {
-            pub const #unit_names_type: &[(#dimension_type, &str, f64)] = &[
-                #unit_names_array_gen
-            ];
         }
     }
 }
