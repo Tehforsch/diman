@@ -9,7 +9,7 @@ There are some code style issues, run `cargo fmt` first.
 EOF
 fi
 
-for glam in glam, "" ; do
+for glam in glam,glam-vec2,glam-dvec2,glam-vec3,glam-dvec3, "" ; do
     echo cargo test --no-default-features --features "${dim}${float}${glam},mpi,rand,serde,hdf5"
     if ! cargo test --no-default-features --features "${dim}${float}${glam},mpi,rand,serde,hdf5"
     then

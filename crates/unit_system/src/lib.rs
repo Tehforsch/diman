@@ -1,3 +1,4 @@
+mod float_type;
 mod gen_traits;
 mod parse;
 mod types;
@@ -10,6 +11,8 @@ use syn::*;
 use types::{Defs, QuantityEntry, UnitEntry};
 use utils::join;
 use vector_type::VectorType;
+
+use crate::float_type::FloatType;
 
 #[proc_macro]
 pub fn unit_system_2(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -131,6 +134,21 @@ impl Defs {
         ]
     }
 
+    fn float_types(&self) -> Vec<FloatType> {
+        vec![
+            #[cfg(feature = "f32")]
+            FloatType {
+                name: quote! { f32 },
+                module_name: quote! { f32 },
+            },
+            #[cfg(feature = "f64")]
+            FloatType {
+                name: quote! { f64 },
+                module_name: quote! { f64 },
+            },
+        ]
+    }
+
     pub(crate) fn vector_quantity_definitions(&self) -> TokenStream {
         self.vector_types()
             .iter()
@@ -141,10 +159,12 @@ impl Defs {
     }
 
     pub(crate) fn float_quantity_definitions(&self) -> TokenStream {
-        join([
-            self.quantity_definitions_for_type(&quote! { f32 }, &quote! { f32 }),
-            self.quantity_definitions_for_type(&quote! { f64 }, &quote! { f64 }),
-        ])
+        self.float_types()
+            .iter()
+            .map(|float_type| {
+                self.quantity_definitions_for_type(&float_type.name, &float_type.module_name)
+            })
+            .collect()
     }
 
     pub(crate) fn quantity_definitions_for_type(
@@ -197,35 +217,58 @@ impl Defs {
                     let unit_name = &unit.name;
                     let factor = &unit.factor;
                     let conversion_method_name = format_ident!("in_{}", unit_name);
-                    let vector_impls: TokenStream = self.vector_types().iter().map(|vector_type| self.vector_unit_constructor(vector_type, &unit, &dimension)).collect();
+                    let vector_impls: TokenStream = self
+                        .vector_types()
+                        .iter()
+                        .map(|vector_type| self.vector_unit_constructor(vector_type, &unit, &dimension))
+                        .collect();
+                    let float_impls: TokenStream = self
+                        .float_types()
+                        .iter()
+                        .map(|float_type| self.float_unit_constructor(float_type, &unit, &dimension))
+                        .collect();
                     quote! {
-                        impl #quantity_type::<f64, {#dimension}> {
-                            pub fn #unit_name(v: f64) -> #quantity_type<f64, { #dimension }> {
-                                #quantity_type::<f64, { #dimension }>(v * #factor)
-                            }
-
-                        }
-                        impl #quantity_type::<f32, {#dimension}> {
-                            pub fn #unit_name(v: f32) -> #quantity_type<f32, { #dimension }> {
-                                #quantity_type::<f32, { #dimension }>(v * (#factor as f32))
-                            }
-                        }
                         impl<S> #quantity_type<S, {#dimension}> where S: std::ops::Div<f64, Output = S> {
                             pub fn #conversion_method_name(self) -> S {
                                 self.0 / #factor
                             }
                         }
+                        #float_impls
                         #vector_impls
                     }
                 })
         }).collect()
     }
 
-    fn vector_unit_constructor(&self, vector_type: &VectorType, unit: &UnitEntry, quantity_dimension: &TokenStream) -> TokenStream {
-        let Defs {
-            quantity_type,
+    fn float_unit_constructor(
+        &self,
+        float_type: &FloatType,
+        unit: &UnitEntry,
+        quantity_dimension: &TokenStream,
+    ) -> TokenStream {
+        let Defs { quantity_type, .. } = &self;
+        let UnitEntry {
+            name: unit_name,
+            factor,
             ..
-        } = &self;
+        } = unit;
+        let name = &float_type.name;
+        quote! {
+            impl #quantity_type<#name, {#quantity_dimension}> {
+                pub fn #unit_name(val: #name) -> #quantity_type<#name, {#quantity_dimension}> {
+                    #quantity_type::<#name, {#quantity_dimension}>(val * #factor)
+                }
+            }
+        }
+    }
+
+    fn vector_unit_constructor(
+        &self,
+        vector_type: &VectorType,
+        unit: &UnitEntry,
+        quantity_dimension: &TokenStream,
+    ) -> TokenStream {
+        let Defs { quantity_type, .. } = &self;
         let UnitEntry {
             name: unit_name,
             factor,
@@ -255,7 +298,6 @@ impl Defs {
             }
         }
     }
-
 
     // Only temporary to make the transition less menacing
     pub(crate) fn unit_array(&self) -> TokenStream {

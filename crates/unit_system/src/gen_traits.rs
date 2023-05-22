@@ -18,27 +18,29 @@ impl Defs {
     }
 
     pub(crate) fn numeric_traits(&self) -> TokenStream {
-        join([ self.add_sub_impl(
-            quote! {std::ops::Add},
-            quote! {add},
-            quote! {Self(self.0 + rhs.0)},
-        ),
-         self.add_sub_impl(
-            quote! {std::ops::Sub},
-            quote! {sub},
-            quote! {Self(self.0 - rhs.0)},
-        ),
-         self.add_sub_assign_impl(
-            quote! {std::ops::AddAssign},
-            quote! {add_assign},
-            quote! {self.0 += rhs.0;},
-        ),
-         self.add_sub_assign_impl(
-            quote! {std::ops::SubAssign},
-            quote! {sub_assign},
-            quote! {self.0 -= rhs.0;},
-        ),
-         self.neg_impl()])
+        join([
+            self.add_sub_impl(
+                quote! {std::ops::Add},
+                quote! {add},
+                quote! {Self(self.0 + rhs.0)},
+            ),
+            self.add_sub_impl(
+                quote! {std::ops::Sub},
+                quote! {sub},
+                quote! {Self(self.0 - rhs.0)},
+            ),
+            self.add_sub_assign_impl(
+                quote! {std::ops::AddAssign},
+                quote! {add_assign},
+                quote! {self.0 += rhs.0;},
+            ),
+            self.add_sub_assign_impl(
+                quote! {std::ops::SubAssign},
+                quote! {sub_assign},
+                quote! {self.0 -= rhs.0;},
+            ),
+            self.neg_impl(),
+        ])
     }
 
     fn add_sub_impl(
@@ -48,10 +50,9 @@ impl Defs {
         inner_code: TokenStream,
     ) -> TokenStream {
         let Self { quantity_type, .. } = &self;
-        let output_type_def = 
-            quote! {
-                type Output = #quantity_type<S, D>;
-            };
+        let output_type_def = quote! {
+            type Output = #quantity_type<S, D>;
+        };
         self.generic_impl(
             trait_type,
             quote! {Output = S},
@@ -59,7 +60,7 @@ impl Defs {
             fn_name,
             quote! {self, rhs: Self},
             inner_code,
-            output_type_def
+            output_type_def,
         )
     }
 
@@ -76,7 +77,7 @@ impl Defs {
             fn_name,
             quote! {&mut self, rhs: Self},
             inner_code,
-            quote! {}
+            quote! {},
         )
     }
 
@@ -85,7 +86,7 @@ impl Defs {
         self.generic_impl(
             quote! {std::ops::Neg},
             quote! {Output = S},
-            quote! {Self}, 
+            quote! {Self},
             quote! {neg},
             quote! {self},
             quote! {Self(-self.0)},

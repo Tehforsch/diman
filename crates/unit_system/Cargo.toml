@@ -12,6 +12,8 @@ glam-vec2 = []
 glam-dvec2 = []
 glam-vec3 = []
 glam-dvec3 = []
+f32 = []
+f64 = []
 
 [dependencies]
 syn = { version = "1.0", features = ["full"] }

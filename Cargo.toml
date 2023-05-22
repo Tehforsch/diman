@@ -9,6 +9,8 @@ glam-vec2 = ["glam", "unit_system/glam-vec2"]
 glam-dvec2 = ["glam", "unit_system/glam-dvec2"]
 glam-vec3 = ["glam", "unit_system/glam-vec3"]
 glam-dvec3 = ["glam", "unit_system/glam-dvec3"]
+f32 = ["unit_system/f32"]
+f64 = ["unit_system/f64"]
 
 mpi = ["dep:once_cell", "dep:mpi"]
 hdf5 = ["dep:hdf5"]
