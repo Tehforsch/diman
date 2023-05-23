@@ -1,4 +1,4 @@
-use syn::{*, punctuated::Punctuated};
+use syn::{punctuated::Punctuated, *};
 
 use crate::expression::MultiplicativeExpr;
 
@@ -21,7 +21,6 @@ pub struct DimensionEntry {
 pub struct Dimensions {
     pub fields: Vec<DimensionEntry>,
 }
-
 
 #[derive(Debug)]
 pub enum QuantityFactor {

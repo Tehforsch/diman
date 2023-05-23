@@ -21,7 +21,7 @@ hdf5 = []
 gen-vec-names = [] 
 
 [dependencies]
-syn = { version = "1.0", features = ["full"] }
+syn = { version = "1.0", features = ["full", "extra-traits"] }
 quote = "1.0"
 proc-macro2 = "1.0"
 

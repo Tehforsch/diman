@@ -1,13 +1,13 @@
 #![feature(proc_macro_diagnostic)]
 
+mod expression;
 mod parse;
 mod types;
-mod expression;
 // mod storage_types;
 // mod codegen;
 
 use syn::*;
-use types::{Defs};
+use types::Defs;
 
 #[proc_macro]
 pub fn unit_system(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
