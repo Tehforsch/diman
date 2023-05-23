@@ -18,6 +18,7 @@ mpi = []
 serde = []
 rand = []
 hdf5 = []
+gen-vec-names = [] 
 
 [dependencies]
 syn = { version = "1.0", features = ["full"] }
