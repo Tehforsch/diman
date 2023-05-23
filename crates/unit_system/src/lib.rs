@@ -4,6 +4,7 @@ mod expression;
 mod parse;
 mod types;
 mod verify;
+mod resolve;
 // mod storage_types;
 // mod codegen;
 
@@ -14,7 +15,8 @@ use verify::Verify;
 #[proc_macro]
 pub fn unit_system(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let defs = parse_macro_input!(item as parse::types::Defs);
-    let _defs: types::Defs = defs.verify().unwrap();
+    let defs: types::UnresolvedDefs = defs.verify().unwrap();
+    let resolved: types::ResolvedDefs = defs.resolve();
     // defs.code_gen().into()
     proc_macro::TokenStream::new()
 }

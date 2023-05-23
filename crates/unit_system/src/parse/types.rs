@@ -82,7 +82,7 @@ pub enum QuantityOrUnit {
 }
 
 #[derive(Debug, Verify)]
-#[verified(crate::types::Defs)]
+#[verified(crate::types::UnresolvedDefs)]
 pub struct Defs {
     pub dimension_type: Type,
     pub quantity_type: Type,

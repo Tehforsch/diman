@@ -26,12 +26,14 @@ impl<T: Parse + std::fmt::Debug> Parse for Expr<T> {
         let lookahead = input.lookahead1();
         if input.is_empty() {
             Ok(Self::Value(first_factor))
+        } else if lookahead.peek(Token![,]) {
+            Ok(Self::Value(first_factor))
         } else if lookahead.peek(Token![*]) {
-            let _: Token![*] = input.parse()?;
+            let _: Token![*] = input.parse().unwrap();
             let second_expr: Expr<T> = input.parse()?;
             Ok(Self::Times(first_factor, Box::new(second_expr)))
         } else if lookahead.peek(Token![/]) {
-            let _: Token![/] = input.parse()?;
+            let _: Token![/] = input.parse().unwrap();
             let second_expr: Expr<T> = input.parse()?;
             Ok(Self::Over(first_factor, Box::new(second_expr)))
         } else {

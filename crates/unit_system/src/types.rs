@@ -55,9 +55,30 @@ pub struct QuantityEntry {
 }
 
 #[derive(Debug)]
-pub struct Defs {
+pub struct UnresolvedDefs {
     pub dimension_type: Type,
     pub quantity_type: Type,
     pub quantities: Vec<QuantityEntry>,
     pub units: Vec<UnitEntry>,
+}
+
+#[derive(Debug)]
+pub struct Quantity {
+    pub name: Ident,
+    pub dimension: Dimensions,
+}
+
+#[derive(Debug)]
+pub struct Unit {
+    pub name: Ident,
+    pub dimension: Dimensions,
+    pub factor: f64,
+}
+
+#[derive(Debug)]
+pub struct ResolvedDefs {
+    pub dimension_type: Type,
+    pub quantity_type: Type,
+    pub quantities: Vec<Quantity>,
+    pub units: Vec<Unit>,
 }

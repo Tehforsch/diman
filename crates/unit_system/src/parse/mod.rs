@@ -155,8 +155,8 @@ impl Parse for QuantityEntry {
     }
 }
 
-impl QuantityOrUnit {
-    fn parse_named(input: ParseStream) -> Result<Self> {
+impl Parse for QuantityOrUnit {
+    fn parse(input: ParseStream) -> Result<Self> {
         let keyword: Ident = input.parse()?;
         match keyword.to_string().as_str() {
             "def" => Ok(Self::Quantity(input.parse()?)),
@@ -170,7 +170,9 @@ impl QuantityOrUnit {
             )),
         }
     }
+}
 
+impl QuantityOrUnit {
     fn is_quantity(&self) -> bool {
         matches!(self, Self::Quantity(..))
     }
@@ -199,7 +201,7 @@ impl Parse for Defs {
         let content;
         let _: token::Bracket = bracketed!(content in input);
         let (quantities, units): (Vec<_>, Vec<_>) = content
-            .parse_terminated::<_, Token![,]>(QuantityOrUnit::parse_named)?
+            .parse_terminated::<_, Token![,]>(QuantityOrUnit::parse)?
             .into_iter()
             .partition(|x| x.is_quantity());
         Ok(Self {
