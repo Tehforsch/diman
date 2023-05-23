@@ -10,7 +10,7 @@ use syn::{
 
 use self::types::{
     Defs, DimensionEntry, DimensionInt, Dimensions, Factor, Prefix, Prefixes, QuantityDefinition,
-    QuantityEntry, QuantityOrUnit, Symbol, UnitEntry, UnitExpression, UnitFactor,
+    QuantityEntry, Entry, Symbol, UnitEntry, UnitExpression, UnitFactor, ConstantEntry,
 };
 
 impl Parse for Symbol {
@@ -142,39 +142,34 @@ impl Parse for QuantityEntry {
     }
 }
 
-impl Parse for QuantityOrUnit {
+impl Parse for ConstantEntry {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let name = input.parse()?;
+        let _: Token![=] = input.parse()?;
+        let val = input.parse()?;
+        let lookahead = input.lookahead1();
+        if lookahead.peek(Token![*]) {
+            let _: Token![*] = input.parse()?;
+        }
+        let unit = input.parse()?;
+        Ok(Self { name, val, unit  })
+    }
+}
+
+impl Parse for Entry {
     fn parse(input: ParseStream) -> Result<Self> {
         let keyword: Ident = input.parse()?;
         match keyword.to_string().as_str() {
             "def" => Ok(Self::Quantity(input.parse()?)),
             "unit" => Ok(Self::Unit(input.parse()?)),
+            "constant" => Ok(Self::Constant(input.parse()?)),
             ident => Err(Error::new(
                 keyword.span(),
                 format!(
-                    "Unexpected identifier: {}, expected \"def\" or \"unit\"",
+                    "Unexpected identifier: {}, expected \"def\", \"unit\" or \"constant\"",
                     ident
                 ),
             )),
-        }
-    }
-}
-
-impl QuantityOrUnit {
-    fn is_quantity(&self) -> bool {
-        matches!(self, Self::Quantity(..))
-    }
-
-    fn as_quantity(self) -> QuantityEntry {
-        match self {
-            QuantityOrUnit::Quantity(quantity) => quantity,
-            QuantityOrUnit::Unit(_) => unreachable!(),
-        }
-    }
-
-    fn as_unit(self) -> UnitEntry {
-        match self {
-            QuantityOrUnit::Unit(unit) => unit,
-            QuantityOrUnit::Quantity(_) => unreachable!(),
         }
     }
 }
@@ -187,15 +182,24 @@ impl Parse for Defs {
         let _: Token![,] = input.parse()?;
         let content;
         let _: token::Bracket = bracketed!(content in input);
-        let (quantities, units): (Vec<_>, Vec<_>) = content
-            .parse_terminated::<_, Token![,]>(QuantityOrUnit::parse)?
-            .into_iter()
-            .partition(|x| x.is_quantity());
+        let mut quantities = vec![];
+        let mut units = vec![];
+        let mut constants = vec![];
+        for item in content
+            .parse_terminated::<_, Token![,]>(Entry::parse)?
+            .into_iter() {
+                match item {
+                    Entry::Quantity(q) => quantities.push(q),
+                    Entry::Unit(u) => units.push(u),
+                    Entry::Constant(c) => constants.push(c),
+                }
+            }
         Ok(Self {
             dimension_type,
             quantity_type,
-            quantities: quantities.into_iter().map(|x| x.as_quantity()).collect(),
-            units: units.into_iter().map(|x| x.as_unit()).collect(),
+            quantities,
+            units,
+            constants,
         })
     }
 }

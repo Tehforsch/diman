@@ -7,7 +7,7 @@ use crate::{
     expression::Expr,
     types::{
         Dimensions, Quantity, QuantityDefinition, QuantityEntry, Defs, Unit, UnitEntry,
-        UnitFactor, UnresolvedDefs,
+        UnitFactor, UnresolvedDefs, Constant,
     },
 };
 
@@ -23,11 +23,21 @@ impl UnresolvedDefs {
         let (quantities, units): (Vec<_>, Vec<_>) = items
             .into_iter()
             .partition(|x| matches!(x.type_, Type::Quantity));
+        let constants = self.constants.into_iter().map(|constant| {
+            // Very inefficient, but hopefully irrelevant for now
+            let unit = units.iter().find(|unit| unit.name == constant.unit).ok_or_else(|| UnresolvableError(vec![constant.unit]))?;
+            Ok(Constant {
+                name: constant.name,
+                dimension: unit.val.dimensions.clone(),
+                factor: unit.val.factor,
+            })
+        }).collect::<Result<_, _>>()?;
         Ok(Defs {
             dimension_type: self.dimension_type,
             quantity_type: self.quantity_type,
             quantities: quantities.into_iter().map(|i| i.into()).collect(),
             units: units.into_iter().map(|i| i.into()).collect(),
+            constants,
         })
     }
 }

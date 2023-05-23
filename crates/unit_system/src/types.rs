@@ -49,11 +49,19 @@ pub struct QuantityEntry {
 }
 
 #[derive(Debug)]
+pub struct ConstantEntry {
+    pub name: Ident,
+    pub val: f64,
+    pub unit: Ident,
+}
+
+#[derive(Debug)]
 pub struct UnresolvedDefs {
     pub dimension_type: Type,
     pub quantity_type: Type,
     pub quantities: Vec<QuantityEntry>,
     pub units: Vec<UnitEntry>,
+    pub constants: Vec<ConstantEntry>,
 }
 
 #[derive(Debug)]
@@ -71,9 +79,17 @@ pub struct Unit {
 }
 
 #[derive(Debug)]
+pub struct Constant {
+    pub name: Ident,
+    pub dimension: Dimensions,
+    pub factor: f64,
+}
+
+#[derive(Debug)]
 pub struct Defs {
     pub dimension_type: Type,
     pub quantity_type: Type,
     pub quantities: Vec<Quantity>,
     pub units: Vec<Unit>,
+    pub constants: Vec<Constant>,
 }

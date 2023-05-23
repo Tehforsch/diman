@@ -28,5 +28,6 @@ unit_system!(
         def Volume = Length * Length * Length,
         def Force = Energy / Length,
         unit (newtons, "N") = joules / meters,
+        constant SOLAR_MASS = 1.988477e30 * kilograms,
     ]
 );

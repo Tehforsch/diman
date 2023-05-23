@@ -68,10 +68,19 @@ pub struct QuantityEntry {
     pub rhs: QuantityDefinition,
 }
 
+#[derive(Debug, Verify)]
+#[verified(crate::types::ConstantEntry)]
+pub struct ConstantEntry {
+    pub name: Ident,
+    pub val: Factor,
+    pub unit: Ident,
+}
+
 #[derive(Debug)]
-pub enum QuantityOrUnit {
+pub enum Entry {
     Quantity(QuantityEntry),
     Unit(UnitEntry),
+    Constant(ConstantEntry),
 }
 
 #[derive(Debug, Verify)]
@@ -81,4 +90,5 @@ pub struct Defs {
     pub quantity_type: Type,
     pub quantities: Vec<QuantityEntry>,
     pub units: Vec<UnitEntry>,
+    pub constants: Vec<ConstantEntry>,
 }
