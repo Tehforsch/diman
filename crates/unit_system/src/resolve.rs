@@ -1,4 +1,4 @@
-use std::{collections::HashMap, hash::Hash};
+use std::{collections::HashMap, hash::Hash, fmt::Display};
 
 use syn::Ident;
 
@@ -12,7 +12,7 @@ use crate::{
 };
 
 impl UnresolvedDefs {
-    pub fn resolve(self) -> Result<Defs, UnresolvableError> {
+    pub fn resolve(self) -> Result<Defs, UnresolvableError<Ident>> {
         let items: Vec<UnresolvedItem> = self
             .quantities
             .into_iter()
@@ -179,7 +179,7 @@ impl<U: Resolvable<Resolved = R, Name = N>, R, N: Hash + PartialEq + Eq> Resolve
     fn resolve_with(
         unresolved: Vec<U>,
         resolved: HashMap<N, R>,
-    ) -> Result<Vec<R>, UnresolvableError> {
+    ) -> Result<Vec<R>, UnresolvableError<N>> {
         let mut resolver = Self {
             unresolved,
             resolved,
@@ -188,11 +188,11 @@ impl<U: Resolvable<Resolved = R, Name = N>, R, N: Hash + PartialEq + Eq> Resolve
         Ok(resolver.resolved.into_iter().map(|(_, x)| x).collect())
     }
 
-    fn resolve(unresolved: Vec<U>) -> Result<Vec<R>, UnresolvableError> {
+    fn resolve(unresolved: Vec<U>) -> Result<Vec<R>, UnresolvableError<N>> {
         Self::resolve_with(unresolved, HashMap::new())
     }
 
-    fn run(&mut self) -> Result<(), UnresolvableError> {
+    fn run(&mut self) -> Result<(), UnresolvableError<N>> {
         while !self.unresolved.is_empty() {
             let next_resolvable = self
                 .unresolved
@@ -205,7 +205,7 @@ impl<U: Resolvable<Resolved = R, Name = N>, R, N: Hash + PartialEq + Eq> Resolve
                 let resolved = next_resolvable.resolve(&self.resolved);
                 self.resolved.insert(name, resolved);
             } else {
-                return Err(UnresolvableError);
+                return Err(UnresolvableError(self.unresolved.drain(..).map(|x| x.name()).collect()));
             }
         }
         Ok(())
@@ -216,4 +216,13 @@ impl<U: Resolvable<Resolved = R, Name = N>, R, N: Hash + PartialEq + Eq> Resolve
     }
 }
 
-pub struct UnresolvableError;
+pub struct UnresolvableError<N>(Vec<N>);
+
+impl Display for UnresolvableError<Ident> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for ident in self.0.iter() {
+            ident.span().unwrap().error(format!("Unresolvable definition: \"{}\"", ident)).emit();
+        }
+        write!(f, "Unable to resolve. Unresolvable definitions: {}", self.0.iter().map(|x| format!("\"{}\"", x.to_string())).collect::<Vec<_>>().join(", "))
+    }
+}

@@ -16,6 +16,6 @@ use verify::Verify;
 pub fn unit_system(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let defs = parse_macro_input!(item as parse::types::Defs);
     let defs: types::UnresolvedDefs = defs.verify().unwrap();
-    let resolved: types::Defs = defs.resolve().unwrap_or_else(|_| panic!("Failed to resolve definitions. Recursive definitions?"));
+    let resolved: types::Defs = defs.resolve().unwrap_or_else(|e| panic!("{}", e));
     resolved.code_gen().into()
 }
