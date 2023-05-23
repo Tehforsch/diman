@@ -34,14 +34,9 @@ pub struct Dimensions {
     pub fields: Vec<DimensionEntry>,
 }
 
-#[derive(Debug, Verify)]
-#[verified(crate::types::QuantityFactor)]
-pub enum QuantityFactor {
-    Quantity(Ident),
-    Number(Factor),
-}
+pub type Quantity = Ident;
 
-pub type QuantityExpression = Expr<QuantityFactor>;
+pub type QuantityExpression = Expr<Ident>;
 
 #[derive(Debug, Verify)]
 #[verified(crate::types::UnitFactor)]

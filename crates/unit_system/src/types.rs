@@ -7,24 +7,18 @@ pub struct Prefix {
     pub name: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DimensionEntry {
     pub ident: Ident,
     pub value: i32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Dimensions {
     pub fields: Vec<DimensionEntry>,
 }
 
-#[derive(Debug)]
-pub enum QuantityFactor {
-    Quantity(Ident),
-    Number(f64),
-}
-
-pub type QuantityExpression = Expr<QuantityFactor>;
+pub type QuantityExpression = Expr<Ident>;
 
 #[derive(Debug)]
 pub enum UnitFactor {

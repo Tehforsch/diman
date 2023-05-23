@@ -23,6 +23,45 @@ impl<T> MulDiv for T where
 {
 }
 
+impl<T> Expr<T> {
+    pub fn map<U, F>(self, f: F) -> Expr<U>
+    where
+        F: Fn(T) -> U + Clone,
+    {
+        match self {
+            Expr::Value(val) => Expr::Value(val.map(f)),
+            Expr::Times(val, expr) => Expr::Times(val.map(f.clone()), Box::new(expr.map(f))),
+            Expr::Over(val, expr) => Expr::Over(val.map(f.clone()), Box::new(expr.map(f))),
+        }
+    }
+
+    pub fn iter_vals<'a>(&'a self) -> Box<dyn Iterator<Item = &'a T> + 'a> {
+        match self {
+            Expr::Value(val) => Box::new(val.iter_vals()),
+            Expr::Times(val, expr) => Box::new(val.iter_vals().chain(expr.iter_vals())),
+            Expr::Over(val, expr) => Box::new(val.iter_vals().chain(expr.iter_vals())),
+        }
+    }
+}
+
+impl<T> Factor<T> {
+    pub fn map<U, F>(self, f: F) -> Factor<U>
+    where
+        F: Fn(T) -> U + Clone,
+    {
+        match self {
+            Factor::Value(val) => Factor::Value(f(val)),
+            Factor::ParenExpr(expr) => Factor::ParenExpr(Box::new(expr.map(f))),
+        }
+    }
+    pub fn iter_vals<'a>(&'a self) -> Box<dyn Iterator<Item = &'a T> + 'a> {
+        match self {
+            Factor::Value(val) => Box::new(std::iter::once(val)),
+            Factor::ParenExpr(expr) => expr.iter_vals(),
+        }
+    }
+}
+
 impl<T: MulDiv> Expr<T> {
     pub fn eval(&self) -> T {
         match self {
