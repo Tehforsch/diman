@@ -41,7 +41,7 @@ impl<T: Parse + std::fmt::Debug> Parse for Expr<T> {
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use proc_macro2::TokenStream;
     use quote::quote;
 
@@ -53,7 +53,7 @@ mod tests {
         Lit, Result,
     };
 
-    #[derive(Debug, PartialEq, Eq)]
+    #[derive(Debug, PartialEq, Eq, Clone)]
     pub struct MyInt(pub isize);
 
     impl Parse for MyInt {
@@ -65,7 +65,8 @@ mod tests {
             }
         }
     }
-    fn parse_expr(input: TokenStream) -> Expr<MyInt> {
+
+    pub fn parse_expr(input: TokenStream) -> Expr<MyInt> {
         syn::parse2(input).unwrap()
     }
 

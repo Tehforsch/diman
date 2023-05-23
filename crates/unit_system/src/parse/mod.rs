@@ -1,4 +1,4 @@
-mod expression;
+pub(super) mod expression;
 
 use syn::{
     parse::{Parse, ParseStream},
