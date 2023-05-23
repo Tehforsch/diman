@@ -9,7 +9,7 @@ use syn::{
 
 use crate::types::{
     Defs, DimensionEntry, Dimensions, Prefix, Prefixes, QuantityDefinition, QuantityEntry,
-    QuantityFactor, QuantityOrUnit, UnitEntry, UnitFactor,
+    QuantityFactor, QuantityOrUnit, UnitEntry, UnitExpression, UnitFactor,
 };
 
 impl Parse for Prefix {
@@ -105,7 +105,7 @@ impl Parse for UnitEntry {
             return Err(lookahead.error());
         }
         let _: Token![=] = input.parse()?;
-        let rhs = input.parse()?;
+        let rhs: UnitExpression = input.parse()?;
         Ok(Self {
             name,
             symbol,

@@ -1,14 +1,14 @@
 #[derive(Debug)]
 #[cfg_attr(test, derive(PartialEq))]
-pub enum MultiplicativeExpr<T> {
-    Factor(Factor<T>),
-    Times(Factor<T>, Factor<T>),
-    Over(Factor<T>, Factor<T>),
+pub enum Expr<T> {
+    Value(Factor<T>),
+    Times(Factor<T>, Box<Expr<T>>),
+    Over(Factor<T>, Box<Expr<T>>),
 }
 
 #[derive(Debug)]
 #[cfg_attr(test, derive(PartialEq))]
 pub enum Factor<T> {
     Value(T),
-    ParenExpr(Box<MultiplicativeExpr<T>>),
+    ParenExpr(Box<Expr<T>>),
 }

@@ -1,6 +1,6 @@
 use syn::{punctuated::Punctuated, *};
 
-use crate::expression::MultiplicativeExpr;
+use crate::expression::Expr;
 
 #[derive(Debug)]
 pub enum Prefix {
@@ -28,7 +28,7 @@ pub enum QuantityFactor {
     Number(Lit),
 }
 
-pub type QuantityExpression = MultiplicativeExpr<QuantityFactor>;
+pub type QuantityExpression = Expr<QuantityFactor>;
 
 #[derive(Debug)]
 pub enum UnitFactor {
@@ -36,7 +36,7 @@ pub enum UnitFactor {
     Number(Lit),
 }
 
-pub type UnitExpression = MultiplicativeExpr<UnitFactor>;
+pub type UnitExpression = Expr<UnitFactor>;
 
 #[derive(Debug)]
 pub enum QuantityDefinition {
