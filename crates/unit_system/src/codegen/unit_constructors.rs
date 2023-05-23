@@ -1,12 +1,12 @@
 use quote::{quote, format_ident};
 use proc_macro2::TokenStream;
 
-use crate::{types::{Defs, UnitEntry}, storage_types::{VectorType, FloatType}};
+use crate::{types::{Defs, Unit}, storage_types::{VectorType, FloatType}};
 
 impl Defs {
     pub fn unit_constructors(&self) -> TokenStream {
-        self.iter_units().map(|(quantity, unit)| {
-            let dimension = self.get_dimension_definition(&quantity);
+        self.units.iter().map(|unit| {
+            let dimension = self.get_dimension_definition(&unit.dimension);
             let quantity_type = &self.quantity_type;
             let unit_name = &unit.name;
             let factor = &unit.factor;
@@ -36,11 +36,11 @@ impl Defs {
     fn float_unit_constructor(
         &self,
         float_type: &FloatType,
-        unit: &UnitEntry,
+        unit: &Unit,
         quantity_dimension: &TokenStream,
     ) -> TokenStream {
         let Defs { quantity_type, .. } = &self;
-        let UnitEntry {
+        let Unit {
             name: unit_name,
             factor,
             ..
@@ -58,11 +58,11 @@ impl Defs {
     fn vector_unit_constructor(
         &self,
         vector_type: &VectorType,
-        unit: &UnitEntry,
+        unit: &Unit,
         quantity_dimension: &TokenStream,
     ) -> TokenStream {
         let Defs { quantity_type, .. } = &self;
-        let UnitEntry {
+        let Unit {
             name: unit_name,
             factor,
             ..

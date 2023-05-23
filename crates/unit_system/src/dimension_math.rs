@@ -1,11 +1,23 @@
 use crate::types::Dimensions;
 
-impl std::ops::Mul for Dimensions {
+#[derive(Clone)]
+pub struct DimensionsAndFactor {
+    pub dimensions: Dimensions,
+    pub factor: f64,
+}
+
+impl Dimensions {
+    pub fn none() -> Self {
+        Self { fields: vec![] }
+    }
+}
+
+impl std::ops::Mul for DimensionsAndFactor {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        let mut fields = self.fields;
-        for f2 in rhs.fields {
+        let mut fields = self.dimensions.fields;
+        for f2 in rhs.dimensions.fields {
             let same_field = fields.iter_mut().find(|f1| f1.ident == f2.ident);
             if let Some(same_field) = same_field {
                 same_field.value += f2.value;
@@ -15,12 +27,13 @@ impl std::ops::Mul for Dimensions {
             }
         }
         Self {
-            fields
+            dimensions: Dimensions { fields },
+            factor: self.factor * rhs.factor,
         }
     }
 }
 
-impl std::ops::Div for Dimensions {
+impl std::ops::Div for DimensionsAndFactor {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self::Output {
@@ -28,11 +41,12 @@ impl std::ops::Div for Dimensions {
     }
 }
 
-impl Dimensions {
+impl DimensionsAndFactor {
     fn inv(mut self) -> Self {
-        for field in self.fields.iter_mut() {
+        for field in self.dimensions.fields.iter_mut() {
             field.value = -field.value;
         }
+        self.factor *= -1.0;
         self
     }
 }

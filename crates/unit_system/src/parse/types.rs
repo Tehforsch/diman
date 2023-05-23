@@ -34,8 +34,6 @@ pub struct Dimensions {
     pub fields: Vec<DimensionEntry>,
 }
 
-pub type Quantity = Ident;
-
 pub type QuantityExpression = Expr<Ident>;
 
 #[derive(Debug, Verify)]

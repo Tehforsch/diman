@@ -67,10 +67,11 @@ pub struct Unit {
     pub name: Ident,
     pub dimension: Dimensions,
     pub factor: f64,
+    pub symbol: Option<String>,
 }
 
 #[derive(Debug)]
-pub struct ResolvedDefs {
+pub struct Defs {
     pub dimension_type: Type,
     pub quantity_type: Type,
     pub quantities: Vec<Quantity>,

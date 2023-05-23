@@ -1,18 +1,17 @@
 use proc_macro2::TokenStream;
 use quote::{quote};
-use syn::*;
-use types::{Defs, QuantityEntry, UnitEntry};
+use crate::types::{Defs, Dimensions};
 
 impl Defs {
-    fn get_dimension_definition(&self, q: &QuantityEntry) -> TokenStream {
+    pub fn get_dimension_definition(&self, dim: &Dimensions) -> TokenStream {
         let dimension_type = &self.dimension_type;
-        let field_updates: TokenStream = q
-            .dimensions_def
+        let field_updates: TokenStream = 
+            dim
             .fields
             .iter()
             .map(|field| {
                 let ident = &field.ident;
-                let value = &field.value.val;
+                let value = &field.value;
                 quote! { #ident: #value, }
             })
             .collect();
@@ -106,7 +105,7 @@ impl Defs {
             .quantities
             .iter()
             .map(|quantity| {
-                let dimension = self.get_dimension_definition(&quantity);
+                let dimension = self.get_dimension_definition(&quantity.dimension);
                 let quantity_type = &self.quantity_type;
                 let quantity_name = &quantity.name;
                 quote! {
@@ -124,13 +123,5 @@ impl Defs {
                 #quantities
             }
         }
-    }
-
-    pub fn iter_units(&self) -> impl Iterator<Item=(&QuantityEntry, &UnitEntry)> {
-        self
-            .quantities
-            .iter()
-            .flat_map(|quantity| quantity.units_def.units.iter().map(move |unit| (quantity, unit)))
-
     }
 }

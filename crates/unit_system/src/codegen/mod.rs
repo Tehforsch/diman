@@ -13,6 +13,7 @@ mod rand;
 mod hdf5;
 mod unit_constructors;
 mod traits;
+pub mod type_defs;
 
 use proc_macro2::TokenStream;
 

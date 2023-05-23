@@ -6,8 +6,8 @@ use crate::types::Defs;
 
 impl Defs {
     pub fn units_array(&self) -> TokenStream {
-        let units: TokenStream = self.iter_units().filter_map(|(quantity, unit)| {
-            let dim = self.get_dimension_definition(quantity);
+        let units: TokenStream = self.units.iter().filter_map(|unit| {
+            let dim = self.get_dimension_definition(&unit.dimension);
             let factor = unit.factor;
             let symbol = unit.symbol.as_ref()?;
             Some(quote! {
