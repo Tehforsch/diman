@@ -1,3 +1,5 @@
+#![feature(proc_macro_diagnostic)]
+
 mod gen_traits;
 mod parse;
 mod types;

@@ -2,7 +2,6 @@ use proc_macro2::Span;
 use syn::{
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    spanned::Spanned,
     *,
 };
 
@@ -37,7 +36,7 @@ impl Parse for Symbol {
         let lit: Lit = input.parse()?;
         let symbol = match lit {
             Lit::Str(x) => Ok(x.value()),
-            _ => Err(Error::new(input.span(), "Expected string literal.")),
+            _ => Err(Error::new(lit.span(), "Expected string literal.")),
         }?;
         Ok(Self { symbol })
     }
@@ -50,7 +49,7 @@ impl Parse for Factor {
             Lit::Int(x) => x.base10_parse(),
 
             Lit::Float(x) => x.base10_parse(),
-            _ => Err(Error::new(input.span(), "Expected float literal.")),
+            _ => Err(Error::new(lit.span(), "Expected float literal.")),
         }?;
         Ok(Self { factor })
     }
@@ -62,7 +61,7 @@ impl Parse for DimensionInt {
         let val = match lit {
             Lit::Int(x) => x.base10_parse(),
 
-            _ => Err(Error::new(input.span(), "Expected int literal.")),
+            _ => Err(Error::new(lit.span(), "Expected int literal.")),
         }?;
         Ok(Self { val })
     }
@@ -78,8 +77,8 @@ impl Parse for UnitDefinitionEntry {
             "symbol" => Ok(Self::Symbol(input.parse()?)),
             "prefixes" => Ok(Self::Prefixes(input.parse()?)),
             ident => Err(Error::new(
-                ident.span(),
-                format!("Unexpected identifier: {}", ident),
+                name.span(),
+                format!("Unexpected identifier: {}, expected \"name\", \"factor\", \"symbol\" or \"prefixes\"", ident),
             )),
         }
     }
@@ -259,10 +258,9 @@ impl QuantityDefinitionEntry {
         match name.to_string().as_str() {
             "dimension" => Ok(Self::Dimensions(input.parse()?)),
             "units" => Ok(Self::Units(input.parse()?)),
-            ident => Err(Error::new(
-                ident.span(),
-                format!("Unexpected identifier: {}", ident),
-            )),
+            ident => {
+                Err(Error::new(name.span(), format!("Unexpected identifier: {}, expected \"dimension\" or \"units\"", ident),))
+            },
         }
     }
 
