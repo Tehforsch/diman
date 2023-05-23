@@ -11,55 +11,22 @@ unit_system!(
     Dimension,
     Quantity,
     [
-        Dimensionless = {
-            dimension: {
-            },
-            units: [
-                { name: dimensionless, factor: 1.0, symbol: "dimensionless" }
-            ]
-        },
-        Length = {
-            dimension: { length: 1 },
-            units: [
-                { name: meters, factor: 1.0, symbol: "m", prefixes: [k, m] },
-                { name: kilometers, factor: 1000.0, symbol: "km", prefixes: [k, m] }
-            ]
-        },
-        Time = {
-            dimension: { time: 1 },
-            units: [
-                { name: seconds, factor: 1.0, symbol: "s" }
-            ]
-        },
-        Velocity = {
-            dimension: { length: 1, time: -1 },
-            units: [
-                { name: meters_per_second, factor: 1.0, symbol: "m/s" }
-            ],
-        },
-        Energy = {
-            dimension: { length: 2, time: -2, mass: 1 },
-            units: [
-                { name: joules, factor: 1.0, symbol: "J" },
-            ],
-        },
-        Mass = {
-            dimension: { mass: 1 },
-            units: [
-                { name: kilograms, factor: 1.0, symbol: "kg" },
-            ],
-        },
-        Area = {
-            dimension: { length: 2 },
-        },
-        Volume = {
-            dimension: { length: 3 },
-        },
-        Force = {
-            dimension: { length: 1, time: -2, mass: 1 },
-            units: [
-                { name: newtons, factor: 1.0, symbol: "N" }
-            ]
-        },
+        def Dimensionless = {},
+        unit dimensionless = Dimensionless,
+        def Length = { length: 1 },
+        unit (meters, "m") = Length,
+        unit (kilometers, "km") = 1000.0 * meters,
+        def Time = { time: 1 },
+        unit (seconds, "s") = 1.0 * Time,
+        def Velocity = Length / Time,
+        unit (meters_per_second, "m/s") = meters / seconds,
+        def Energy = Mass * Velocity * Velocity,
+        unit (joules, "J") = 1.0 * Energy,
+        def Mass = { mass: 1 },
+        unit (kilograms, "kg") = Mass,
+        def Area = Length * Length,
+        def Volume = Length * Length * Length,
+        def Force = Energy / Length,
+        unit (newtons, "N") = joules / meters,
     ]
 );

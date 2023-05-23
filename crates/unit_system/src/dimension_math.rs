@@ -46,7 +46,7 @@ impl DimensionsAndFactor {
         for field in self.dimensions.fields.iter_mut() {
             field.value = -field.value;
         }
-        self.factor *= -1.0;
+        self.factor = 1.0 / self.factor;
         self
     }
 }
