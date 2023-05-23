@@ -1,3 +1,5 @@
+mod expression;
+
 use syn::{
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
@@ -5,12 +7,9 @@ use syn::{
     *,
 };
 
-use crate::{
-    expression::{Factor, MultiplicativeExpr},
-    types::{
-        Defs, DimensionEntry, Dimensions, Prefix, Prefixes, QuantityDefinition, QuantityEntry,
-        QuantityFactor, QuantityOrUnit, UnitEntry, UnitFactor,
-    },
+use crate::types::{
+    Defs, DimensionEntry, Dimensions, Prefix, Prefixes, QuantityDefinition, QuantityEntry,
+    QuantityFactor, QuantityOrUnit, UnitEntry, UnitFactor,
 };
 
 impl Parse for Prefix {
@@ -63,45 +62,6 @@ impl Parse for UnitFactor {
             Ok(Self::UnitOrQuantity(input.parse()?))
         } else if lookahead.peek(Lit) {
             Ok(Self::Number(input.parse()?))
-        } else {
-            Err(lookahead.error())
-        }
-    }
-}
-
-impl<T: Parse + std::fmt::Debug> Parse for Factor<T> {
-    fn parse(input: ParseStream) -> Result<Self> {
-        let lookahead = input.lookahead1();
-        if lookahead.peek(Paren) {
-            let content;
-            let _: token::Paren = parenthesized!(content in input);
-            Ok(Self::ParenExpr(Box::new(content.parse()?)))
-        } else {
-            Ok(Self::Value(input.parse()?))
-        }
-    }
-}
-
-impl<T: Parse + std::fmt::Debug> Parse for MultiplicativeExpr<T> {
-    fn parse(input: ParseStream) -> Result<Self> {
-        let first_factor: Factor<T> = input.parse()?;
-        let lookahead = input.lookahead1();
-        if input.is_empty() {
-            Ok(Self::Factor(first_factor))
-        } else if lookahead.peek(Token![,]) {
-            let _: Token![,] = input.parse()?;
-            Ok(Self::Factor(first_factor))
-        } else if lookahead.peek(Token![;]) {
-            let _: Token![;] = input.parse()?;
-            Ok(Self::Factor(first_factor))
-        } else if lookahead.peek(Token![*]) {
-            let _: Token![*] = input.parse()?;
-            let second_factor: Factor<T> = input.parse()?;
-            Ok(Self::Times(first_factor, second_factor))
-        } else if lookahead.peek(Token![/]) {
-            let _: Token![/] = input.parse()?;
-            let second_factor: Factor<T> = input.parse()?;
-            Ok(Self::Over(first_factor, second_factor))
         } else {
             Err(lookahead.error())
         }
