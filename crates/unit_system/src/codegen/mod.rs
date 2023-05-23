@@ -12,6 +12,7 @@ mod rand;
 #[cfg(feature="hdf5")]
 mod hdf5;
 mod unit_constructors;
+mod traits;
 
 use proc_macro2::TokenStream;
 

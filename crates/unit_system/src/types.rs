@@ -1,49 +1,74 @@
-use syn::*;
+use syn::{*, punctuated::Punctuated};
 
-pub struct DimensionInt {
-    pub val: i32,
+use crate::expression::MultiplicativeExpr;
+
+#[derive(Debug)]
+pub enum Prefix {
+    Ident(Ident),
+    Lit(Lit),
 }
 
-pub struct Factor {
-    pub factor: f64,
-}
+#[derive(Debug)]
+pub struct Prefixes(pub Punctuated<Prefix, Token![,]>);
 
-pub struct Symbol {
-    pub symbol: String,
-}
-
-pub struct Prefixes {
-    pub prefixes: Vec<Ident>,
-}
-
-pub struct UnitEntry {
-    pub name: Ident,
-    pub factor: f64,
-    pub symbol: Option<String>,
-    pub prefixes: Vec<Ident>,
-}
-
+#[derive(Debug)]
 pub struct DimensionEntry {
     pub ident: Ident,
-    pub value: DimensionInt,
+    pub value: Lit,
 }
 
-pub struct UnitsEntry {
-    pub units: Vec<UnitEntry>,
-}
-
-pub struct DimensionsEntry {
+#[derive(Debug)]
+pub struct Dimensions {
     pub fields: Vec<DimensionEntry>,
 }
 
-pub struct QuantityEntry {
-    pub name: Ident,
-    pub dimensions_def: DimensionsEntry,
-    pub units_def: UnitsEntry,
+
+#[derive(Debug)]
+pub enum QuantityFactor {
+    Quantity(Ident),
+    Number(Lit),
 }
 
+pub type QuantityExpression = MultiplicativeExpr<QuantityFactor>;
+
+#[derive(Debug)]
+pub enum UnitFactor {
+    UnitOrQuantity(Ident),
+    Number(Lit),
+}
+
+pub type UnitExpression = MultiplicativeExpr<UnitFactor>;
+
+#[derive(Debug)]
+pub enum QuantityDefinition {
+    Dimensions(Dimensions),
+    Expression(QuantityExpression),
+}
+
+#[derive(Debug)]
+pub struct UnitEntry {
+    pub name: Ident,
+    pub symbol: Option<Lit>,
+    pub prefixes: Prefixes,
+    pub rhs: UnitExpression,
+}
+
+#[derive(Debug)]
+pub struct QuantityEntry {
+    pub name: Ident,
+    pub rhs: QuantityDefinition,
+}
+
+#[derive(Debug)]
+pub enum QuantityOrUnit {
+    Quantity(QuantityEntry),
+    Unit(UnitEntry),
+}
+
+#[derive(Debug)]
 pub struct Defs {
     pub dimension_type: Type,
     pub quantity_type: Type,
     pub quantities: Vec<QuantityEntry>,
+    pub units: Vec<UnitEntry>,
 }

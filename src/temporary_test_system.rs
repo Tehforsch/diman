@@ -9,10 +9,11 @@ pub struct Dimension {
 }
 
 ::unit_system::unit_system!(Dimension, Quantity, [
-        Length = {
-            dimension: { length: 1 },
-            units: [
-                { name: meters, factor: 1.0, symbol: "m" }
-            ]
-        },
+    def Length = { length: 1 },
+    def Shlami = Length,
+    def Area = Length * Length,
+    unit (square_meters, "m^2") = Area,
+    unit (square_kilometers, "km^2") = 1e6 * square_meters,
+    unit square_centimeters = 1e-4 * Area,
+    unit (meters, "m", ["k", "m", "M"]) = Length,
 ]);
