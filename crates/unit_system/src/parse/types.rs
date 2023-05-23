@@ -1,0 +1,91 @@
+use derive_verify::Verify;
+use syn::{punctuated::Punctuated, *};
+
+use crate::expression::Expr;
+
+#[derive(Debug)]
+pub enum Prefix {
+    Ident(Ident),
+    Lit(Lit),
+}
+
+#[derive(Debug)]
+pub struct Prefixes(pub Punctuated<Prefix, Token![,]>);
+
+#[derive(Debug)]
+pub struct DimensionInt(pub Lit);
+
+#[derive(Debug)]
+pub struct Factor(pub Lit);
+
+#[derive(Debug)]
+pub struct Symbol(pub Lit);
+
+#[derive(Debug, Verify)]
+#[verified(crate::types::DimensionEntry)]
+pub struct DimensionEntry {
+    pub ident: Ident,
+    pub value: DimensionInt,
+}
+
+#[derive(Debug, Verify)]
+#[verified(crate::types::Dimensions)]
+pub struct Dimensions {
+    pub fields: Vec<DimensionEntry>,
+}
+
+#[derive(Debug, Verify)]
+#[verified(crate::types::QuantityFactor)]
+pub enum QuantityFactor {
+    Quantity(Ident),
+    Number(Factor),
+}
+
+pub type QuantityExpression = Expr<QuantityFactor>;
+
+#[derive(Debug, Verify)]
+#[verified(crate::types::UnitFactor)]
+pub enum UnitFactor {
+    UnitOrQuantity(Ident),
+    Number(Factor),
+}
+
+pub type UnitExpression = Expr<UnitFactor>;
+
+#[derive(Debug, Verify)]
+#[verified(crate::types::QuantityDefinition)]
+pub enum QuantityDefinition {
+    Dimensions(Dimensions),
+    Expression(QuantityExpression),
+}
+
+#[derive(Debug, Verify)]
+#[verified(crate::types::UnitEntry)]
+pub struct UnitEntry {
+    pub name: Ident,
+    pub symbol: Option<Symbol>,
+    pub prefixes: Prefixes,
+    pub rhs: UnitExpression,
+}
+
+#[derive(Debug, Verify)]
+#[verified(crate::types::QuantityEntry)]
+pub struct QuantityEntry {
+    pub name: Ident,
+    pub rhs: QuantityDefinition,
+}
+
+#[derive(Debug)]
+pub enum QuantityOrUnit {
+    Quantity(QuantityEntry),
+    Unit(UnitEntry),
+}
+
+#[derive(Debug, Verify)]
+#[verified(crate::types::Defs)]
+pub struct Defs {
+    pub dimension_type: Type,
+    pub quantity_type: Type,
+    pub quantities: Vec<QuantityEntry>,
+    pub units: Vec<UnitEntry>,
+}

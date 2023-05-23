@@ -1,20 +1,16 @@
-use syn::{punctuated::Punctuated, *};
+use syn::*;
 
 use crate::expression::Expr;
 
 #[derive(Debug)]
-pub enum Prefix {
-    Ident(Ident),
-    Lit(Lit),
+pub struct Prefix {
+    pub name: String,
 }
-
-#[derive(Debug)]
-pub struct Prefixes(pub Punctuated<Prefix, Token![,]>);
 
 #[derive(Debug)]
 pub struct DimensionEntry {
     pub ident: Ident,
-    pub value: Lit,
+    pub value: i32,
 }
 
 #[derive(Debug)]
@@ -25,7 +21,7 @@ pub struct Dimensions {
 #[derive(Debug)]
 pub enum QuantityFactor {
     Quantity(Ident),
-    Number(Lit),
+    Number(f64),
 }
 
 pub type QuantityExpression = Expr<QuantityFactor>;
@@ -33,7 +29,7 @@ pub type QuantityExpression = Expr<QuantityFactor>;
 #[derive(Debug)]
 pub enum UnitFactor {
     UnitOrQuantity(Ident),
-    Number(Lit),
+    Number(f64),
 }
 
 pub type UnitExpression = Expr<UnitFactor>;
@@ -47,8 +43,8 @@ pub enum QuantityDefinition {
 #[derive(Debug)]
 pub struct UnitEntry {
     pub name: Ident,
-    pub symbol: Option<Lit>,
-    pub prefixes: Prefixes,
+    pub symbol: Option<String>,
+    pub prefixes: Vec<Prefix>,
     pub rhs: UnitExpression,
 }
 
@@ -56,12 +52,6 @@ pub struct UnitEntry {
 pub struct QuantityEntry {
     pub name: Ident,
     pub rhs: QuantityDefinition,
-}
-
-#[derive(Debug)]
-pub enum QuantityOrUnit {
-    Quantity(QuantityEntry),
-    Unit(UnitEntry),
 }
 
 #[derive(Debug)]

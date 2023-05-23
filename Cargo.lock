@@ -153,6 +153,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "derive_verify"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "diman"
 version = "0.1.0"
 dependencies = [
@@ -744,6 +753,7 @@ checksum = "6ceab39d59e4c9499d4e5a8ee0e2735b891bb7308ac83dfb4e80cad195c9f6f3"
 name = "unit_system"
 version = "0.1.0"
 dependencies = [
+ "derive_verify",
  "proc-macro2",
  "quote",
  "syn",

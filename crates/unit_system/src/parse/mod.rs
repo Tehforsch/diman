@@ -1,4 +1,5 @@
 pub(super) mod expression;
+pub mod types;
 
 use syn::{
     parse::{Parse, ParseStream},
@@ -7,10 +8,28 @@ use syn::{
     *,
 };
 
-use crate::types::{
-    Defs, DimensionEntry, Dimensions, Prefix, Prefixes, QuantityDefinition, QuantityEntry,
-    QuantityFactor, QuantityOrUnit, UnitEntry, UnitExpression, UnitFactor,
+use self::types::{
+    Defs, DimensionEntry, DimensionInt, Dimensions, Factor, Prefix, Prefixes, QuantityDefinition,
+    QuantityEntry, QuantityFactor, QuantityOrUnit, Symbol, UnitEntry, UnitExpression, UnitFactor,
 };
+
+impl Parse for Symbol {
+    fn parse(input: ParseStream) -> Result<Self> {
+        Ok(Self(input.parse()?))
+    }
+}
+
+impl Parse for Factor {
+    fn parse(input: ParseStream) -> Result<Self> {
+        Ok(Self(input.parse()?))
+    }
+}
+
+impl Parse for DimensionInt {
+    fn parse(input: ParseStream) -> Result<Self> {
+        Ok(Self(input.parse()?))
+    }
+}
 
 impl Parse for Prefix {
     fn parse(input: ParseStream) -> Result<Self> {
@@ -37,7 +56,7 @@ impl Parse for DimensionEntry {
     fn parse(input: ParseStream) -> Result<Self> {
         let ident: Ident = input.parse()?;
         let _: Token![:] = input.parse()?;
-        let value: Lit = input.parse()?;
+        let value: DimensionInt = input.parse()?;
         Ok(Self { ident, value })
     }
 }
