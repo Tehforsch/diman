@@ -26,8 +26,8 @@ impl Defs {
         join([
             self.type_definition(),
             self.type_functions(),
-            self.float_quantity_definitions(),
-            self.vector_quantity_definitions(),
+            self.float_definitions(),
+            self.vector_definitions(),
             self.unit_constructors(),
             self.qproduct_trait(),
             self.numeric_traits(),

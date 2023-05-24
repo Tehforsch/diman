@@ -19,5 +19,5 @@ pub struct Dimension {
     unit (square_kilometers, "km^2") = 1e6 * square_meters,
     unit square_centimeters = 1e-4 * Area,
     unit (meters, "m", ["k", "m", "M"]) = Length,
-    constant roflcopter = 1e-7 * square_centimeters,
+    constant ROFLCOPTER = 1e-7 * square_centimeters,
 ]);

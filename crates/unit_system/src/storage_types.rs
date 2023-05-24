@@ -20,6 +20,31 @@ pub struct FloatType {
     pub serialize_method: TokenStream,
 }
 
+pub trait StorageType {
+    fn name(&self) -> &TokenStream;
+    fn base_storage(&self) -> &TokenStream;
+}
+
+impl StorageType for VectorType {
+    fn name(&self) -> &TokenStream {
+        &self.name
+    }
+
+    fn base_storage(&self) -> &TokenStream {
+        &self.float_type.name
+    }
+}
+
+impl StorageType for FloatType {
+    fn name(&self) -> &TokenStream {
+        &self.name
+    }
+
+    fn base_storage(&self) -> &TokenStream {
+        &self.name
+    }
+}
+
 impl Defs {
     pub fn storage_type_names(&self) -> Vec<TokenStream> {
         self.float_types()

@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::{quote};
-use crate::types::{Defs, Dimensions};
+use crate::{types::{Defs, Dimensions}, storage_types::StorageType};
 
 impl Defs {
     pub(crate) fn type_definition(&self) -> TokenStream {
@@ -73,55 +73,92 @@ impl Defs {
         }
     }
 
-    pub fn vector_quantity_definitions(&self) -> TokenStream {
+    pub fn vector_definitions(&self) -> TokenStream {
         self.vector_types()
             .iter()
             .map(|vector_type| {
-                self.quantity_definitions_for_type(&vector_type.name, &vector_type.module_name)
+                self.definitions_for_storage_type(vector_type, &vector_type.module_name, false)
             })
             .collect()
     }
 
-    pub fn float_quantity_definitions(&self) -> TokenStream {
+    pub fn float_definitions(&self) -> TokenStream {
         self.float_types()
             .iter()
             .map(|float_type| {
-                self.quantity_definitions_for_type(&float_type.name, &float_type.module_name)
+                self.definitions_for_storage_type(float_type, &float_type.module_name, true)
             })
             .collect()
     }
 
-    pub fn quantity_definitions_for_type(
+    pub fn definitions_for_storage_type<T: StorageType>(
         &self,
-        type_: &TokenStream,
+        type_: &T,
         module_name: &TokenStream,
+        gen_constants: bool,
     ) -> TokenStream {
         let Self {
             dimension_type,
             quantity_type,
             ..
         } = &self;
-        let quantities: TokenStream = self
+        // TODO: The use statements here are quite hacky and will probably
+        // not work if dimension is declared in a different place from
+        // the macro invocation.
+        let quantities = self.quantity_definitions_for_storage_type(type_);
+        let constants = if gen_constants {
+             self.constant_definitions_for_storage_type(type_)
+        }
+        else {
+             quote! {}
+        };
+        quote! {
+            pub mod #module_name {
+                use super::#dimension_type;
+                use super::#quantity_type;
+                #quantities
+                #constants
+            }
+        }
+    }
+
+    pub fn quantity_definitions_for_storage_type<T: StorageType>(
+        &self,
+        type_: &T,
+        ) -> TokenStream {
+        self
             .quantities
             .iter()
             .map(|quantity| {
                 let dimension = self.get_dimension_expr(&quantity.dimension);
                 let quantity_type = &self.quantity_type;
                 let quantity_name = &quantity.name;
+                let type_ = type_.name();
                 quote! {
                     pub type #quantity_name = #quantity_type::<#type_, { #dimension }>;
                 }
             })
-            .collect();
-        // TODO: The use statements here are quite hacky and will probably
-        // not work if dimension is declared in a different place from
-        // the macro invocation.
-        quote! {
-            pub mod #module_name {
-                use super::#dimension_type;
-                use super::#quantity_type;
-                #quantities
-            }
-        }
+            .collect()
+    }
+
+    pub fn constant_definitions_for_storage_type<T: StorageType>(
+        &self,
+        type_: &T,
+        ) -> TokenStream {
+        self
+            .constants
+            .iter()
+            .map(|constant| {
+                let dimension = self.get_dimension_expr(&constant.dimension);
+                let quantity_type = &self.quantity_type;
+                let constant_name = &constant.name;
+                let value = constant.factor;
+                let float_type = type_.base_storage();
+                let type_ = type_.name();
+                quote! {
+                    pub const #constant_name: #quantity_type::<#type_, { #dimension }> = #quantity_type::<#type_, { #dimension }>(#value as #float_type);
+                }
+            })
+            .collect()
     }
 }
