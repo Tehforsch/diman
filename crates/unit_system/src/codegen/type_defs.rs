@@ -53,6 +53,14 @@ impl Defs {
                     Self(s)
                 }
             }
+
+            impl<S> std::ops::Deref for #quantity_type<S, { #dimension_type::none() }> {
+                type Target = S;
+
+                fn deref(&self) -> &Self::Target {
+                    &self.0
+                }
+            }
         }
     }
 

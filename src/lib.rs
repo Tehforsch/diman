@@ -244,6 +244,12 @@ mod tests {
         let x = Dimensionless::dimensionless(128.0);
         assert_is_close(x.log2(), Dimensionless::dimensionless(7.0));
     }
+
+    #[test]
+    fn deref_dimensionless() {
+        let x = Dimensionless::dimensionless(128.3);
+        assert_eq!(x.round(), 128.0);
+    }
 }
 
 pub mod temporary_test_system;
