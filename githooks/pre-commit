@@ -9,16 +9,18 @@ There are some code style issues, run `cargo fmt` first.
 EOF
 fi
 
-for glam in glam,glam-vec2,glam-dvec2,glam-vec3,glam-dvec3, "" ; do
-    echo cargo test --no-default-features --features "${dim}${float}${glam},mpi,rand,serde,hdf5"
-    if ! cargo test --no-default-features --features "${dim}${float}${glam},mpi,rand,serde,hdf5"
-    then
-        echo "There are some test issues."
-        exit 1
-    fi
-done
 
-exit 0
+if ! cargo test --all-features
+then
+    echo "test failed"
+    exit 1
+fi
+
+if ! cargo test --manifest-path crates/unit_system/Cargo.toml --all-features
+then
+    echo "unit_system test failed"
+    exit 1
+fi
 
 diff=$(cargo fmt -- --check)
 result=$?
