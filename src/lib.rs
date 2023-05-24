@@ -10,7 +10,6 @@ compile_error!("Both 'default-f32' and 'default-f64' are activated. This is impo
 compile_error!("Both 'default-2d' and 'default-3d' are activated. This is impossible.");
 
 mod debug_storage_type;
-mod quantity;
 mod type_aliases;
 mod vectors;
 
