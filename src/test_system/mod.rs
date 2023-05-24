@@ -24,10 +24,13 @@ unit_system!(
         unit (joules, "J") = 1.0 * Energy,
         def Mass = { mass: 1 },
         unit (kilograms, "kg") = Mass,
+        unit (grams, "g") = 1e-3 * kilograms,
         def Area = Length * Length,
         def Volume = Length * Length * Length,
         def Force = Energy / Length,
         unit (newtons, "N") = joules / meters,
         constant SOLAR_MASS = 1.988477e30 * kilograms,
+        constant SOLAR_MASS_GRAMS = 1.988477e33 * grams,
+        constant SOLAR_MASS_AWKWARD = 1.988477e30 * kilograms / (seconds / seconds),
     ]
 );

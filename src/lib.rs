@@ -42,8 +42,12 @@ mod tests {
     use crate::test_system::f64::Energy;
     use crate::test_system::f64::Force;
     use crate::test_system::f64::Length;
+    use crate::test_system::f64::Mass;
     use crate::test_system::f64::Time;
     use crate::test_system::f64::Velocity;
+    use crate::test_system::f64::SOLAR_MASS;
+    use crate::test_system::f64::SOLAR_MASS_AWKWARD;
+    use crate::test_system::f64::SOLAR_MASS_GRAMS;
     use crate::test_utils::assert_is_close_f64 as assert_is_close;
 
     #[test]
@@ -185,17 +189,12 @@ mod tests {
         assert_is_close((x / y).cbrt(), Velocity::meters_per_second(4.0));
     }
 
-    // #[test]
-    // fn constant() {
-    //     #[cfg(feature = "default-f32")]
-    //     define_constant!(Quantity, f32, NONE, CONSTANT, 5.0, length: 1, mass: 1);
-    //     #[cfg(feature = "default-f64")]
-    //     define_constant!(Quantity, f64, NONE, CONSTANT, 5.0, length: 1, mass: 1);
-    //     assert_is_close(
-    //         CONSTANT / Length::meters(5.0) / Mass::kilograms(1.0),
-    //         Dimensionless::dimensionless(1.0),
-    //     )
-    // }
+    #[test]
+    fn constant() {
+        assert_is_close(SOLAR_MASS, Mass::kilograms(1.988477e30));
+        assert_is_close(SOLAR_MASS_GRAMS, Mass::kilograms(1.988477e30));
+        assert_is_close(SOLAR_MASS_AWKWARD, Mass::kilograms(1.988477e30));
+    }
 
     #[test]
     fn log2() {
