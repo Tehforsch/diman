@@ -64,6 +64,10 @@ impl Defs {
 
                 #set_z_impl
 
+                pub fn zero() -> Self {
+                    Self(<#vector_type_name>::ZERO)
+                }
+
                 pub fn min(self, rhs: Self) -> Self {
                     Self(self.0.min(rhs.0))
                 }
