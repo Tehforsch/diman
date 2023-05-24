@@ -1,6 +1,4 @@
-use std::{
-    collections::{HashMap, HashSet},
-};
+use std::collections::{HashMap, HashSet};
 
 use syn::Ident;
 
@@ -9,7 +7,7 @@ use crate::{
     expression::Expr,
     types::{
         Constant, Defs, Dimensions, Quantity, QuantityDefinition, QuantityEntry, Unit, UnitEntry,
-        UnitFactor, UnresolvedDefs,
+        UnitFactor, UnresolvedDefs, ConstantEntry,
     },
 };
 
@@ -17,31 +15,16 @@ impl UnresolvedDefs {
     pub fn resolve(self) -> Result<Defs, Error> {
         let items: Vec<UnresolvedItem> = self
             .quantities
-            .into_iter()
-            .map(|q| q.into())
-            .chain(self.units.into_iter().map(|u| u.into()))
+            .iter()
+            .map(|q| q.to_unresolved_item())
+            .chain(self.units.iter().map(|u| u.to_unresolved_item()))
+            .chain(self.constants.iter().map(|u| u.to_unresolved_item()))
             .collect();
         check_no_undefined_identifiers(&items)?;
-        let items = Resolver::resolve(items)?;
-        let (quantities, units): (Vec<_>, Vec<_>) = items
-            .into_iter()
-            .partition(|x| matches!(x.type_, Type::Quantity));
-        let constants = self
-            .constants
-            .into_iter()
-            .map(|constant| {
-                // Very inefficient, but hopefully irrelevant for now
-                let unit = units
-                    .iter()
-                    .find(|unit| unit.name == constant.unit)
-                    .ok_or_else(|| Error::unresolvable(vec![constant.unit]))?;
-                Ok(Constant {
-                    name: constant.name,
-                    dimension: unit.val.dimensions.clone(),
-                    factor: unit.val.factor,
-                })
-            })
-            .collect::<Result<_, _>>()?;
+        let mut items = Resolver::resolve(items)?;
+        let quantities = as_resolved(self.quantities, &mut items);
+        let units = as_resolved(self.units, &mut items);
+        let constants = as_resolved(self.constants, &mut items);
         Ok(Defs {
             dimension_type: self.dimension_type,
             quantity_type: self.quantity_type,
@@ -52,9 +35,14 @@ impl UnresolvedDefs {
     }
 }
 
-fn check_no_undefined_identifiers(
-    items: &[UnresolvedItem],
-) -> Result<(), Error> {
+fn as_resolved<T: ItemConversion>(ts: Vec<T>, items: &mut HashMap<Ident, ResolvedItem>) -> Vec<T::Resolved> {
+    ts.into_iter().map(|t| {
+        let item = items.remove(t.ident()).unwrap();
+        t.from_resolved_item(item)
+    }).collect()
+}
+
+fn check_no_undefined_identifiers(items: &[UnresolvedItem]) -> Result<(), Error> {
     let lhs_idents: HashSet<Ident> = items.iter().map(|item| item.name.clone()).collect();
     let mut undefined_rhs_idents = vec![];
     for item in items.iter() {
@@ -81,11 +69,6 @@ fn check_no_undefined_identifiers(
     }
 }
 
-enum Type {
-    Unit(Option<String>),
-    Quantity,
-}
-
 enum IdentOrFactor {
     Factor(DimensionsAndFactor),
     Ident(Ident),
@@ -97,74 +80,111 @@ enum ValueOrExpr {
 }
 
 struct UnresolvedItem {
-    type_: Type,
     name: Ident,
     val: ValueOrExpr,
 }
 
 struct ResolvedItem {
-    type_: Type,
-    name: Ident,
     val: DimensionsAndFactor,
 }
 
-impl From<QuantityEntry> for UnresolvedItem {
-    fn from(q: QuantityEntry) -> Self {
-        let val = match q.rhs {
+trait ItemConversion {
+    type Resolved;
+
+    fn to_unresolved_item(&self) -> UnresolvedItem;
+    fn from_resolved_item(self, item: ResolvedItem) -> Self::Resolved;
+    fn ident(&self) -> &Ident;
+}
+
+impl ItemConversion for QuantityEntry {
+    type Resolved = Quantity;
+
+    fn to_unresolved_item(&self) -> UnresolvedItem {
+        let val = match &self.rhs {
             QuantityDefinition::Dimensions(dimensions) => ValueOrExpr::Value(DimensionsAndFactor {
-                dimensions,
+                dimensions: dimensions.clone(),
                 factor: 1.0,
             }),
             QuantityDefinition::Expression(expr) => {
-                ValueOrExpr::Expr(expr.map(|x| IdentOrFactor::Ident(x)))
+                ValueOrExpr::Expr(expr.clone().map(|x| IdentOrFactor::Ident(x)))
             }
         };
-        Self {
-            type_: Type::Quantity,
-            name: q.name,
+        UnresolvedItem {
+            name: self.name.clone(),
             val,
         }
     }
+
+    fn from_resolved_item(self, item: ResolvedItem) -> Self::Resolved {
+        Quantity {
+            name: self.name,
+            dimension: item.val.dimensions,
+        }
+    }
+
+    fn ident(&self) -> &Ident {
+        &self.name
+    }
 }
 
-impl From<UnitEntry> for UnresolvedItem {
-    fn from(q: UnitEntry) -> Self {
-        let val = ValueOrExpr::Expr(q.rhs.map(|x| match x {
+impl ItemConversion for UnitEntry {
+    type Resolved = Unit;
+
+    fn to_unresolved_item(&self) -> UnresolvedItem {
+        let val = ValueOrExpr::Expr(self.rhs.clone().map(|x| match x {
             UnitFactor::UnitOrQuantity(ident) => IdentOrFactor::Ident(ident),
             UnitFactor::Number(factor) => IdentOrFactor::Factor(DimensionsAndFactor {
                 factor,
                 dimensions: Dimensions::none(),
             }),
         }));
-        Self {
-            type_: Type::Unit(q.symbol),
-            name: q.name,
+        UnresolvedItem {
+            name: self.name.clone(),
             val,
         }
     }
-}
 
-impl From<ResolvedItem> for Quantity {
-    fn from(q: ResolvedItem) -> Self {
-        Quantity {
-            name: q.name,
-            dimension: q.val.dimensions,
+    fn from_resolved_item(self, item: ResolvedItem) -> Self::Resolved {
+        Unit {
+            name: self.name,
+            dimension: item.val.dimensions,
+            factor: item.val.factor,
+            symbol: self.symbol,
         }
+    }
+
+    fn ident(&self) -> &Ident {
+        &self.name
     }
 }
 
-impl From<ResolvedItem> for Unit {
-    fn from(q: ResolvedItem) -> Self {
-        let symbol = match q.type_ {
-            Type::Unit(symbol) => symbol,
-            Type::Quantity => unreachable!(),
-        };
-        Unit {
-            name: q.name,
-            dimension: q.val.dimensions,
-            factor: q.val.factor,
-            symbol: symbol,
+impl ItemConversion for ConstantEntry {
+    type Resolved = Constant;
+
+    fn to_unresolved_item(&self) -> UnresolvedItem {
+        let val = ValueOrExpr::Expr(self.rhs.clone().map(|x| match x {
+            UnitFactor::UnitOrQuantity(ident) => IdentOrFactor::Ident(ident),
+            UnitFactor::Number(factor) => IdentOrFactor::Factor(DimensionsAndFactor {
+                factor,
+                dimensions: Dimensions::none(),
+            }),
+        }));
+        UnresolvedItem {
+            name: self.name.clone(),
+            val,
         }
+    }
+
+    fn from_resolved_item(self, item: ResolvedItem) -> Self::Resolved {
+        Constant {
+            name: self.name,
+            dimension: item.val.dimensions,
+            factor: item.val.factor,
+        }
+    }
+
+    fn ident(&self) -> &Ident {
+        &self.name
     }
 }
 
@@ -186,8 +206,6 @@ impl Resolvable for UnresolvedItem {
     fn resolve(self, others: &HashMap<Ident, ResolvedItem>) -> Self::Resolved {
         match self.val {
             ValueOrExpr::Value(val) => ResolvedItem {
-                type_: self.type_,
-                name: self.name,
                 val,
             },
             ValueOrExpr::Expr(expr) => {
@@ -198,8 +216,6 @@ impl Resolvable for UnresolvedItem {
                     })
                     .eval();
                 ResolvedItem {
-                    type_: self.type_,
-                    name: self.name,
                     val,
                 }
             }
@@ -223,20 +239,13 @@ struct Resolver<U, R> {
 }
 
 impl<U: Resolvable<Resolved = R>, R> Resolver<U, R> {
-    fn resolve_with(
-        unresolved: Vec<U>,
-        resolved: HashMap<Ident, R>,
-    ) -> Result<Vec<R>, Error> {
+    fn resolve(unresolved: Vec<U>) -> Result<HashMap<Ident, R>, Error> {
         let mut resolver = Self {
             unresolved,
-            resolved,
+            resolved: HashMap::new(),
         };
         resolver.run()?;
-        Ok(resolver.resolved.into_iter().map(|(_, x)| x).collect())
-    }
-
-    fn resolve(unresolved: Vec<U>) -> Result<Vec<R>, Error> {
-        Self::resolve_with(unresolved, HashMap::new())
+        Ok(resolver.resolved)
     }
 
     fn run(&mut self) -> Result<(), Error> {
@@ -246,7 +255,7 @@ impl<U: Resolvable<Resolved = R>, R> Resolver<U, R> {
                 .unresolved
                 .iter()
                 .enumerate()
-                .find(|(_, x)| self.resolvable(x));
+                .find(|(_, x)| x.is_resolvable(&self.resolved));
             if let Some((index, _)) = next_resolvable {
                 let next_resolvable = self.unresolved.remove(index);
                 let name = next_resolvable.ident();
@@ -260,10 +269,6 @@ impl<U: Resolvable<Resolved = R>, R> Resolver<U, R> {
         }
         Ok(())
     }
-
-    fn resolvable(&self, u: &U) -> bool {
-        u.is_resolvable(&self.resolved)
-    }
 }
 
 pub struct Error {
@@ -271,7 +276,7 @@ pub struct Error {
     kind: ErrorKind,
 }
 
-pub enum ErrorKind{
+pub enum ErrorKind {
     Unresolvable,
     Undefined,
 }
@@ -280,14 +285,14 @@ impl Error {
     fn undefined(idents: Vec<Ident>) -> Self {
         Self {
             idents,
-            kind: ErrorKind::Undefined
+            kind: ErrorKind::Undefined,
         }
     }
 
     fn unresolvable(idents: Vec<Ident>) -> Self {
         Self {
             idents,
-            kind: ErrorKind::Unresolvable
+            kind: ErrorKind::Unresolvable,
         }
     }
 

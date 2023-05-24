@@ -20,7 +20,7 @@ pub struct Dimensions {
 
 pub type QuantityExpression = Expr<Ident>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum UnitFactor {
     UnitOrQuantity(Ident),
     Number(f64),
@@ -51,8 +51,7 @@ pub struct QuantityEntry {
 #[derive(Debug)]
 pub struct ConstantEntry {
     pub name: Ident,
-    pub val: f64,
-    pub unit: Ident,
+    pub rhs: UnitExpression,
 }
 
 #[derive(Debug)]

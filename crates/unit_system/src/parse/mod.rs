@@ -146,13 +146,8 @@ impl Parse for ConstantEntry {
     fn parse(input: ParseStream) -> Result<Self> {
         let name = input.parse()?;
         let _: Token![=] = input.parse()?;
-        let val = input.parse()?;
-        let lookahead = input.lookahead1();
-        if lookahead.peek(Token![*]) {
-            let _: Token![*] = input.parse()?;
-        }
-        let unit = input.parse()?;
-        Ok(Self { name, val, unit  })
+        let rhs: UnitExpression = input.parse()?;
+        Ok(Self { name, rhs  })
     }
 }
 

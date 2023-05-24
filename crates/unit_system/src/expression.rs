@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[cfg_attr(test, derive(PartialEq))]
 pub enum Expr<T> {
     Value(Factor<T>),
@@ -6,7 +6,7 @@ pub enum Expr<T> {
     Over(Factor<T>, Box<Expr<T>>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[cfg_attr(test, derive(PartialEq))]
 pub enum Factor<T> {
     Value(T),

@@ -72,8 +72,7 @@ pub struct QuantityEntry {
 #[verified(crate::types::ConstantEntry)]
 pub struct ConstantEntry {
     pub name: Ident,
-    pub val: Factor,
-    pub unit: Ident,
+    pub rhs: UnitExpression,
 }
 
 #[derive(Debug)]
