@@ -10,3 +10,7 @@ pub(crate) fn assert_is_close_f64<const U: crate::test_system::Dimension>(
         y.value_unchecked()
     )
 }
+
+pub(crate) fn assert_is_close_float(x: f64, y: f64) {
+    assert!((x - y).abs() < f64::EPSILON, "{} {}", x, y)
+}

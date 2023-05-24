@@ -26,7 +26,7 @@ impl NumericTrait {
             ..
         } = defs;
         Self {
-            impl_generics: quote! { const D: #dimension_type, S },
+            impl_generics: quote! { < const D: #dimension_type, S > },
             rhs: quote! { #quantity_type<S, D> },
             lhs: quote! { #quantity_type<S, D> },
             ..Default::default()
@@ -84,7 +84,7 @@ impl NumericTrait {
             ..
         } = defs;
         Self {
-            impl_generics: quote! { S },
+            impl_generics: quote! { < S > },
             rhs: quote! { S },
             lhs: quote! { #quantity_type<S, { #dimension_type::none() }> },
             fn_args: quote! {self, rhs: S},
@@ -105,11 +105,68 @@ impl NumericTrait {
             ..
         } = defs;
         Self {
-            impl_generics: quote! { S },
+            impl_generics: quote! { < S > },
             rhs: quote! { S },
             lhs: quote! { #quantity_type<S, { #dimension_type::none() }> },
             fn_args: quote! {&mut self, rhs: S},
             ..Self::add_or_sub_assign_quantity_quantity(defs, name, fn_name, fn_return_expr)
+        }
+    }
+
+    /// For an impl of Add or Sub between a storage type and a dimensionless quantity
+    fn add_or_sub_type_quantity(
+        defs: &Defs,
+        name: TokenStream,
+        fn_name: TokenStream,
+        fn_inner_return_expr: TokenStream,
+        storage_type: &Type,
+    ) -> Self {
+        let Defs {
+            quantity_type,
+            dimension_type,
+            ..
+        } = defs;
+        let quantity = quote! { #quantity_type::<#storage_type, { #dimension_type::none() }> };
+        let fn_return_expr = quote! { #quantity( #fn_inner_return_expr ) };
+        Self {
+            impl_generics: quote! { },
+            lhs: quote! { #storage_type },
+            rhs: quantity.clone(),
+            fn_args: quote! {self, rhs: #quantity},
+            output_type_def: quote! { type Output = #quantity; },
+            fn_return_type: quantity,
+            name,
+            fn_name,
+            fn_return_expr,
+            trait_bound_impl: quote! { },
+        }
+    }
+
+    /// For an impl of AddAssign or SubAssign between a storage type and a dimensionless quantity
+    fn add_or_sub_assign_type_quantity(
+        defs: &Defs,
+        name: TokenStream,
+        fn_name: TokenStream,
+        fn_return_expr: TokenStream,
+        storage_type: &Type,
+    ) -> Self {
+        let Defs {
+            quantity_type,
+            dimension_type,
+            ..
+        } = defs;
+        let quantity = quote! { #quantity_type::<#storage_type, { #dimension_type::none() }> };
+        Self {
+            impl_generics: quote! { },
+            lhs: quote! { #storage_type },
+            rhs: quantity.clone(),
+            fn_args: quote! {&mut self, rhs: #quantity},
+            output_type_def: quote! {},
+            fn_return_type: quote! {()},
+            name,
+            fn_name,
+            fn_return_expr,
+            trait_bound_impl: quote! { },
         }
     }
 
@@ -144,7 +201,7 @@ impl NumericTrait {
                     { DL.#dimension_fn(DR) },
                 >;
             },
-            impl_generics: quote! { const DL: #dimension_type, const DR: #dimension_type, LHS, RHS },
+            impl_generics: quote! { < const DL: #dimension_type, const DR: #dimension_type, LHS, RHS > },
             rhs,
             lhs,
         }
@@ -182,7 +239,7 @@ impl NumericTrait {
                     D,
                 >;
             },
-            impl_generics: quote! { const D: #dimension_type, LHS},
+            impl_generics: quote! { < const D: #dimension_type, LHS >},
         }
     }
 
@@ -245,7 +302,7 @@ impl NumericTrait {
                     D,
                 >;
             },
-            impl_generics: quote! { const D: #dimension_type, RHS},
+            impl_generics: quote! { < const D: #dimension_type, RHS >},
         }
     }
 
@@ -274,7 +331,7 @@ impl NumericTrait {
                 LHS: #name<RHS>,
             },
             output_type_def: quote! {},
-            impl_generics: quote! { const DL: #dimension_type, LHS, RHS },
+            impl_generics: quote! { < const DL: #dimension_type, LHS, RHS > },
             rhs,
             lhs,
         }
@@ -404,6 +461,34 @@ impl Defs {
                     quote! { #quantity_type(self / rhs.0) },
                     &storage_type,
                 ),
+                NumericTrait::add_or_sub_type_quantity(
+                    &self,
+                    quote! { std::ops::Add },
+                    quote! { add },
+                    quote! { self + rhs.0 },
+                    &storage_type,
+                ),
+                NumericTrait::add_or_sub_type_quantity(
+                    &self,
+                    quote! { std::ops::Sub },
+                    quote! { sub },
+                    quote! { self - rhs.0 },
+                    &storage_type,
+                ),
+                NumericTrait::add_or_sub_assign_type_quantity(
+                    &self,
+                    quote! { std::ops::AddAssign },
+                    quote! { add_assign },
+                    quote! { *self += rhs.0; },
+                    &storage_type,
+                ),
+                NumericTrait::add_or_sub_assign_type_quantity(
+                    &self,
+                    quote! { std::ops::SubAssign },
+                    quote! { sub_assign },
+                    quote! { *self -= rhs.0; },
+                    &storage_type,
+                ),
             ].into_iter()
         }))
     }
@@ -434,7 +519,7 @@ impl Defs {
             lhs,
         } = &numeric_trait;
         quote! {
-            impl<#impl_generics> #name::<#rhs> for #lhs
+            impl #impl_generics #name::<#rhs> for #lhs
             where
                 #trait_bound_impl
             {

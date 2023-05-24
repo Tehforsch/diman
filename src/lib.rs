@@ -50,6 +50,7 @@ mod tests {
     use crate::test_system::f64::SOLAR_MASS_AWKWARD;
     use crate::test_system::f64::SOLAR_MASS_GRAMS;
     use crate::test_utils::assert_is_close_f64 as assert_is_close;
+    use crate::test_utils::assert_is_close_float;
 
     #[test]
     fn add_same_unit() {
@@ -82,10 +83,25 @@ mod tests {
     }
 
     #[test]
+    fn add_assign_type_quantity() {
+        let x = Dimensionless::dimensionless(1.0);
+        let mut y = 10.0;
+        y += x;
+        assert_is_close_float(y, 11.0);
+    }
+
+    #[test]
     fn add_quantity_type() {
         let x = Dimensionless::dimensionless(1.0);
         let y = 10.0;
         assert_is_close(x + y, Dimensionless::dimensionless(11.0));
+    }
+
+    #[test]
+    fn add_type_quantity() {
+        let x = Dimensionless::dimensionless(1.0);
+        let y = 10.0;
+        assert_is_close(y + x, Dimensionless::dimensionless(11.0));
     }
 
     #[test]
@@ -123,10 +139,25 @@ mod tests {
     }
 
     #[test]
+    fn sub_assign_type_quantity() {
+        let x = Dimensionless::dimensionless(1.0);
+        let mut y = 10.0;
+        y -= x;
+        assert_is_close_float(y, 9.0);
+    }
+
+    #[test]
     fn sub_quantity_type() {
         let x = Dimensionless::dimensionless(1.0);
         let y = 10.0;
         assert_is_close(x - y, Dimensionless::dimensionless(-9.0));
+    }
+
+    #[test]
+    fn sub_type_quantity() {
+        let x = Dimensionless::dimensionless(1.0);
+        let y = 10.0;
+        assert_is_close(y - x, Dimensionless::dimensionless(9.0));
     }
 
     #[test]
