@@ -249,8 +249,6 @@ impl NumericTrait {
         }
     }
 
-
-
     /// For an impl of MulAssign or DivAssign between two quantities (only for
     /// dimensionless right hand side)
     fn mul_or_div_assign_quantity_quantity(
@@ -411,10 +409,15 @@ impl Defs {
     }
 
     pub fn numeric_traits(&self) -> TokenStream {
-        self.iter_numeric_traits()
+        let ops: TokenStream = self.iter_numeric_traits()
             .into_iter()
             .map(|num_trait| self.generic_numeric_trait_impl(num_trait))
-            .collect()
+            .collect();
+        let sum = self.impl_sum();
+        quote! {
+            #ops
+            #sum
+        }
     }
 
     fn generic_numeric_trait_impl(&self, numeric_trait: NumericTrait) -> TokenStream {
@@ -440,6 +443,24 @@ impl Defs {
                     #fn_return_expr
                 }
             }
+        }
+    }
+
+    fn impl_sum(&self) -> TokenStream {
+        let Self { quantity_type, dimension_type, .. } = self;
+        quote! { 
+            impl<const D: #dimension_type, S: Default + std::ops::AddAssign<S>> std::iter::Sum
+                for #quantity_type<S, D>
+            {
+                fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+                    let mut total = Self::default();
+                    for item in iter {
+                        total += item;
+                    }
+                    total
+                }
+            }
+
         }
     }
 }

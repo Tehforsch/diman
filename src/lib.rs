@@ -89,6 +89,17 @@ mod tests {
     }
 
     #[test]
+    fn sum_quantity_type() {
+        let items = [
+            Length::meters(3.0),
+            Length::kilometers(3.0),
+            Length::meters(9.0),
+            Length::kilometers(1.0),
+        ];
+        assert_is_close(items.into_iter().sum(), Length::meters(4012.0));
+    }
+
+    #[test]
     fn sub_different_units() {
         let x = Length::meters(1.0);
         let y = Length::kilometers(10.0);
