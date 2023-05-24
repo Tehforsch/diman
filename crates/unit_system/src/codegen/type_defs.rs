@@ -3,26 +3,6 @@ use quote::{quote};
 use crate::types::{Defs, Dimensions};
 
 impl Defs {
-    pub fn get_dimension_definition(&self, dim: &Dimensions) -> TokenStream {
-        let dimension_type = &self.dimension_type;
-        let field_updates: TokenStream = 
-            dim
-            .fields
-            .iter()
-            .map(|field| {
-                let ident = &field.ident;
-                let value = &field.value;
-                quote! { #ident: #value, }
-            })
-            .collect();
-        quote! {
-            #dimension_type {
-                #field_updates
-                ..#dimension_type::none()
-            }
-        }
-    }
-
     pub(crate) fn type_definition(&self) -> TokenStream {
         let Self {
             quantity_type,
@@ -73,6 +53,26 @@ impl Defs {
         }
     }
 
+    pub fn get_dimension_expr(&self, dim: &Dimensions) -> TokenStream {
+        let dimension_type = &self.dimension_type;
+        let field_updates: TokenStream = 
+            dim
+            .fields
+            .iter()
+            .map(|field| {
+                let ident = &field.ident;
+                let value = &field.value;
+                quote! { #ident: #value, }
+            })
+            .collect();
+        quote! {
+            #dimension_type {
+                #field_updates
+                ..#dimension_type::none()
+            }
+        }
+    }
+
     pub fn vector_quantity_definitions(&self) -> TokenStream {
         self.vector_types()
             .iter()
@@ -105,7 +105,7 @@ impl Defs {
             .quantities
             .iter()
             .map(|quantity| {
-                let dimension = self.get_dimension_definition(&quantity.dimension);
+                let dimension = self.get_dimension_expr(&quantity.dimension);
                 let quantity_type = &self.quantity_type;
                 let quantity_name = &quantity.name;
                 quote! {

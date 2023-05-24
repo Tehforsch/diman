@@ -6,7 +6,7 @@ use crate::{types::{Defs, Unit}, storage_types::{VectorType, FloatType}};
 impl Defs {
     pub fn unit_constructors(&self) -> TokenStream {
         self.units.iter().map(|unit| {
-            let dimension = self.get_dimension_definition(&unit.dimension);
+            let dimension = self.get_dimension_expr(&unit.dimension);
             let quantity_type = &self.quantity_type;
             let unit_name = &unit.name;
             let factor = &unit.factor;
