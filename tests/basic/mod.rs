@@ -224,14 +224,15 @@ macro_rules! gen_tests_for_float {
     };
 }
 
-#[cfg(feature="f32")]
+#[cfg(feature = "f32")]
 gen_tests_for_float!(
     f32,
     f32,
     crate::utils::assert_is_close_f32,
     crate::utils::assert_is_close_float_f32
 );
-#[cfg(feature="f64")]
+
+#[cfg(feature = "f64")]
 gen_tests_for_float!(
     f64,
     f64,

@@ -9,13 +9,7 @@ mod basic;
 
 mod type_aliases;
 
-#[cfg(test)]
-#[cfg(all(
-    feature = "glam",
-    feature = "glam-dvec2",
-    feature = "glam-dvec3",
-    feature = "f64"
-))]
+#[cfg(feature = "glam")]
 mod glam;
 
 #[cfg(feature = "mpi")]
