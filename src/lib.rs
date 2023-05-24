@@ -9,8 +9,8 @@ compile_error!("Both 'default-f32' and 'default-f64' are activated. This is impo
 #[cfg(all(feature = "default-2d", feature = "default-3d"))]
 compile_error!("Both 'default-2d' and 'default-3d' are activated. This is impossible.");
 
+mod debug_storage_type;
 mod quantity;
-mod storage_type;
 mod type_aliases;
 mod vectors;
 
@@ -29,6 +29,7 @@ mod rand;
 #[cfg(test)]
 mod test_utils;
 
+pub use debug_storage_type::DebugStorageType;
 pub use derive_dimension::diman_dimension;
 pub use type_aliases::Product;
 pub use type_aliases::QProduct;

@@ -21,7 +21,7 @@ impl Defs {
         let Defs { quantity_type, dimension_type, .. } = &self;
         let units = self.units_array();
         quote! {
-            impl<const D: #dimension_type, S: diman::storage_type::StorageType + std::fmt::Display> std::fmt::Debug for #quantity_type<S, D> {
+            impl<const D: #dimension_type, S: diman::DebugStorageType + std::fmt::Display> std::fmt::Debug for #quantity_type<S, D> {
                 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                     let closeness = |value: f64, unit_factor: f64| {
                         if value == 0.0 {
