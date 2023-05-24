@@ -6,7 +6,7 @@ mod tests {
     use mpi::traits::Communicator;
     use mpi::Threading;
 
-    use crate::test_system::f64::Length;
+    use crate::example_system::f64::Length;
 
     lazy_static::lazy_static! {
         pub static ref MPI_UNIVERSE: Universe = {
@@ -32,7 +32,7 @@ mod tests {
     #[cfg(feature = "glam")]
     #[test]
     fn pack_unpack_vec_quantity() {
-        use crate::test_system::vec2::Length as VecLength;
+        use crate::example_system::vec2::Length as VecLength;
         let world = MPI_UNIVERSE.world();
         let q1 = VecLength::meters(1.0, 2.0);
         let mut q2 = VecLength::meters(3.0, 4.0);

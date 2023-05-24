@@ -47,8 +47,6 @@ pub mod tests {
     use proc_macro2::TokenStream;
     use quote::quote;
 
-    use crate::expression::Factor;
-
     use super::Expr;
     use syn::{
         parse::{self, Parse},
@@ -103,7 +101,7 @@ pub mod tests {
 
     #[test]
     fn parse_expr_with_multiple_factors() {
-        use super::Expr::{Over, Times};
+        use super::Expr::Times;
         use super::Factor::*;
         let x = parse_expr(quote! { 1 * 2 * 3 });
         assert_eq!(

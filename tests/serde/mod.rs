@@ -4,12 +4,12 @@
 #[cfg(feature = "glam-dvec3")]
 mod vector_tests {
 
-    use crate::test_system::dvec2::Dimensionless as Vec2Dimensionless;
-    use crate::test_system::dvec2::Length as Vec2Length;
-    use crate::test_system::dvec3::Dimensionless as Vec3Dimensionless;
-    use crate::test_system::dvec3::Length as Vec3Length;
-    use crate::test_system::f64::Length;
-    use crate::test_utils::assert_is_close_f64 as assert_is_close;
+    use crate::example_system::dvec2::Dimensionless as Vec2Dimensionless;
+    use crate::example_system::dvec2::Length as Vec2Length;
+    use crate::example_system::dvec3::Dimensionless as Vec3Dimensionless;
+    use crate::example_system::dvec3::Length as Vec3Length;
+    use crate::example_system::f64::Length;
+    use crate::utils::assert_is_close;
 
     #[test]
     fn deserialize_vector_2() {

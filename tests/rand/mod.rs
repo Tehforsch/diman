@@ -1,9 +1,9 @@
 #[cfg(test)]
-#[cfg(any(feature = "f64"))]
+#[cfg(all(feature = "f64", feature = "rand"))]
 mod tests {
     use rand::Rng;
 
-    use crate::test_system::f64::Length;
+    use crate::example_system::f64::Length;
 
     #[test]
     fn test_random_quantity_generation() {
