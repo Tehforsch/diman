@@ -1,4 +1,6 @@
-use std::{collections::HashMap, hash::Hash, fmt::Display};
+use std::{
+    collections::{HashMap, HashSet},
+};
 
 use syn::Ident;
 
@@ -6,32 +8,40 @@ use crate::{
     dimension_math::DimensionsAndFactor,
     expression::Expr,
     types::{
-        Dimensions, Quantity, QuantityDefinition, QuantityEntry, Defs, Unit, UnitEntry,
-        UnitFactor, UnresolvedDefs, Constant,
+        Constant, Defs, Dimensions, Quantity, QuantityDefinition, QuantityEntry, Unit, UnitEntry,
+        UnitFactor, UnresolvedDefs,
     },
 };
 
 impl UnresolvedDefs {
-    pub fn resolve(self) -> Result<Defs, UnresolvableError<Ident>> {
+    pub fn resolve(self) -> Result<Defs, Error> {
         let items: Vec<UnresolvedItem> = self
             .quantities
             .into_iter()
             .map(|q| q.into())
             .chain(self.units.into_iter().map(|u| u.into()))
             .collect();
+        check_no_undefined_identifiers(&items)?;
         let items = Resolver::resolve(items)?;
         let (quantities, units): (Vec<_>, Vec<_>) = items
             .into_iter()
             .partition(|x| matches!(x.type_, Type::Quantity));
-        let constants = self.constants.into_iter().map(|constant| {
-            // Very inefficient, but hopefully irrelevant for now
-            let unit = units.iter().find(|unit| unit.name == constant.unit).ok_or_else(|| UnresolvableError(vec![constant.unit]))?;
-            Ok(Constant {
-                name: constant.name,
-                dimension: unit.val.dimensions.clone(),
-                factor: unit.val.factor,
+        let constants = self
+            .constants
+            .into_iter()
+            .map(|constant| {
+                // Very inefficient, but hopefully irrelevant for now
+                let unit = units
+                    .iter()
+                    .find(|unit| unit.name == constant.unit)
+                    .ok_or_else(|| Error::unresolvable(vec![constant.unit]))?;
+                Ok(Constant {
+                    name: constant.name,
+                    dimension: unit.val.dimensions.clone(),
+                    factor: unit.val.factor,
+                })
             })
-        }).collect::<Result<_, _>>()?;
+            .collect::<Result<_, _>>()?;
         Ok(Defs {
             dimension_type: self.dimension_type,
             quantity_type: self.quantity_type,
@@ -39,6 +49,35 @@ impl UnresolvedDefs {
             units: units.into_iter().map(|i| i.into()).collect(),
             constants,
         })
+    }
+}
+
+fn check_no_undefined_identifiers(
+    items: &[UnresolvedItem],
+) -> Result<(), Error> {
+    let lhs_idents: HashSet<Ident> = items.iter().map(|item| item.name.clone()).collect();
+    let mut undefined_rhs_idents = vec![];
+    for item in items.iter() {
+        match &item.val {
+            ValueOrExpr::Value(_) => {}
+            ValueOrExpr::Expr(expr) => {
+                for val in expr.iter_vals() {
+                    match val {
+                        IdentOrFactor::Factor(_) => {}
+                        IdentOrFactor::Ident(ident) => {
+                            if !lhs_idents.contains(ident) {
+                                undefined_rhs_idents.push(ident.clone());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if undefined_rhs_idents.is_empty() {
+        Ok(())
+    } else {
+        Err(Error::undefined(undefined_rhs_idents))
     }
 }
 
@@ -131,18 +170,16 @@ impl From<ResolvedItem> for Unit {
 
 trait Resolvable {
     type Resolved;
-    type Name: Hash + PartialEq + Eq;
 
-    fn resolve(self, others: &HashMap<Self::Name, Self::Resolved>) -> Self::Resolved;
-    fn is_resolvable(&self, others: &HashMap<Self::Name, Self::Resolved>) -> bool;
-    fn name(&self) -> Self::Name;
+    fn resolve(self, others: &HashMap<Ident, Self::Resolved>) -> Self::Resolved;
+    fn is_resolvable(&self, others: &HashMap<Ident, Self::Resolved>) -> bool;
+    fn ident(&self) -> Ident;
 }
 
 impl Resolvable for UnresolvedItem {
     type Resolved = ResolvedItem;
-    type Name = Ident;
 
-    fn name(&self) -> Self::Name {
+    fn ident(&self) -> Ident {
         self.name.clone()
     }
 
@@ -180,16 +217,16 @@ impl Resolvable for UnresolvedItem {
     }
 }
 
-struct Resolver<U, R, N> {
+struct Resolver<U, R> {
     unresolved: Vec<U>,
-    resolved: HashMap<N, R>,
+    resolved: HashMap<Ident, R>,
 }
 
-impl<U: Resolvable<Resolved = R, Name = N>, R, N: Hash + PartialEq + Eq> Resolver<U, R, N> {
+impl<U: Resolvable<Resolved = R>, R> Resolver<U, R> {
     fn resolve_with(
         unresolved: Vec<U>,
-        resolved: HashMap<N, R>,
-    ) -> Result<Vec<R>, UnresolvableError<N>> {
+        resolved: HashMap<Ident, R>,
+    ) -> Result<Vec<R>, Error> {
         let mut resolver = Self {
             unresolved,
             resolved,
@@ -198,11 +235,12 @@ impl<U: Resolvable<Resolved = R, Name = N>, R, N: Hash + PartialEq + Eq> Resolve
         Ok(resolver.resolved.into_iter().map(|(_, x)| x).collect())
     }
 
-    fn resolve(unresolved: Vec<U>) -> Result<Vec<R>, UnresolvableError<N>> {
+    fn resolve(unresolved: Vec<U>) -> Result<Vec<R>, Error> {
         Self::resolve_with(unresolved, HashMap::new())
     }
 
-    fn run(&mut self) -> Result<(), UnresolvableError<N>> {
+    fn run(&mut self) -> Result<(), Error> {
+        // This is a very inefficient topological sort.
         while !self.unresolved.is_empty() {
             let next_resolvable = self
                 .unresolved
@@ -211,11 +249,13 @@ impl<U: Resolvable<Resolved = R, Name = N>, R, N: Hash + PartialEq + Eq> Resolve
                 .find(|(_, x)| self.resolvable(x));
             if let Some((index, _)) = next_resolvable {
                 let next_resolvable = self.unresolved.remove(index);
-                let name = next_resolvable.name();
+                let name = next_resolvable.ident();
                 let resolved = next_resolvable.resolve(&self.resolved);
                 self.resolved.insert(name, resolved);
             } else {
-                return Err(UnresolvableError(self.unresolved.drain(..).map(|x| x.name()).collect()));
+                return Err(Error::unresolvable(
+                    self.unresolved.drain(..).map(|x| x.ident()).collect(),
+                ));
             }
         }
         Ok(())
@@ -226,13 +266,56 @@ impl<U: Resolvable<Resolved = R, Name = N>, R, N: Hash + PartialEq + Eq> Resolve
     }
 }
 
-pub struct UnresolvableError<N>(Vec<N>);
+pub struct Error {
+    idents: Vec<Ident>,
+    kind: ErrorKind,
+}
 
-impl Display for UnresolvableError<Ident> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for ident in self.0.iter() {
-            ident.span().unwrap().error(format!("Unresolvable definition: \"{}\"", ident)).emit();
+pub enum ErrorKind{
+    Unresolvable,
+    Undefined,
+}
+
+impl Error {
+    fn undefined(idents: Vec<Ident>) -> Self {
+        Self {
+            idents,
+            kind: ErrorKind::Undefined
         }
-        write!(f, "Unable to resolve. Unresolvable definitions: {}", self.0.iter().map(|x| format!("\"{}\"", x.to_string())).collect::<Vec<_>>().join(", "))
+    }
+
+    fn unresolvable(idents: Vec<Ident>) -> Self {
+        Self {
+            idents,
+            kind: ErrorKind::Unresolvable
+        }
+    }
+
+    pub fn emit(self) -> () {
+        let error_msg = match self.kind {
+            ErrorKind::Unresolvable => "Unresolvable definition:",
+            ErrorKind::Undefined => "Undefined identifier:",
+        };
+        let help = match self.kind {
+            ErrorKind::Unresolvable => "Possible cause: recursive definitions?",
+            ErrorKind::Undefined => "This identifier only appears on the right hand side.",
+        };
+        for ident in self.idents.iter() {
+            ident
+                .span()
+                .unwrap()
+                .error(format!("{} \"{}\"", error_msg, ident))
+                .help(help)
+                .emit();
+        }
+        // write!(
+        //     f,
+        //     "Unable to resolve. Unresolvable definitions: {}",
+        //     self.0
+        //         .iter()
+        //         .map(|x| format!("\"{}\"", x.to_string()))
+        //         .collect::<Vec<_>>()
+        //         .join(", ")
+        // )
     }
 }
