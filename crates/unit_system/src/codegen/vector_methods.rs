@@ -42,8 +42,30 @@ impl Defs {
         } else {
             quote! {}
         };
+        let new_impl = if *num_dims == 3 {
+            quote! {
+                pub fn new(
+                    x: #quantity_type<#float_type, D>,
+                    y: #quantity_type<#float_type, D>,
+                    z: #quantity_type<#float_type, D>,
+                ) -> Self {
+                    Self(<#vector_type_name>::new(x.value_unchecked(), y.value_unchecked(), z.value_unchecked()))
+                }
+            }
+        } else {
+            quote! {
+                pub fn new(
+                    x: #quantity_type<#float_type, D>,
+                    y: #quantity_type<#float_type, D>,
+                ) -> Self {
+                    Self(<#vector_type_name>::new(x.value_unchecked(), y.value_unchecked()))
+                }
+            }
+        };
         quote! {
             impl<const D: #dimension_type> #quantity_type<#vector_type_name, D> {
+                #new_impl
+
                 pub fn x(&self) -> #quantity_type<#float_type, D> {
                     #quantity_type(self.0.x)
                 }
