@@ -24,6 +24,15 @@ impl Defs {
             ..
         } = vector_type;
         let float_type = &float_type.name;
+        let new_z_impl = if *num_dims == 3 {
+            quote! {
+                pub fn new_z(q: #quantity_type<#float_type, D>) -> #quantity_type<#vector_type_name, D> {
+                    q * <#vector_type_name>::Z
+                }
+            }
+        } else {
+            quote! {}
+        };
         let z_impl = if *num_dims == 3 {
             quote! {
                 pub fn z(&self) -> #quantity_type<#float_type, D> {
@@ -66,6 +75,16 @@ impl Defs {
             impl<const D: #dimension_type> #quantity_type<#vector_type_name, D> {
                 #new_impl
 
+                pub fn new_x(q: #quantity_type<#float_type, D>) -> #quantity_type<#vector_type_name, D> {
+                    q * <#vector_type_name>::X
+                }
+
+                pub fn new_y(q: #quantity_type<#float_type, D>) -> #quantity_type<#vector_type_name, D> {
+                    q * <#vector_type_name>::Y
+                }
+
+                #new_z_impl
+                
                 pub fn x(&self) -> #quantity_type<#float_type, D> {
                     #quantity_type(self.0.x)
                 }
