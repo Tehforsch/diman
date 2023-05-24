@@ -161,6 +161,14 @@ mod tests {
     }
 
     #[test]
+    fn neg_quantity() {
+        let x = Length::meters(5.0);
+        let y = Length::meters(2.0);
+        assert_is_close(x + (-y), Length::meters(3.0));
+        assert_is_close(x - y, Length::meters(3.0));
+    }
+
+    #[test]
     fn mul_quantity_quantity() {
         let x = Force::newtons(2.0);
         let y = Length::meters(3.0);

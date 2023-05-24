@@ -499,9 +499,11 @@ impl Defs {
             .map(|num_trait| self.generic_numeric_trait_impl(num_trait))
             .collect();
         let sum = self.impl_sum();
+        let neg = self.impl_neg();
         quote! {
             #ops
             #sum
+            #neg
         }
     }
 
@@ -546,6 +548,20 @@ impl Defs {
                 }
             }
 
+        }
+    }
+
+
+    fn impl_neg(&self) -> TokenStream {
+        let Self { quantity_type, dimension_type, .. } = self;
+        quote! { 
+            impl<const D: #dimension_type, S: std::ops::Neg<Output=S>> std::ops::Neg for #quantity_type<S, D> {
+                type Output = Self;
+
+                fn neg(self) -> Self::Output {
+                    Self(-self.0)
+                }
+            }
         }
     }
 }
