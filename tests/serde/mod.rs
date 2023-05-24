@@ -9,7 +9,7 @@ mod vector_tests {
     use crate::example_system::dvec3::Dimensionless as Vec3Dimensionless;
     use crate::example_system::dvec3::Length as Vec3Length;
     use crate::example_system::f64::Length;
-    use crate::utils::assert_is_close;
+    use crate::utils::assert_is_close_f64 as assert_is_close;
 
     #[test]
     fn deserialize_vector_2() {

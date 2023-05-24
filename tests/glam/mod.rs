@@ -3,7 +3,7 @@ use crate::example_system::f64::{Length, Time};
 use glam::DVec2;
 use glam::DVec3;
 
-use crate::utils::assert_is_close;
+use crate::utils::assert_is_close_f64 as assert_is_close;
 
 #[test]
 fn debug_vector_2() {
