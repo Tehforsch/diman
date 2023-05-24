@@ -1,5 +1,6 @@
-use quote::{quote, format_ident};
+use quote::{quote, format_ident, quote_spanned};
 use proc_macro2::TokenStream;
+use syn::spanned::Spanned;
 
 use crate::{types::{Defs, Unit}, storage_types::{VectorType, FloatType}};
 
@@ -46,7 +47,9 @@ impl Defs {
             ..
         } = unit;
         let name = &float_type.name;
-        quote! {
+        let span = self.dimension_type.span();
+        quote_spanned! {
+            span => 
             impl #quantity_type<#name, {#quantity_dimension}> {
                 pub fn #unit_name(val: #name) -> #quantity_type<#name, {#quantity_dimension}> {
                     #quantity_type::<#name, {#quantity_dimension}>(val * (#factor as #name))

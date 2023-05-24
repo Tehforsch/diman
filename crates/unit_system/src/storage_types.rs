@@ -1,16 +1,18 @@
 use proc_macro2::TokenStream;
+use syn::Type;
+use quote::quote;
 
 use crate::types::Defs;
 
 pub struct VectorType {
-    pub name: TokenStream,
+    pub name: Type,
     pub module_name: TokenStream,
     pub float_type: FloatType,
     pub num_dims: usize,
 }
 
 pub struct FloatType {
-    pub name: TokenStream,
+    pub name: Type,
     pub module_name: TokenStream,
     #[cfg(feature = "mpi")]
     pub mpi_type: TokenStream,
@@ -21,32 +23,32 @@ pub struct FloatType {
 }
 
 pub trait StorageType {
-    fn name(&self) -> &TokenStream;
-    fn base_storage(&self) -> &TokenStream;
+    fn name(&self) -> &Type;
+    fn base_storage(&self) -> &Type;
 }
 
 impl StorageType for VectorType {
-    fn name(&self) -> &TokenStream {
+    fn name(&self) -> &Type {
         &self.name
     }
 
-    fn base_storage(&self) -> &TokenStream {
+    fn base_storage(&self) -> &Type {
         &self.float_type.name
     }
 }
 
 impl StorageType for FloatType {
-    fn name(&self) -> &TokenStream {
+    fn name(&self) -> &Type {
         &self.name
     }
 
-    fn base_storage(&self) -> &TokenStream {
+    fn base_storage(&self) -> &Type {
         &self.name
     }
 }
 
 impl Defs {
-    pub fn storage_type_names(&self) -> Vec<TokenStream> {
+    pub fn storage_type_names(&self) -> Vec<Type> {
         self.float_types()
             .into_iter()
             .map(|x| x.name)
@@ -55,32 +57,37 @@ impl Defs {
     }
 
     pub fn vector_types(&self) -> Vec<VectorType> {
+        // I don't know if this is really the way to construct types
+        let _vec2: Type = syn::parse2(quote!{ ::glam::Vec2 }).unwrap();
+        let _dvec2: Type = syn::parse2(quote!{ ::glam::DVec2 }).unwrap();
+        let _vec3: Type = syn::parse2(quote!{ ::glam::Vec3 }).unwrap();
+        let _dvec3: Type = syn::parse2(quote!{ ::glam::DVec3 }).unwrap();
         vec![
             #[cfg(feature = "glam-vec2")]
             VectorType {
-                name: quote::quote! {::glam::Vec2},
-                module_name: quote::quote! { vec2 },
+                name: _vec2,
+                module_name: quote! { vec2 },
                 float_type: self.f32_type(),
                 num_dims: 2,
             },
             #[cfg(feature = "glam-dvec2")]
             VectorType {
-                name: quote::quote! {::glam::DVec2},
-                module_name: quote::quote! { dvec2 },
+                name: _dvec2,
+                module_name: quote! { dvec2 },
                 float_type: self.f64_type(),
                 num_dims: 2,
             },
             #[cfg(feature = "glam-vec3")]
             VectorType {
-                name: quote::quote! {::glam::Vec3},
-                module_name: quote::quote! { vec3 },
+                name: _vec3,
+                module_name: quote! { vec3 },
                 float_type: self.f32_type(),
                 num_dims: 3,
             },
             #[cfg(feature = "glam-dvec3")]
             VectorType {
-                name: quote::quote! {::glam::DVec3},
-                module_name: quote::quote! { dvec3 },
+                name: _dvec3,
+                module_name: quote! { dvec3 },
                 float_type: self.f64_type(),
                 num_dims: 3,
             },
@@ -89,29 +96,31 @@ impl Defs {
 
     #[cfg(feature = "f32")]
     fn f32_type(&self) -> FloatType {
+        let f32_ty: Type = syn::parse2(quote!{ f32 }).unwrap();
         FloatType {
-            name: quote::quote! { f32 },
-            module_name: quote::quote! { f32 },
+            name: f32_ty,
+            module_name: quote! { f32 },
             #[cfg(feature = "mpi")]
-            mpi_type: quote::quote! { ::mpi::ffi::RSMPI_FLOAT },
+            mpi_type: quote! { ::mpi::ffi::RSMPI_FLOAT },
             #[cfg(feature = "hdf5")]
-            hdf5_type: quote::quote! { hdf5::types::FloatSize::U4 },
+            hdf5_type: quote! { hdf5::types::FloatSize::U4 },
             #[cfg(feature = "serde")]
-            serialize_method: quote::quote! { serialize_f32 },
+            serialize_method: quote! { serialize_f32 },
         }
     }
 
     #[cfg(feature = "f64")]
     fn f64_type(&self) -> FloatType {
+        let f64_ty: Type = syn::parse2(quote!{ f64 }).unwrap();
         FloatType {
-            name: quote::quote! { f64 },
-            module_name: quote::quote! { f64 },
+            name: f64_ty,
+            module_name: quote! { f64 },
             #[cfg(feature = "mpi")]
-            mpi_type: quote::quote! { ::mpi::ffi::RSMPI_DOUBLE },
+            mpi_type: quote! { ::mpi::ffi::RSMPI_DOUBLE },
             #[cfg(feature = "hdf5")]
-            hdf5_type: quote::quote! { hdf5::types::FloatSize::U8 },
+            hdf5_type: quote! { hdf5::types::FloatSize::U8 },
             #[cfg(feature = "serde")]
-            serialize_method: quote::quote! { serialize_f64 },
+            serialize_method: quote! { serialize_f64 },
         }
     }
 

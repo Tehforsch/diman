@@ -1,5 +1,6 @@
 use proc_macro2::TokenStream;
-use quote::{quote};
+use quote::{quote, quote_spanned};
+use syn::{spanned::Spanned};
 use crate::{types::{Defs, Dimensions}, storage_types::StorageType};
 
 impl Defs {
@@ -9,10 +10,12 @@ impl Defs {
             dimension_type,
             ..
         } = &self;
-        quote! {
-            #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Default)]
-            #[repr(transparent)]
-            pub struct #quantity_type<S: 'static, const D: #dimension_type>(pub(crate) S);
+        let span = quantity_type.span();
+        quote_spanned! {
+            span => 
+                #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Default)]
+                #[repr(transparent)]
+                pub struct #quantity_type<S: 'static, const D: #dimension_type>(pub(crate) S);
         }
     }
 
@@ -65,11 +68,13 @@ impl Defs {
                 quote! { #ident: #value, }
             })
             .collect();
-        quote! {
-            #dimension_type {
-                #field_updates
-                ..#dimension_type::none()
-            }
+        let span = self.quantity_type.span();
+        quote_spanned! {
+            span => 
+                #dimension_type {
+                    #field_updates
+                    ..#dimension_type::none()
+                }
         }
     }
 
@@ -134,7 +139,9 @@ impl Defs {
                 let quantity_type = &self.quantity_type;
                 let quantity_name = &quantity.name;
                 let type_ = type_.name();
-                quote! {
+                let span = self.dimension_type.span();
+                quote_spanned! {
+                    span => 
                     pub type #quantity_name = #quantity_type::<#type_, { #dimension }>;
                 }
             })

@@ -1,5 +1,6 @@
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{quote};
+use syn::Type;
 
 use crate::types::Defs;
 
@@ -155,7 +156,7 @@ impl NumericTrait {
         name: TokenStream,
         fn_name: TokenStream,
         fn_return_expr: TokenStream,
-        storage_type: &TokenStream,
+        storage_type: &Type,
     ) -> NumericTrait {
         let Defs {
             quantity_type,
@@ -191,7 +192,7 @@ impl NumericTrait {
         name: TokenStream,
         fn_name: TokenStream,
         fn_return_expr: TokenStream,
-        storage_type: &TokenStream,
+        storage_type: &Type,
     ) -> NumericTrait {
         let Defs {
             quantity_type,
@@ -218,7 +219,7 @@ impl NumericTrait {
         name: TokenStream,
         fn_name: TokenStream,
         fn_return_expr: TokenStream,
-        storage_type: &TokenStream,
+        storage_type: &Type,
     ) -> NumericTrait {
         let Defs {
             quantity_type,

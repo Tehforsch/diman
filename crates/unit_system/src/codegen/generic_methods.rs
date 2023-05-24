@@ -1,12 +1,13 @@
 use proc_macro2::TokenStream;
 use quote::quote;
+use syn::Type;
 
 use crate::types::Defs;
 
 impl Defs {
     fn impl_method_for_generic_storage_type(
         &self,
-        storage_type: &TokenStream,
+        storage_type: &Type,
         name: &TokenStream,
     ) -> TokenStream {
         let Self {

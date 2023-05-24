@@ -15,7 +15,7 @@ mod type_aliases;
 mod vectors;
 
 #[cfg(test)]
-mod test_system;
+pub mod test_system;
 
 #[cfg(feature = "mpi")]
 mod mpi;
@@ -203,4 +203,4 @@ mod tests {
     }
 }
 
-mod temporary_test_system;
+pub mod temporary_test_system;
