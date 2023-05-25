@@ -5,7 +5,7 @@
 pub mod example_system;
 pub mod utils;
 
-mod basic;
+mod float;
 
 mod type_aliases;
 
