@@ -21,7 +21,6 @@ pub type Product<Q1> = <Q1 as QProduct>::Output;
 pub type Quotient<Q1, Q2> =
     <<Q1 as QProduct>::Output as std::ops::Div<<Q2 as QProduct>::Output>>::Output;
 
-    // ($n:ident, $check_severity:expr, $($x:ident : $type:ty),+, $code:block) => {
 macro_rules! impl_qproduct {
     ($f: ident, $($fs: ident),+) => {
         impl<$f, $($fs),+> QProduct for ($f, $($fs),+)
