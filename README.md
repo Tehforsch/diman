@@ -120,7 +120,7 @@ The macro will automatically implement numerical traits such as `Add`, `Sub`, `M
 `Quantity` should behave just like its underlying storage type whenever possible and allowed by the dimensions. 
 For example:
 * Addition of `Quantity<Float, D>` and `Float` is possible if and only if `D` is dimensionless.
-* `Quantity` implements the dimensionless methods of the underlying storage type, such as `abs` for dimensionless quantities.
+* `Quantity` implements the dimensionless methods of `S`, such as `abs` for dimensionless quantities.
 * It implements `Deref` to `S` if and only if `D` is dimensionless.
 * `Debug` is implemented and will print the quantity in its representation of the "closest" unit. For example `Length::meters(100.0)` would be debug printed as `0.1 km`. If printing in a specific unit is required, conversion methods are available for each unit (such as `Length::in_meters`).
 
