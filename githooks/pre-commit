@@ -1,6 +1,6 @@
 #!/bin/bash
 
-diff=$(cargo fmt -- --check)
+diff=$(cargo fmt --all -- --check)
 result=$?
 
 if [[ ${result} -ne 0 ]] ; then
@@ -10,19 +10,13 @@ EOF
 fi
 
 
-if ! cargo test --all-features
+if ! cargo test --all --all-features
 then
     echo "test failed"
     exit 1
 fi
 
-if ! cargo test --manifest-path crates/unit_system/Cargo.toml --all-features
-then
-    echo "unit_system test failed"
-    exit 1
-fi
-
-diff=$(cargo fmt -- --check)
+diff=$(cargo fmt --all -- --check)
 result=$?
 
 if [[ ${result} -ne 0 ]] ; then

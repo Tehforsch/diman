@@ -10,6 +10,9 @@ categories = ["science"]
 keywords = ["units", "dimensional-analysis"]
 readme = "README.md"
 
+[workspace]
+members = ["crates/*"]
+
 [features]
 glam = ["dep:glam", "unit_system/glam"]
 glam-vec2 = ["glam", "f32", "unit_system/glam-vec2"]
