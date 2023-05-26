@@ -126,7 +126,7 @@ For example:
 
 Some other, more complex operations are also allowed:
 ```
-# use diman::si::f64::{Length, Volume};
+use diman::si::f64::{Length, Volume};
 let x = Length::meters(3.0);
 let vol = x.cubed();
 assert_eq!(vol, Volume::cubic_meters(27.0))
@@ -136,7 +136,7 @@ This includes `squared`, `cubed`, `sqrt`, `cbrt` as well as `powi`.
 ## Serde
 Serialization and deserialization of the units is provided via `serde`:
 ```rust
-# use diman::si::f64::{Length, Velocity};
+use diman::si::f64::{Length, Velocity};
 use serde::{Serialize, Deserialize};
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 struct Parameters {
