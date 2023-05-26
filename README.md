@@ -16,7 +16,7 @@ assert_eq!(v1, v2);
 
 Let's try to assign add quantities with incompatible units:
 ```rust compile_fail
-use diman::si::{Length, Time};
+use diman::si::f64::{Length, Time};
 
 let time = Time::seconds(1.0);
 let length = Length::meters(10.0);
@@ -26,8 +26,8 @@ This results in a compiler error:
 ```text
 let sum = length + time;
                    ^^^^
-= note: expected struct `Quantity<_, Dimension { length: 1, time: 0, mass: 0, temperature: 0 }>`
-        found struct `Quantity<_, Dimension { length: 0, time: 1, mass: 0, temperature: 0 }>`
+= note: expected struct `Quantity<_, Dimension { length: 1, time: 0, mass: 0, temperature: 0, current: 0, amount_of_substance: 0, luminous_intensity: 0 }>`
+        found struct `Quantity<_, Dimension { length: 0, time: 1, mass: 0, temperature: 0, current: 0, amount_of_substance: 0, luminous_intensity: 0 }>`
 ```
 
 
