@@ -111,6 +111,7 @@ fn fast_enough(x: Length, t: Time) {
 fast_enough(Length::kilometers(100.0), Time::hours(0.3));
 ```
 
+This will define the `Quantity` type and implement all the required traits and methods.
 Here, `def` defines Quantities, which are concrete types, `unit` defines units, which are methods on the corresponding quantities and `constant` defines constants. The macro also accepts more complex definitions such as `def EnergyRatePerVolume = (Energy / Time) / Volume`.
 The definitions do not have to be in any specific order.
 
