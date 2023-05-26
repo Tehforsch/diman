@@ -12,12 +12,13 @@ glam-dvec3 = ["glam", "f64", "unit_system/glam-dvec3"]
 f32 = ["unit_system/f32"]
 f64 = ["unit_system/f64"]
 gen-vec-names = ["unit_system/gen-vec-names"]
+si = []
 
 mpi = ["dep:once_cell", "dep:mpi", "unit_system/mpi"]
 hdf5 = ["dep:hdf5", "unit_system/hdf5"]
 rand = ["dep:rand", "unit_system/rand"]
 serde = ["dep:serde", "unit_system/serde"]
-default = ["f32", "f64", "glam", "glam-vec2", "glam-vec3", "glam-dvec2", "glam-dvec3", "serde", "mpi", "hdf5", "rand"]
+default = ["f32", "f64", "si"]
 
 [lib]
 

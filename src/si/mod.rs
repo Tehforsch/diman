@@ -1,5 +1,6 @@
-use ::diman::diman_dimension;
-use ::diman::unit_system;
+use crate as diman;
+use crate::diman_dimension;
+use crate::unit_system;
 
 #[diman_dimension]
 pub struct Dimension {
@@ -7,6 +8,9 @@ pub struct Dimension {
     pub time: i32,
     pub mass: i32,
     pub temperature: i32,
+    pub current: i32,
+    pub amount_of_substance: i32,
+    pub luminous_intensity: i32,
 }
 
 unit_system!(
@@ -20,6 +24,7 @@ unit_system!(
         unit (kilometers, "km") = 1000.0 * meters,
         def Time = { time: 1 },
         unit (seconds, "s") = 1.0 * Time,
+        unit (hours, "h") = 3600 * seconds,
         def Velocity = Length / Time,
         unit (meters_per_second, "m/s") = meters / seconds,
         def Energy = Mass * Velocity * Velocity,

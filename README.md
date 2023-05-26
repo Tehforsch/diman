@@ -1,8 +1,8 @@
 # Diman
 Diman is a library for zero-cost compile time unit checking.
 
-```rust ignore
-use diman::si::{Length, Time, Velocity};
+```rust
+use diman::si::f32::{Length, Time, Velocity};
 
 fn get_velocity(x: Length, t: Time) -> Velocity {
     x / t
@@ -51,9 +51,8 @@ If you cannot use unstable Rust for your project or require a stable library for
 ## Design
 Diman aims to make it as easy as possible to add compile-time unit safety to Rust code. Physical quantities are represented by the `Quantity<S, D>` struct, where `S` is the underlying storage type (`f32`, `f64`, ...) and `D` is the  dimension of the quantity. For example, in order to represent the [SI system of units](https://www.nist.gov/pml/owm/metric-si/si-units), the dimension type would look as follows:
 ```rust
-use derive_dimension::diman_dimension;
+use diman::diman_dimension;
 
-#[derive(PartialEq, Eq, Debug, Clone)]
 #[diman_dimension]
 pub struct Dimension {
     pub length: i32,

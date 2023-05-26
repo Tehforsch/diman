@@ -5,6 +5,9 @@
 mod debug_storage_type;
 mod type_aliases;
 
+#[cfg(feature = "si")]
+pub mod si;
+
 pub use debug_storage_type::DebugStorageType;
 pub use derive_dimension::diman_dimension;
 pub use type_aliases::Product;

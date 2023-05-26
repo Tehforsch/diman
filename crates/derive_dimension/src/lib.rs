@@ -8,9 +8,10 @@ pub fn diman_dimension(
     _args: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    let methods_impl: proc_macro2::TokenStream = dimension_methods_impl(input.clone()).into();
-    let input: proc_macro2::TokenStream = input.into();
+    let input: DeriveInput = syn::parse(input).unwrap();
+    let methods_impl: proc_macro2::TokenStream = dimension_methods_impl(&input).into();
     let output = quote! {
+        #[derive(PartialEq, Eq, Clone, Debug)]
         #input
 
         #methods_impl
@@ -19,15 +20,14 @@ pub fn diman_dimension(
 }
 
 pub(crate) fn dimension_methods_impl(
-    input: proc_macro::TokenStream,
+    input: &DeriveInput,
 ) -> proc_macro::TokenStream {
-    let ast: DeriveInput = syn::parse(input).unwrap();
-    let type_name = &ast.ident;
-    let (impl_generics, type_generics, where_clause) = &ast.generics.split_for_impl();
+    let type_name = &input.ident;
+    let (impl_generics, type_generics, where_clause) = &input.generics.split_for_impl();
     let panic_unexpected_type = || panic!("Found unexpected field type while deriving diman_dimension methods.");
     let mut field_names = vec![];
-    if let syn::Data::Struct(s) = ast.data {
-        if let syn::Fields::Named(fields) = s.fields {
+    if let syn::Data::Struct(s) = &input.data {
+        if let syn::Fields::Named(fields) = &s.fields {
             for f in fields.named.iter() {
                 if let syn::Type::Path(ref type_name) = f.ty {
                     if type_name.path.segments.len() != 1 {
