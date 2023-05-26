@@ -47,6 +47,7 @@ If you cannot use unstable Rust for your project or require a stable library for
 * Serialization and Deserialization via [`serde`](https://crates.io/crates/serde) (behind the `serde` feature gate).
 * HDF5 support using [`hdf5-rs`](https://crates.io/crates/hdf5-rs/) (behind the `hdf5` feature gate).
 * Quantities can be sent via MPI using [`mpi`](https://crates.io/crates/mpi) (behind the `mpi` feature gate).
+* Random quantities can be generated via [`rand`](https://crates.io/crates/rand) (behind the `rand` feature gate).
 
 ## Design
 Diman aims to make it as easy as possible to add compile-time unit safety to Rust code. Physical quantities are represented by the `Quantity<S, D>` struct, where `S` is the underlying storage type (`f32`, `f64`, ...) and `D` is the  dimension of the quantity. For example, in order to represent the [SI system of units](https://www.nist.gov/pml/owm/metric-si/si-units), the dimension type would look as follows:
@@ -134,7 +135,7 @@ assert_eq!(vol, Volume::cubic_meters(27.0))
 This includes `squared`, `cubed`, `sqrt`, `cbrt` as well as `powi`.
 
 ## Serde
-Serialization and deserialization of the units is provided via `serde`:
+Serialization and deserialization of the units is provided via `serde` if the `serde` feature gate is enabled:
 ```rust
 use diman::si::f64::{Length, Velocity};
 use serde::{Serialize, Deserialize};
@@ -156,4 +157,19 @@ assert_eq!(
         my_vel: Velocity::meters_per_second(10.0),
     }
 )
+```
+
+## Rand
+Random quantities can be generated via `rand`
+```rust
+use rand::Rng;
+
+use diman::si::f64::Length;
+
+let mut rng = rand::thread_rng();
+for _ in 0..100 {
+    let x = rng.gen_range(Length::meters(0.0)..Length::kilometers(1.0));
+    assert!(Length::meters(0.0) <= x);
+    assert!(x < Length::meters(1000.0));
+}
 ```
