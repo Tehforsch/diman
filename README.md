@@ -71,8 +71,8 @@ Using the above `Dimension` type, we can define our own quantity type and a corr
 
 
 ```rust ignore
-# #![allow(incomplete_features)]
-# #![feature(generic_const_exprs, adt_const_params)]
+#![allow(incomplete_features)]
+#![feature(generic_const_exprs, adt_const_params)]
 use diman::unit_system;
 use diman::dimension;
 
