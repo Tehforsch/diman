@@ -21,27 +21,42 @@ pub type Product<Q1> = <Q1 as QProduct>::Output;
 pub type Quotient<Q1, Q2> =
     <<Q1 as QProduct>::Output as std::ops::Div<<Q2 as QProduct>::Output>>::Output;
 
-impl<Q1: QProduct, Q2: QProduct> QProduct for (Q1, Q2)
+    // ($n:ident, $check_severity:expr, $($x:ident : $type:ty),+, $code:block) => {
+macro_rules! impl_qproduct {
+    ($f: ident, $($fs: ident),+) => {
+        impl<$f, $($fs),+> QProduct for ($f, $($fs),+)
+        where
+            ($($fs),+): QProduct,
+            $f: QProduct,
+            <($($fs),+) as QProduct>::Output: std::ops::Mul<<$f as QProduct>::Output>,
+        {
+            type Output =
+                <<($($fs),+) as QProduct>::Output as std::ops::Mul<<$f as QProduct>::Output>>::Output;
+        }
+
+    }
+}
+
+impl<Q1, Q2> QProduct for (Q1, Q2)
 where
+    Q1: QProduct,
+    Q2: QProduct,
     <Q1 as QProduct>::Output: std::ops::Mul<<Q2 as QProduct>::Output>,
 {
     type Output = <<Q1 as QProduct>::Output as std::ops::Mul<<Q2 as QProduct>::Output>>::Output;
 }
 
-impl<Q1, Q2, Q3: QProduct> QProduct for (Q1, Q2, Q3)
-where
-    (Q1, Q2): QProduct,
-    <(Q1, Q2) as QProduct>::Output: std::ops::Mul<<Q3 as QProduct>::Output>,
-{
-    type Output =
-        <<(Q1, Q2) as QProduct>::Output as std::ops::Mul<<Q3 as QProduct>::Output>>::Output;
-}
-
-impl<Q1, Q2, Q3, Q4: QProduct> QProduct for (Q1, Q2, Q3, Q4)
-where
-    (Q1, Q2, Q3): QProduct,
-    <(Q1, Q2, Q3) as QProduct>::Output: std::ops::Mul<<Q4 as QProduct>::Output>,
-{
-    type Output =
-        <<(Q1, Q2, Q3) as QProduct>::Output as std::ops::Mul<<Q4 as QProduct>::Output>>::Output;
-}
+impl_qproduct!(Q1, Q2, Q3);
+impl_qproduct!(Q1, Q2, Q3, Q4);
+impl_qproduct!(Q1, Q2, Q3, Q4, Q5);
+impl_qproduct!(Q1, Q2, Q3, Q4, Q5, Q6);
+impl_qproduct!(Q1, Q2, Q3, Q4, Q5, Q6, Q7);
+impl_qproduct!(Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8);
+impl_qproduct!(Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9);
+impl_qproduct!(Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10);
+impl_qproduct!(Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11);
+impl_qproduct!(Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12);
+impl_qproduct!(Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13);
+impl_qproduct!(Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14);
+impl_qproduct!(Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15);
+impl_qproduct!(Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, Q16);
