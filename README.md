@@ -98,6 +98,7 @@ unit_system!(
         constant MY_FAVORITE_VELOCITY = 1000 * meters_per_second,
     ]
 );
+
 use f64::{Length, Time, Velocity, MY_FAVORITE_VELOCITY};
 
 fn fast_enough(x: Length, t: Time) {
