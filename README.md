@@ -101,7 +101,7 @@ unit_system!(
 use f64::{Length, Time, Velocity, MY_FAVORITE_VELOCITY};
 
 fn fast_enough(x: Length, t: Time) {
-    let vel = x /t;
+    let vel = x / t;
     if vel > MY_FAVORITE_VELOCITY {
         println!("{} is definitely fast enough!", vel.in_kilometers_per_hour());
     }
