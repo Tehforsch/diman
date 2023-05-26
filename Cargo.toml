@@ -30,17 +30,17 @@ default = ["f32", "f64", "si"]
 [lib]
 
 [dependencies]
-glam = { version = "0.21.3", optional = true }
+glam = { version = "0.24.0", optional = true }
 rand = { version = "0.8.5", optional = true }
-serde = {version = "1.0.143", features = ["derive"], optional = true }
+serde = {version = "1.0.163", features = ["derive"], optional = true }
 # Keeping hdf5 at an open PR which adds support for 1.14.0 until it is merged
 hdf5 = { rev = "7eb87b800e2806fcd416e5f76dc16998bf311525", git = "https://github.com/aldanor/hdf5-rust", optional = true}
 mpi = { version = "0.6", default-features = false, features = ["derive"], optional = true }
-once_cell = { version = "1.13.0", optional = true }
+once_cell = { version = "1.17.1", optional = true }
 
 derive_dimension = { path = "crates/derive_dimension" }
 unit_system = { path = "crates/unit_system" }
 
 [dev-dependencies]
-serde_yaml = "0.9.9"
+serde_yaml = "0.9.21"
 lazy_static = "1.4.0"
