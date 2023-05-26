@@ -171,7 +171,6 @@ dependencies = [
  "lazy_static",
  "mpi",
  "once_cell",
- "paste",
  "rand",
  "serde",
  "serde_yaml",
