@@ -1,3 +1,4 @@
+/// A storage type that can be debug printed.
 pub trait DebugStorageType {
     fn representative_value(&self) -> f64;
     fn div_f64(&self, val: f64) -> Self;

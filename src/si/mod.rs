@@ -1,5 +1,3 @@
-/// Defines the proper dimensions for the SI system. The unit definitions
-/// are primarily used for the doctests now and not complete in any sense.
 use crate as diman;
 use crate::dimension;
 use crate::unit_system;
@@ -29,6 +27,8 @@ unit_system!(
         unit (hours, "h") = 3600 * seconds,
         def Velocity = Length / Time,
         unit (meters_per_second, "m/s") = meters / seconds,
+        def Area = Length * Length,
+        unit (square_meters, "m^2") = meters * meters,
         def Volume = Length * Length * Length,
         unit (cubic_meters, "m^3") = meters * meters * meters,
     ]

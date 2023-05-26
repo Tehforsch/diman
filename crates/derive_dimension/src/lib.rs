@@ -3,6 +3,9 @@ use syn::*;
 
 const ALLOWED_TYPES: &[&str] = &["i8", "i32", "i64"];
 
+/// Derives all required methods for a dimension type.
+/// Only works on structs on which every field is `i32`.
+/// Also adds derives of `PartialEq`, `Eq`, `Clone` and `Debug`.
 #[proc_macro_attribute]
 pub fn dimension(
     _args: proc_macro::TokenStream,
