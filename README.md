@@ -124,6 +124,9 @@ For example:
 * `Quantity` implements the dimensionless methods of `S`, such as `abs` for dimensionless quantities.
 * It implements `Deref` to `S` if and only if `D` is dimensionless.
 * `Debug` is implemented and will print the quantity in its representation of the "closest" unit. For example `Length::meters(100.0)` would be debug printed as `0.1 km`. If printing in a specific unit is required, conversion methods are available for each unit (such as `Length::in_meters`).
+* `.value()` provides access to the underlying storage type of a dimensionless quantity.
+* `.value_unchecked()` provides access to the underlying storage type for all quantities if absolutely required. This is not unit-safe since the value will depend on the unit system!
+* Similarly, new quantities can be constructed from storage types using `Vec::new_unchecked`. This is also not unit-safe.
 
 Some other, more complex operations are also allowed:
 ```
