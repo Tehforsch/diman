@@ -14,7 +14,7 @@ pub trait ItemConversion {
     type Resolved;
 
     fn to_unresolved_item(&self) -> UnresolvedItem;
-    fn from_resolved_item(self, item: ResolvedItem) -> Self::Resolved;
+    fn into_resolved(self, item: ResolvedItem) -> Self::Resolved;
     fn ident(&self) -> &Ident;
 }
 
@@ -28,7 +28,7 @@ impl ItemConversion for QuantityEntry {
                 factor: 1.0,
             }),
             QuantityDefinition::Expression(expr) => {
-                ValueOrExpr::Expr(expr.clone().map(|x| IdentOrFactor::Ident(x)))
+                ValueOrExpr::Expr(expr.clone().map(IdentOrFactor::Ident))
             }
         };
         UnresolvedItem {
@@ -37,7 +37,7 @@ impl ItemConversion for QuantityEntry {
         }
     }
 
-    fn from_resolved_item(self, item: ResolvedItem) -> Self::Resolved {
+    fn into_resolved(self, item: ResolvedItem) -> Self::Resolved {
         Quantity {
             name: self.name,
             dimension: item.val.dimensions,
@@ -66,7 +66,7 @@ impl ItemConversion for UnitEntry {
         }
     }
 
-    fn from_resolved_item(self, item: ResolvedItem) -> Self::Resolved {
+    fn into_resolved(self, item: ResolvedItem) -> Self::Resolved {
         Unit {
             name: self.name,
             dimension: item.val.dimensions,
@@ -97,7 +97,7 @@ impl ItemConversion for ConstantEntry {
         }
     }
 
-    fn from_resolved_item(self, item: ResolvedItem) -> Self::Resolved {
+    fn into_resolved(self, item: ResolvedItem) -> Self::Resolved {
         Constant {
             name: self.name,
             dimension: item.val.dimensions,

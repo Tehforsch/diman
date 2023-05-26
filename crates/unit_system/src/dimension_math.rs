@@ -35,6 +35,8 @@ impl std::ops::Mul for DimensionsAndFactor {
 impl std::ops::Div for DimensionsAndFactor {
     type Output = Self;
 
+    // :D
+    #[allow(clippy::suspicious_arithmetic_impl)]
     fn div(self, rhs: Self) -> Self::Output {
         self * rhs.inv()
     }

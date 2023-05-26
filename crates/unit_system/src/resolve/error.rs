@@ -27,7 +27,7 @@ impl Error {
         }
     }
 
-    pub fn emit(self) -> () {
+    pub fn emit(self) {
         let error_msg = match self.kind {
             ErrorKind::Unresolvable => "Unresolvable definition:",
             ErrorKind::Undefined => "Undefined identifier:",

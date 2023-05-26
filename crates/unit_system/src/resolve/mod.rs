@@ -47,7 +47,7 @@ fn convert_vec_to_resolved<T: ItemConversion>(
     ts.into_iter()
         .map(|t| {
             let item = items.remove(t.ident()).unwrap();
-            t.from_resolved_item(item)
+            t.into_resolved(item)
         })
         .collect()
 }

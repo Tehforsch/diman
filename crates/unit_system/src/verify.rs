@@ -69,7 +69,7 @@ impl Verify for ptype::Symbol {
             Lit::Str(s) => Ok(s.value()),
             _ => Err(Error::new(
                 self.0.span(),
-                format!("Unexpected literal, expected a str"),
+                "Unexpected literal, expected a str".to_string(),
             )),
         }
     }
@@ -84,7 +84,7 @@ impl Verify for ptype::Factor {
             Lit::Int(s) => Ok(s.base10_parse()?),
             _ => Err(Error::new(
                 self.0.span(),
-                format!("Unexpected literal, expected a numerical value"),
+                "Unexpected literal, expected a numerical value".to_string(),
             )),
         }
     }
@@ -98,7 +98,7 @@ impl Verify for ptype::DimensionInt {
             Lit::Int(s) => Ok(s.base10_parse()?),
             _ => Err(Error::new(
                 self.0.span(),
-                format!("Unexpected literal, expected an integer"),
+                "Unexpected literal, expected an integer".to_string(),
             )),
         }
     }
@@ -114,7 +114,7 @@ impl Verify for ptype::Prefix {
                 Lit::Str(s) => Ok(s.value()),
                 _ => Err(Error::new(
                     s.span(),
-                    format!("Unexpected literal, expected a str"),
+                    "Unexpected literal, expected a str".to_string(),
                 )),
             },
         }?;

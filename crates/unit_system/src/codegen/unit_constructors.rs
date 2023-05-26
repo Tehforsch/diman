@@ -18,12 +18,12 @@ impl Defs {
             let vector_impls: TokenStream = self
                 .vector_types()
                 .iter()
-                .map(|vector_type| self.vector_unit_constructor(vector_type, &unit, &dimension))
+                .map(|vector_type| self.vector_unit_constructor(vector_type, unit, &dimension))
                 .collect();
             let float_impls: TokenStream = self
                 .float_types()
                 .iter()
-                .map(|float_type| self.float_unit_constructor(float_type, &unit, &dimension))
+                .map(|float_type| self.float_unit_constructor(float_type, unit, &dimension))
                 .collect();
             quote! {
                 impl<S> #quantity_type<S, {#dimension}> where S: std::ops::Div<f64, Output = S> {

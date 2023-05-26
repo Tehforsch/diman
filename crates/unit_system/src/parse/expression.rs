@@ -24,9 +24,7 @@ impl<T: Parse> Parse for Expr<T> {
     fn parse(input: ParseStream) -> Result<Self> {
         let first_factor: Factor<T> = input.parse()?;
         let lookahead = input.lookahead1();
-        if input.is_empty() {
-            Ok(Self::Value(first_factor))
-        } else if lookahead.peek(Token![,]) {
+        if input.is_empty() || lookahead.peek(Token![,]) {
             Ok(Self::Value(first_factor))
         } else if lookahead.peek(Token![*]) {
             let _: Token![*] = input.parse().unwrap();

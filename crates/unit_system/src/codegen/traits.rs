@@ -353,75 +353,75 @@ impl Defs {
         let Self { quantity_type, .. } = self;
         vec![
             NumericTrait::add_or_sub_quantity_quantity(
-                &self,
+                self,
                 quote! { std::ops::Add },
                 quote! { add },
                 quote! { Self(self.0 + rhs.0) },
             ),
             NumericTrait::add_or_sub_quantity_quantity(
-                &self,
+                self,
                 quote! { std::ops::Sub },
                 quote! { sub },
                 quote! { Self(self.0 - rhs.0) },
             ),
             NumericTrait::add_or_sub_assign_quantity_quantity(
-                &self,
+                self,
                 quote! { std::ops::AddAssign },
                 quote! { add_assign },
                 quote! { self.0 += rhs.0; },
             ),
             NumericTrait::add_or_sub_assign_quantity_quantity(
-                &self,
+                self,
                 quote! { std::ops::SubAssign },
                 quote! { sub_assign },
                 quote! { self.0 -= rhs.0; },
             ),
             NumericTrait::add_or_sub_quantity_type(
-                &self,
+                self,
                 quote! { std::ops::Add },
                 quote! { add },
                 quote! { Self(self.0 + rhs) },
             ),
             NumericTrait::add_or_sub_quantity_type(
-                &self,
+                self,
                 quote! { std::ops::Sub },
                 quote! { sub },
                 quote! { Self(self.0 - rhs) },
             ),
             NumericTrait::add_or_sub_assign_quantity_type(
-                &self,
+                self,
                 quote! { std::ops::AddAssign },
                 quote! { add_assign },
                 quote! { self.0 += rhs; },
             ),
             NumericTrait::add_or_sub_assign_quantity_type(
-                &self,
+                self,
                 quote! { std::ops::SubAssign },
                 quote! { sub_assign },
                 quote! { self.0 -= rhs; },
             ),
             NumericTrait::mul_or_div_quantity_quantity(
-                &self,
+                self,
                 quote! { std::ops::Mul },
                 quote! { mul },
                 quote! { #quantity_type(self.0 * rhs.0) },
                 quote! { dimension_mul },
             ),
             NumericTrait::mul_or_div_quantity_quantity(
-                &self,
+                self,
                 quote! { std::ops::Div },
                 quote! { div },
                 quote! { #quantity_type(self.0 / rhs.0) },
                 quote! { dimension_div },
             ),
             NumericTrait::mul_or_div_assign_quantity_quantity(
-                &self,
+                self,
                 quote! { std::ops::MulAssign },
                 quote! { mul_assign },
                 quote! { self.0 *= rhs.0; },
             ),
             NumericTrait::mul_or_div_assign_quantity_quantity(
-                &self,
+                self,
                 quote! { std::ops::DivAssign },
                 quote! { div_assign },
                 quote! { self.0 /= rhs.0; },
@@ -434,56 +434,56 @@ impl Defs {
                 .flat_map(move |storage_type| {
                     [
                         NumericTrait::mul_or_div_quantity_type(
-                            &self,
+                            self,
                             quote! { std::ops::Mul },
                             quote! { mul },
                             quote! { #quantity_type(self.0 * rhs) },
                             &storage_type,
                         ),
                         NumericTrait::mul_or_div_quantity_type(
-                            &self,
+                            self,
                             quote! { std::ops::Div },
                             quote! { div },
                             quote! { #quantity_type(self.0 / rhs) },
                             &storage_type,
                         ),
                         NumericTrait::mul_type_quantity(
-                            &self,
+                            self,
                             quote! { std::ops::Mul },
                             quote! { mul },
                             quote! { #quantity_type(self * rhs.0) },
                             &storage_type,
                         ),
                         NumericTrait::div_type_quantity(
-                            &self,
+                            self,
                             quote! { std::ops::Div },
                             quote! { div },
                             quote! { #quantity_type(self / rhs.0) },
                             &storage_type,
                         ),
                         NumericTrait::add_or_sub_type_quantity(
-                            &self,
+                            self,
                             quote! { std::ops::Add },
                             quote! { add },
                             quote! { self + rhs.0 },
                             &storage_type,
                         ),
                         NumericTrait::add_or_sub_type_quantity(
-                            &self,
+                            self,
                             quote! { std::ops::Sub },
                             quote! { sub },
                             quote! { self - rhs.0 },
                             &storage_type,
                         ),
                         NumericTrait::add_or_sub_assign_type_quantity(
-                            &self,
+                            self,
                             quote! { std::ops::AddAssign },
                             quote! { add_assign },
                             quote! { *self += rhs.0; },
                             &storage_type,
                         ),
                         NumericTrait::add_or_sub_assign_type_quantity(
-                            &self,
+                            self,
                             quote! { std::ops::SubAssign },
                             quote! { sub_assign },
                             quote! { *self -= rhs.0; },
@@ -498,7 +498,6 @@ impl Defs {
     pub fn numeric_traits(&self) -> TokenStream {
         let ops: TokenStream = self
             .iter_numeric_traits()
-            .into_iter()
             .map(|num_trait| self.generic_numeric_trait_impl(num_trait))
             .collect();
         let sum = self.impl_sum();
