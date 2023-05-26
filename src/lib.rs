@@ -1,6 +1,5 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs, adt_const_params)]
-#![feature(const_fn_floating_point_arithmetic)]
 #![doc = include_str!("../README.md")]
 
 mod debug_storage_type;
