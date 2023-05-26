@@ -3,32 +3,27 @@ use syn::{punctuated::Punctuated, *};
 
 use crate::expression::Expr;
 
-#[derive(Debug)]
 pub enum Prefix {
     Ident(Ident),
     Lit(Lit),
 }
 
-#[derive(Debug)]
 pub struct Prefixes(pub Punctuated<Prefix, Token![,]>);
 
-#[derive(Debug)]
 pub struct DimensionInt(pub Lit);
 
-#[derive(Debug)]
 pub struct Factor(pub Lit);
 
-#[derive(Debug)]
 pub struct Symbol(pub Lit);
 
-#[derive(Debug, Verify)]
+#[derive(Verify)]
 #[verified(crate::types::DimensionEntry)]
 pub struct DimensionEntry {
     pub ident: Ident,
     pub value: DimensionInt,
 }
 
-#[derive(Debug, Verify)]
+#[derive(Verify)]
 #[verified(crate::types::Dimensions)]
 pub struct Dimensions {
     pub fields: Vec<DimensionEntry>,
@@ -36,7 +31,7 @@ pub struct Dimensions {
 
 pub type QuantityExpression = Expr<Ident>;
 
-#[derive(Debug, Verify)]
+#[derive(Verify)]
 #[verified(crate::types::UnitFactor)]
 pub enum UnitFactor {
     UnitOrQuantity(Ident),
@@ -45,14 +40,14 @@ pub enum UnitFactor {
 
 pub type UnitExpression = Expr<UnitFactor>;
 
-#[derive(Debug, Verify)]
+#[derive(Verify)]
 #[verified(crate::types::QuantityDefinition)]
 pub enum QuantityDefinition {
     Dimensions(Dimensions),
     Expression(QuantityExpression),
 }
 
-#[derive(Debug, Verify)]
+#[derive(Verify)]
 #[verified(crate::types::UnitEntry)]
 pub struct UnitEntry {
     pub name: Ident,
@@ -61,28 +56,27 @@ pub struct UnitEntry {
     pub rhs: UnitExpression,
 }
 
-#[derive(Debug, Verify)]
+#[derive(Verify)]
 #[verified(crate::types::QuantityEntry)]
 pub struct QuantityEntry {
     pub name: Ident,
     pub rhs: QuantityDefinition,
 }
 
-#[derive(Debug, Verify)]
+#[derive(Verify)]
 #[verified(crate::types::ConstantEntry)]
 pub struct ConstantEntry {
     pub name: Ident,
     pub rhs: UnitExpression,
 }
 
-#[derive(Debug)]
 pub enum Entry {
     Quantity(QuantityEntry),
     Unit(UnitEntry),
     Constant(ConstantEntry),
 }
 
-#[derive(Debug, Verify)]
+#[derive(Verify)]
 #[verified(crate::types::UnresolvedDefs)]
 pub struct Defs {
     pub dimension_type: Type,

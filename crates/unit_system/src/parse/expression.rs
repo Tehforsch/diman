@@ -7,7 +7,7 @@ use syn::{
 use crate::expression::Expr;
 use crate::expression::Factor;
 
-impl<T: Parse + std::fmt::Debug> Parse for Factor<T> {
+impl<T: Parse> Parse for Factor<T> {
     fn parse(input: ParseStream) -> Result<Self> {
         let lookahead = input.lookahead1();
         if lookahead.peek(Paren) {
@@ -20,7 +20,7 @@ impl<T: Parse + std::fmt::Debug> Parse for Factor<T> {
     }
 }
 
-impl<T: Parse + std::fmt::Debug> Parse for Expr<T> {
+impl<T: Parse> Parse for Expr<T> {
     fn parse(input: ParseStream) -> Result<Self> {
         let first_factor: Factor<T> = input.parse()?;
         let lookahead = input.lookahead1();

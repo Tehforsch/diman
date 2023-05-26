@@ -2,25 +2,24 @@ use syn::*;
 
 use crate::expression::Expr;
 
-#[derive(Debug)]
 pub struct Prefix {
     pub name: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct DimensionEntry {
     pub ident: Ident,
     pub value: i32,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Dimensions {
     pub fields: Vec<DimensionEntry>,
 }
 
 pub type QuantityExpression = Expr<Ident>;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub enum UnitFactor {
     UnitOrQuantity(Ident),
     Number(f64),
@@ -28,13 +27,11 @@ pub enum UnitFactor {
 
 pub type UnitExpression = Expr<UnitFactor>;
 
-#[derive(Debug)]
 pub enum QuantityDefinition {
     Dimensions(Dimensions),
     Expression(QuantityExpression),
 }
 
-#[derive(Debug)]
 pub struct UnitEntry {
     pub name: Ident,
     pub symbol: Option<String>,
@@ -42,19 +39,16 @@ pub struct UnitEntry {
     pub rhs: UnitExpression,
 }
 
-#[derive(Debug)]
 pub struct QuantityEntry {
     pub name: Ident,
     pub rhs: QuantityDefinition,
 }
 
-#[derive(Debug)]
 pub struct ConstantEntry {
     pub name: Ident,
     pub rhs: UnitExpression,
 }
 
-#[derive(Debug)]
 pub struct UnresolvedDefs {
     pub dimension_type: Type,
     pub quantity_type: Type,
@@ -63,13 +57,11 @@ pub struct UnresolvedDefs {
     pub constants: Vec<ConstantEntry>,
 }
 
-#[derive(Debug)]
 pub struct Quantity {
     pub name: Ident,
     pub dimension: Dimensions,
 }
 
-#[derive(Debug)]
 pub struct Unit {
     pub name: Ident,
     pub dimension: Dimensions,
@@ -77,14 +69,12 @@ pub struct Unit {
     pub symbol: Option<String>,
 }
 
-#[derive(Debug)]
 pub struct Constant {
     pub name: Ident,
     pub dimension: Dimensions,
     pub factor: f64,
 }
 
-#[derive(Debug)]
 pub struct Defs {
     pub dimension_type: Type,
     pub quantity_type: Type,
