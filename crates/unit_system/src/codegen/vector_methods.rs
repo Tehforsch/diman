@@ -84,7 +84,7 @@ impl Defs {
                 }
 
                 #new_z_impl
-                
+
                 pub fn x(&self) -> #quantity_type<#float_type, D> {
                     #quantity_type(self.0.x)
                 }

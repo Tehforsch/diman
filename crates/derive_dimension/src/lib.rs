@@ -22,12 +22,11 @@ pub fn dimension(
     output.into()
 }
 
-pub(crate) fn dimension_methods_impl(
-    input: &DeriveInput,
-) -> proc_macro::TokenStream {
+pub(crate) fn dimension_methods_impl(input: &DeriveInput) -> proc_macro::TokenStream {
     let type_name = &input.ident;
     let (impl_generics, type_generics, where_clause) = &input.generics.split_for_impl();
-    let panic_unexpected_type = || panic!("Found unexpected field type while deriving diman_dimension methods.");
+    let panic_unexpected_type =
+        || panic!("Found unexpected field type while deriving diman_dimension methods.");
     let mut field_names = vec![];
     if let syn::Data::Struct(s) = &input.data {
         if let syn::Fields::Named(fields) = &s.fields {
@@ -35,52 +34,65 @@ pub(crate) fn dimension_methods_impl(
                 if let syn::Type::Path(ref type_name) = f.ty {
                     if type_name.path.segments.len() != 1 {
                         panic_unexpected_type();
-                    }
-                    else {
+                    } else {
                         let only_segment_in_path = &type_name.path.segments[0];
                         let type_name = only_segment_in_path.ident.to_string();
                         if !ALLOWED_TYPES.contains(&type_name.as_str()) {
                             panic_unexpected_type();
                         }
                     }
-                }
-                else {
-                   panic_unexpected_type(); 
+                } else {
+                    panic_unexpected_type();
                 }
                 field_names.push(f.ident.as_ref().unwrap().clone());
             }
         }
     }
 
-    let none_gen: proc_macro2::TokenStream = field_names.iter().map(|ident| {
-        quote! {
-            #ident: 0,
-        }
-    }).collect();
+    let none_gen: proc_macro2::TokenStream = field_names
+        .iter()
+        .map(|ident| {
+            quote! {
+                #ident: 0,
+            }
+        })
+        .collect();
 
-    let mul_gen: proc_macro2::TokenStream = field_names.iter().map(|ident| {
-        quote! {
-            #ident: self.#ident + other.#ident,
-        }
-    }).collect();
+    let mul_gen: proc_macro2::TokenStream = field_names
+        .iter()
+        .map(|ident| {
+            quote! {
+                #ident: self.#ident + other.#ident,
+            }
+        })
+        .collect();
 
-    let div_gen: proc_macro2::TokenStream = field_names.iter().map(|ident| {
-        quote! {
-            #ident: self.#ident - other.#ident,
-        }
-    }).collect();
+    let div_gen: proc_macro2::TokenStream = field_names
+        .iter()
+        .map(|ident| {
+            quote! {
+                #ident: self.#ident - other.#ident,
+            }
+        })
+        .collect();
 
-    let inv_gen: proc_macro2::TokenStream = field_names.iter().map(|ident| {
-        quote! {
-            #ident: -self.#ident,
-        }
-    }).collect();
+    let inv_gen: proc_macro2::TokenStream = field_names
+        .iter()
+        .map(|ident| {
+            quote! {
+                #ident: -self.#ident,
+            }
+        })
+        .collect();
 
-    let powi_gen: proc_macro2::TokenStream = field_names.iter().map(|ident| {
-        quote! {
-            #ident: self.#ident * other,
-        }
-    }).collect();
+    let powi_gen: proc_macro2::TokenStream = field_names
+        .iter()
+        .map(|ident| {
+            quote! {
+                #ident: self.#ident * other,
+            }
+        })
+        .collect();
 
     let sqrt_safety_gen: proc_macro2::TokenStream = field_names.iter().map(|ident| {
         quote! {
@@ -90,11 +102,14 @@ pub(crate) fn dimension_methods_impl(
         }
     }).collect();
 
-    let sqrt_gen: proc_macro2::TokenStream = field_names.iter().map(|ident| {
-        quote! {
-            #ident: self.#ident / 2,
-        }
-    }).collect();
+    let sqrt_gen: proc_macro2::TokenStream = field_names
+        .iter()
+        .map(|ident| {
+            quote! {
+                #ident: self.#ident / 2,
+            }
+        })
+        .collect();
 
     let cbrt_safety_gen: proc_macro2::TokenStream = field_names.iter().map(|ident| {
         quote! {
@@ -104,11 +119,14 @@ pub(crate) fn dimension_methods_impl(
         }
     }).collect();
 
-    let cbrt_gen: proc_macro2::TokenStream = field_names.iter().map(|ident| {
-        quote! {
-            #ident: self.#ident / 3,
-        }
-    }).collect();
+    let cbrt_gen: proc_macro2::TokenStream = field_names
+        .iter()
+        .map(|ident| {
+            quote! {
+                #ident: self.#ident / 3,
+            }
+        })
+        .collect();
 
     let gen = quote! {
         impl #impl_generics #type_name #type_generics #where_clause {

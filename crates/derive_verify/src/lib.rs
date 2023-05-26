@@ -1,8 +1,9 @@
 use proc_macro2::TokenStream;
-use quote::{quote, format_ident};
+use quote::{format_ident, quote};
 use syn::{
     parse_macro_input, parse_quote, Data, DeriveInput, Fields, GenericParam, Generics, Index, Meta,
-    NestedMeta, Path, };
+    NestedMeta, Path,
+};
 
 #[proc_macro_derive(Verify, attributes(verified))]
 pub fn derive_verify(input: proc_macro::TokenStream) -> proc_macro::TokenStream {

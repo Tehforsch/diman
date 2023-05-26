@@ -2,15 +2,16 @@ use quote::quote;
 
 use proc_macro2::TokenStream;
 
-use crate::{types::Defs, storage_types::FloatType};
+use crate::{storage_types::FloatType, types::Defs};
 
 impl Defs {
     pub fn rand_impl(&self) -> TokenStream {
-        let float_impls: TokenStream = self.float_types().iter().map(|float_type| self.rand_impl_float(float_type)).collect();
-        let Defs {
-            dimension_type,
-            ..
-        } = self;
+        let float_impls: TokenStream = self
+            .float_types()
+            .iter()
+            .map(|float_type| self.rand_impl_float(float_type))
+            .collect();
+        let Defs { dimension_type, .. } = self;
         quote! {
             use ::rand::distributions::uniform::SampleBorrow;
             use ::rand::distributions::uniform::SampleUniform;
@@ -32,7 +33,7 @@ impl Defs {
             ..
         } = self;
         let float_type = &float_type.name;
-        quote! { 
+        quote! {
             impl<const D: #dimension_type> UniformSampler for UniformQuantity<#float_type, D> {
                 type X = #quantity_type::<#float_type, D>;
                 fn new<B1, B2>(low: B1, high: B2) -> Self

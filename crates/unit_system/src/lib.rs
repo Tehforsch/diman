@@ -22,13 +22,13 @@ use verify::Verify;
 /// #![feature(generic_const_exprs, adt_const_params)]
 /// use diman::unit_system;
 /// use diman::dimension;
-/// 
+///
 /// #[dimension]
 /// pub struct Dimension {
 ///     pub length: i32,
 ///     pub time: i32,
 /// }
-/// 
+///
 /// unit_system!(
 ///     Quantity,
 ///     Dimension,

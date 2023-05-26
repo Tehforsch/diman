@@ -1,19 +1,20 @@
-mod resolver;
 mod error;
-mod item_conversion;
 mod item;
+mod item_conversion;
+mod resolver;
 
 use std::collections::{HashMap, HashSet};
 
 use syn::Ident;
 
-use crate::{
-    types::{
-        Defs, UnresolvedDefs,
-    },
-};
+use crate::types::{Defs, UnresolvedDefs};
 
-use self::{error::{Result, Error}, resolver::Resolver, item::{ValueOrExpr, IdentOrFactor, UnresolvedItem, ResolvedItem}, item_conversion::ItemConversion};
+use self::{
+    error::{Error, Result},
+    item::{IdentOrFactor, ResolvedItem, UnresolvedItem, ValueOrExpr},
+    item_conversion::ItemConversion,
+    resolver::Resolver,
+};
 
 impl UnresolvedDefs {
     pub fn resolve(self) -> Result<Defs> {
@@ -77,4 +78,3 @@ fn check_no_undefined_identifiers(items: &[UnresolvedItem]) -> Result<()> {
         Err(Error::undefined(undefined_rhs_idents))
     }
 }
-

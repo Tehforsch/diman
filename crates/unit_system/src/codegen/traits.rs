@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::{quote};
+use quote::quote;
 use syn::Type;
 
 use crate::types::Defs;
@@ -129,7 +129,7 @@ impl NumericTrait {
         let quantity = quote! { #quantity_type::<#storage_type, { #dimension_type::none() }> };
         let fn_return_expr = quote! { #quantity( #fn_inner_return_expr ) };
         Self {
-            impl_generics: quote! { },
+            impl_generics: quote! {},
             lhs: quote! { #storage_type },
             rhs: quantity.clone(),
             fn_args: quote! {self, rhs: #quantity},
@@ -138,7 +138,7 @@ impl NumericTrait {
             name,
             fn_name,
             fn_return_expr,
-            trait_bound_impl: quote! { },
+            trait_bound_impl: quote! {},
         }
     }
 
@@ -157,7 +157,7 @@ impl NumericTrait {
         } = defs;
         let quantity = quote! { #quantity_type::<#storage_type, { #dimension_type::none() }> };
         Self {
-            impl_generics: quote! { },
+            impl_generics: quote! {},
             lhs: quote! { #storage_type },
             rhs: quantity.clone(),
             fn_args: quote! {&mut self, rhs: #quantity},
@@ -166,7 +166,7 @@ impl NumericTrait {
             name,
             fn_name,
             fn_return_expr,
-            trait_bound_impl: quote! { },
+            trait_bound_impl: quote! {},
         }
     }
 
@@ -251,14 +251,11 @@ impl NumericTrait {
         fn_return_expr: TokenStream,
         storage_type: &Type,
     ) -> NumericTrait {
-        let Defs {
-            quantity_type,
-            ..
-        } = defs;
+        let Defs { quantity_type, .. } = defs;
         Self {
             trait_bound_impl: quote! {
                 #storage_type: #name<RHS>,
-                #quantity_type<#storage_type, { D.dimension_inv() }>:, 
+                #quantity_type<#storage_type, { D.dimension_inv() }>:,
             },
             output_type_def: quote! {
                 type Output = #quantity_type<
@@ -430,71 +427,77 @@ impl Defs {
                 quote! { self.0 /= rhs.0; },
             ),
         ]
-        .into_iter().chain(
-        self.storage_type_names().into_iter().flat_map(move |storage_type| {
-            [
-                NumericTrait::mul_or_div_quantity_type(
-                    &self,
-                    quote! { std::ops::Mul },
-                    quote! { mul },
-                    quote! { #quantity_type(self.0 * rhs) },
-                    &storage_type,
-                ),
-                NumericTrait::mul_or_div_quantity_type(
-                    &self,
-                    quote! { std::ops::Div },
-                    quote! { div },
-                    quote! { #quantity_type(self.0 / rhs) },
-                    &storage_type,
-                ),
-                NumericTrait::mul_type_quantity(
-                    &self,
-                    quote! { std::ops::Mul },
-                    quote! { mul },
-                    quote! { #quantity_type(self * rhs.0) },
-                    &storage_type,
-                ),
-                NumericTrait::div_type_quantity(
-                    &self,
-                    quote! { std::ops::Div },
-                    quote! { div },
-                    quote! { #quantity_type(self / rhs.0) },
-                    &storage_type,
-                ),
-                NumericTrait::add_or_sub_type_quantity(
-                    &self,
-                    quote! { std::ops::Add },
-                    quote! { add },
-                    quote! { self + rhs.0 },
-                    &storage_type,
-                ),
-                NumericTrait::add_or_sub_type_quantity(
-                    &self,
-                    quote! { std::ops::Sub },
-                    quote! { sub },
-                    quote! { self - rhs.0 },
-                    &storage_type,
-                ),
-                NumericTrait::add_or_sub_assign_type_quantity(
-                    &self,
-                    quote! { std::ops::AddAssign },
-                    quote! { add_assign },
-                    quote! { *self += rhs.0; },
-                    &storage_type,
-                ),
-                NumericTrait::add_or_sub_assign_type_quantity(
-                    &self,
-                    quote! { std::ops::SubAssign },
-                    quote! { sub_assign },
-                    quote! { *self -= rhs.0; },
-                    &storage_type,
-                ),
-            ].into_iter()
-        }))
+        .into_iter()
+        .chain(
+            self.storage_type_names()
+                .into_iter()
+                .flat_map(move |storage_type| {
+                    [
+                        NumericTrait::mul_or_div_quantity_type(
+                            &self,
+                            quote! { std::ops::Mul },
+                            quote! { mul },
+                            quote! { #quantity_type(self.0 * rhs) },
+                            &storage_type,
+                        ),
+                        NumericTrait::mul_or_div_quantity_type(
+                            &self,
+                            quote! { std::ops::Div },
+                            quote! { div },
+                            quote! { #quantity_type(self.0 / rhs) },
+                            &storage_type,
+                        ),
+                        NumericTrait::mul_type_quantity(
+                            &self,
+                            quote! { std::ops::Mul },
+                            quote! { mul },
+                            quote! { #quantity_type(self * rhs.0) },
+                            &storage_type,
+                        ),
+                        NumericTrait::div_type_quantity(
+                            &self,
+                            quote! { std::ops::Div },
+                            quote! { div },
+                            quote! { #quantity_type(self / rhs.0) },
+                            &storage_type,
+                        ),
+                        NumericTrait::add_or_sub_type_quantity(
+                            &self,
+                            quote! { std::ops::Add },
+                            quote! { add },
+                            quote! { self + rhs.0 },
+                            &storage_type,
+                        ),
+                        NumericTrait::add_or_sub_type_quantity(
+                            &self,
+                            quote! { std::ops::Sub },
+                            quote! { sub },
+                            quote! { self - rhs.0 },
+                            &storage_type,
+                        ),
+                        NumericTrait::add_or_sub_assign_type_quantity(
+                            &self,
+                            quote! { std::ops::AddAssign },
+                            quote! { add_assign },
+                            quote! { *self += rhs.0; },
+                            &storage_type,
+                        ),
+                        NumericTrait::add_or_sub_assign_type_quantity(
+                            &self,
+                            quote! { std::ops::SubAssign },
+                            quote! { sub_assign },
+                            quote! { *self -= rhs.0; },
+                            &storage_type,
+                        ),
+                    ]
+                    .into_iter()
+                }),
+        )
     }
 
     pub fn numeric_traits(&self) -> TokenStream {
-        let ops: TokenStream = self.iter_numeric_traits()
+        let ops: TokenStream = self
+            .iter_numeric_traits()
             .into_iter()
             .map(|num_trait| self.generic_numeric_trait_impl(num_trait))
             .collect();
@@ -534,8 +537,12 @@ impl Defs {
     }
 
     fn impl_sum(&self) -> TokenStream {
-        let Self { quantity_type, dimension_type, .. } = self;
-        quote! { 
+        let Self {
+            quantity_type,
+            dimension_type,
+            ..
+        } = self;
+        quote! {
             impl<const D: #dimension_type, S: Default + std::ops::AddAssign<S>> std::iter::Sum
                 for #quantity_type<S, D>
             {
@@ -551,10 +558,13 @@ impl Defs {
         }
     }
 
-
     fn impl_neg(&self) -> TokenStream {
-        let Self { quantity_type, dimension_type, .. } = self;
-        quote! { 
+        let Self {
+            quantity_type,
+            dimension_type,
+            ..
+        } = self;
+        quote! {
             impl<const D: #dimension_type, S: std::ops::Neg<Output=S>> std::ops::Neg for #quantity_type<S, D> {
                 type Output = Self;
 

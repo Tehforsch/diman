@@ -9,8 +9,8 @@ use syn::{
 };
 
 use self::types::{
-    Defs, DimensionEntry, DimensionInt, Dimensions, Factor, Prefix, Prefixes, QuantityDefinition,
-    QuantityEntry, Entry, Symbol, UnitEntry, UnitExpression, UnitFactor, ConstantEntry,
+    ConstantEntry, Defs, DimensionEntry, DimensionInt, Dimensions, Entry, Factor, Prefix, Prefixes,
+    QuantityDefinition, QuantityEntry, Symbol, UnitEntry, UnitExpression, UnitFactor,
 };
 
 impl Parse for Symbol {
@@ -147,7 +147,7 @@ impl Parse for ConstantEntry {
         let name = input.parse()?;
         let _: Token![=] = input.parse()?;
         let rhs: UnitExpression = input.parse()?;
-        Ok(Self { name, rhs  })
+        Ok(Self { name, rhs })
     }
 }
 
@@ -182,13 +182,14 @@ impl Parse for Defs {
         let mut constants = vec![];
         for item in content
             .parse_terminated::<_, Token![,]>(Entry::parse)?
-            .into_iter() {
-                match item {
-                    Entry::Quantity(q) => quantities.push(q),
-                    Entry::Unit(u) => units.push(u),
-                    Entry::Constant(c) => constants.push(c),
-                }
+            .into_iter()
+        {
+            match item {
+                Entry::Quantity(q) => quantities.push(q),
+                Entry::Unit(u) => units.push(u),
+                Entry::Constant(c) => constants.push(c),
             }
+        }
         Ok(Self {
             dimension_type,
             quantity_type,

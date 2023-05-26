@@ -2,8 +2,7 @@ use std::collections::HashMap;
 
 use syn::Ident;
 
-use super::{
-    error::Error, error::Result, };
+use super::{error::Error, error::Result};
 
 pub trait Resolvable {
     type Resolved;

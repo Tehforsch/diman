@@ -59,8 +59,7 @@ impl Defs {
             self.dimensionless_float_method_for_all_float_types(&quote! { atanh }),
             self.dimensionless_float_method_for_all_float_types(&quote! { exp_m1 }),
             self.dimensionless_float_method_for_all_float_types(&quote! { ln_1p }),
-
-            self.specific_float_methods_for_all_float_types()
+            self.specific_float_methods_for_all_float_types(),
         ])
     }
 

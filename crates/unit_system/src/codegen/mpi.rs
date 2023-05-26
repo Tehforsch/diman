@@ -1,20 +1,23 @@
-use quote::quote;
 use proc_macro2::TokenStream;
+use quote::quote;
 
-use crate::{types::Defs, storage_types::{FloatType, VectorType}};
+use crate::{
+    storage_types::{FloatType, VectorType},
+    types::Defs,
+};
 
 use super::utils::join;
 
 impl Defs {
     pub fn mpi_impl(&self) -> TokenStream {
-        join([
-            self.mpi_floats_impl(),
-            self.mpi_vectors_impl()
-        ])
+        join([self.mpi_floats_impl(), self.mpi_vectors_impl()])
     }
 
     pub fn mpi_floats_impl(&self) -> TokenStream {
-        self.float_types().iter().map(|float_type| self.mpi_float_impl(float_type)).collect()
+        self.float_types()
+            .iter()
+            .map(|float_type| self.mpi_float_impl(float_type))
+            .collect()
     }
 
     pub fn mpi_float_impl(&self, float_type: &FloatType) -> TokenStream {
@@ -39,7 +42,10 @@ impl Defs {
     }
 
     pub fn mpi_vectors_impl(&self) -> TokenStream {
-        self.vector_types().iter().map(|vector_type| self.mpi_vector_impl(vector_type)).collect()
+        self.vector_types()
+            .iter()
+            .map(|vector_type| self.mpi_vector_impl(vector_type))
+            .collect()
     }
 
     pub fn mpi_vector_impl(&self, vector_type: &VectorType) -> TokenStream {

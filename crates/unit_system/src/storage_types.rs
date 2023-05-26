@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
-use syn::Type;
 use quote::quote;
+use syn::Type;
 
 use crate::types::Defs;
 
@@ -58,10 +58,10 @@ impl Defs {
 
     pub fn vector_types(&self) -> Vec<VectorType> {
         // I don't know if this is really the way to construct types
-        let _vec2: Type = syn::parse2(quote!{ ::glam::Vec2 }).unwrap();
-        let _dvec2: Type = syn::parse2(quote!{ ::glam::DVec2 }).unwrap();
-        let _vec3: Type = syn::parse2(quote!{ ::glam::Vec3 }).unwrap();
-        let _dvec3: Type = syn::parse2(quote!{ ::glam::DVec3 }).unwrap();
+        let _vec2: Type = syn::parse2(quote! { ::glam::Vec2 }).unwrap();
+        let _dvec2: Type = syn::parse2(quote! { ::glam::DVec2 }).unwrap();
+        let _vec3: Type = syn::parse2(quote! { ::glam::Vec3 }).unwrap();
+        let _dvec3: Type = syn::parse2(quote! { ::glam::DVec3 }).unwrap();
         vec![
             #[cfg(feature = "glam-vec2")]
             VectorType {
@@ -96,7 +96,7 @@ impl Defs {
 
     #[cfg(feature = "f32")]
     fn f32_type(&self) -> FloatType {
-        let f32_ty: Type = syn::parse2(quote!{ f32 }).unwrap();
+        let f32_ty: Type = syn::parse2(quote! { f32 }).unwrap();
         FloatType {
             name: f32_ty,
             module_name: quote! { f32 },
@@ -111,7 +111,7 @@ impl Defs {
 
     #[cfg(feature = "f64")]
     fn f64_type(&self) -> FloatType {
-        let f64_ty: Type = syn::parse2(quote!{ f64 }).unwrap();
+        let f64_ty: Type = syn::parse2(quote! { f64 }).unwrap();
         FloatType {
             name: f64_ty,
             module_name: quote! { f64 },

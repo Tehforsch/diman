@@ -21,8 +21,7 @@ impl std::ops::Mul for DimensionsAndFactor {
             let same_field = fields.iter_mut().find(|f1| f1.ident == f2.ident);
             if let Some(same_field) = same_field {
                 same_field.value += f2.value;
-            }
-            else {
+            } else {
                 fields.push(f2);
             }
         }
