@@ -1,3 +1,5 @@
+/// Defines the proper dimensions for the SI system. The unit definitions
+/// are primarily used for the doctests now and not complete in any sense.
 use crate as diman;
 use crate::dimension;
 use crate::unit_system;
