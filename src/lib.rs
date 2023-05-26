@@ -9,7 +9,7 @@ mod type_aliases;
 pub mod si;
 
 pub use debug_storage_type::DebugStorageType;
-pub use derive_dimension::diman_dimension;
+pub use derive_dimension::dimension;
 pub use type_aliases::Product;
 pub use type_aliases::QProduct;
 pub use type_aliases::Quotient;

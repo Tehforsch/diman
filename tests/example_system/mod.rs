@@ -1,7 +1,7 @@
-use ::diman::diman_dimension;
+use ::diman::dimension;
 use ::diman::unit_system;
 
-#[diman_dimension]
+#[dimension]
 pub struct Dimension {
     pub length: i32,
     pub time: i32,

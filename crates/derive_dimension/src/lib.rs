@@ -4,7 +4,7 @@ use syn::*;
 const ALLOWED_TYPES: &[&str] = &["i8", "i32", "i64"];
 
 #[proc_macro_attribute]
-pub fn diman_dimension(
+pub fn dimension(
     _args: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
