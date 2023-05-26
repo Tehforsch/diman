@@ -10,8 +10,8 @@ pub struct Dimension {
 }
 
 unit_system!(
-    Dimension,
     Quantity,
+    Dimension,
     [
         def Dimensionless = {},
         unit dimensionless = Dimensionless,

@@ -171,9 +171,9 @@ impl Parse for Entry {
 
 impl Parse for Defs {
     fn parse(input: ParseStream) -> Result<Self> {
-        let dimension_type: Type = input.parse()?;
-        let _: Token![,] = input.parse()?;
         let quantity_type: Type = input.parse()?;
+        let _: Token![,] = input.parse()?;
+        let dimension_type: Type = input.parse()?;
         let _: Token![,] = input.parse()?;
         let content;
         let _: token::Bracket = bracketed!(content in input);

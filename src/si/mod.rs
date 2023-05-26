@@ -16,8 +16,8 @@ pub struct Dimension {
 }
 
 unit_system!(
-    Dimension,
     Quantity,
+    Dimension,
     [
         def Dimensionless = {},
         unit dimensionless = Dimensionless,
@@ -29,5 +29,7 @@ unit_system!(
         unit (hours, "h") = 3600 * seconds,
         def Velocity = Length / Time,
         unit (meters_per_second, "m/s") = meters / seconds,
+        def Volume = Length * Length * Length,
+        unit (cubic_meters, "m^3") = meters * meters * meters,
     ]
 );
