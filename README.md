@@ -137,6 +137,19 @@ assert_eq!(vol, Volume::cubic_meters(27.0))
 ```
 This includes `squared`, `cubed`, `sqrt`, `cbrt` as well as `powi`.
 
+## Quantity products and quotients
+Sometimes, intermediate types in computations are quantities that doesn't really have a nice name and are also
+not needed too many times. Having to add a definition to the unit system for this case can be cumbersome.
+This is why the `Product` and `Quotient` types are provided:
+```rust
+use diman::si::f64::{Length, Time, Velocity, Area};
+use diman::{Product, Quotient};
+let x: Product<(Length, Time)> = Length::meters(10.0) * Time::seconds(2.0);
+let y: Product<(Length, Time, Velocity)> = Area::square_meters(5.0);
+let z: Quotient<Length, Time> = Length::meters(10.0) / Time::seconds(2.0);
+```
+
+
 ## Serde
 Serialization and deserialization of the units is provided via `serde` if the `serde` feature gate is enabled:
 ```rust
