@@ -40,7 +40,6 @@ hdf5 = { version = "0.8.1", optional = true }
 mpi = { version = "0.6", default-features = false, features = ["derive"], optional = true }
 once_cell = { version = "1.17.1", optional = true }
 
-derive_dimension = { path = "crates/derive_dimension", version = "0.2" }
 unit_system = { path = "crates/unit_system", version = "0.2" }
 
 [dev-dependencies]

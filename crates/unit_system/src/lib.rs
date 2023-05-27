@@ -1,6 +1,7 @@
 #![feature(proc_macro_diagnostic)]
 
 mod codegen;
+mod derive_dimension;
 mod dimension_math;
 mod expression;
 mod parse;
@@ -9,6 +10,7 @@ mod storage_types;
 mod types;
 mod verify;
 
+use derive_dimension::dimension_impl;
 use syn::*;
 use verify::Verify;
 
@@ -55,4 +57,15 @@ pub fn unit_system(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
         panic!("Unresolvable definitions, see other errors.")
     });
     resolved.code_gen().into()
+}
+
+/// Derives all required methods for a dimension type.
+/// Only works on structs on which every field is `i32`.
+/// Also adds derives of `PartialEq`, `Eq`, `Clone` and `Debug`.
+#[proc_macro_attribute]
+pub fn dimension(
+    _args: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    dimension_impl(input)
 }
