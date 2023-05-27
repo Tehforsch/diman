@@ -1,4 +1,4 @@
-use derive_verify::Verify;
+use diman_derive_verify::Verify;
 use syn::{punctuated::Punctuated, *};
 
 use crate::expression::Expr;
