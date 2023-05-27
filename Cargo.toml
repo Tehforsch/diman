@@ -14,20 +14,20 @@ readme = "README.md"
 members = ["crates/*"]
 
 [features]
-glam = ["dep:glam", "unit_system/glam"]
-glam-vec2 = ["glam", "f32", "unit_system/glam-vec2"]
-glam-dvec2 = ["glam", "f64", "unit_system/glam-dvec2"]
-glam-vec3 = ["glam", "f32", "unit_system/glam-vec3"]
-glam-dvec3 = ["glam", "f64", "unit_system/glam-dvec3"]
-f32 = ["unit_system/f32"]
-f64 = ["unit_system/f64"]
-gen-vec-names = ["unit_system/gen-vec-names"]
+glam = ["dep:glam", "diman_unit_system/glam"]
+glam-vec2 = ["glam", "f32", "diman_unit_system/glam-vec2"]
+glam-dvec2 = ["glam", "f64", "diman_unit_system/glam-dvec2"]
+glam-vec3 = ["glam", "f32", "diman_unit_system/glam-vec3"]
+glam-dvec3 = ["glam", "f64", "diman_unit_system/glam-dvec3"]
+f32 = ["diman_unit_system/f32"]
+f64 = ["diman_unit_system/f64"]
+gen-vec-names = ["diman_unit_system/gen-vec-names"]
 si = []
 
-mpi = ["dep:once_cell", "dep:mpi", "unit_system/mpi"]
-hdf5 = ["dep:hdf5", "unit_system/hdf5"]
-rand = ["dep:rand", "unit_system/rand"]
-serde = ["dep:serde", "unit_system/serde"]
+mpi = ["dep:once_cell", "dep:mpi", "diman_unit_system/mpi"]
+hdf5 = ["dep:hdf5", "diman_unit_system/hdf5"]
+rand = ["dep:rand", "diman_unit_system/rand"]
+serde = ["dep:serde", "diman_unit_system/serde"]
 default = ["f32", "f64", "si"]
 
 [lib]
@@ -40,7 +40,7 @@ hdf5 = { version = "0.8.1", optional = true }
 mpi = { version = "0.6", default-features = false, features = ["derive"], optional = true }
 once_cell = { version = "1.17.1", optional = true }
 
-unit_system = { path = "crates/unit_system", version = "0.2" }
+diman_unit_system = { path = "crates/diman_unit_system", version = "0.2" }
 
 [dev-dependencies]
 serde_yaml = "0.9.21"

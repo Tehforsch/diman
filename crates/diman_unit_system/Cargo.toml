@@ -1,5 +1,5 @@
 [package]
-name = "unit_system"
+name = "diman_unit_system"
 version = "0.2.0"
 edition = "2021"
 authors = [
