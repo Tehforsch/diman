@@ -6,6 +6,8 @@ authors = [
     "Toni Peter <mail@tonipeter.de>",
 ]
 description = "Internal procedural macros for diman."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/tehforsch/diman"
 
 [features]
 glam = []
