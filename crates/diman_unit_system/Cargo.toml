@@ -21,7 +21,7 @@ hdf5 = []
 gen-vec-names = [] 
 
 [dependencies]
-diman_derive_verify = { path = "../../crates/diman_derive_verify" }
+diman_derive_verify = { path = "../../crates/diman_derive_verify", version = "0.2" }
 syn = { version = "1.0", features = ["full", "extra-traits"] }
 quote = "1.0"
 proc-macro2 = "1.0"
