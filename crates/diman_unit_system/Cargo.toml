@@ -5,6 +5,7 @@ edition = "2021"
 authors = [
     "Toni Peter <mail@tonipeter.de>",
 ]
+description = "Internal procedural macros for diman."
 
 [features]
 glam = []
