@@ -36,7 +36,7 @@ Diman is implemented using Rust's const generics feature. While `min_const_gener
 
 Moreover, Diman is in its early stages of development and APIs will change.
 
-If you cannot use unstable Rust for your project or require a stable library for your project, consider using [`uom`](https://crates.io/crates/uom) or [`dimensioned`](https://crates.io/crates/dimensioned), both of which do not require any experimental features and are much more mature libraries in general.
+If you cannot use unstable Rust for your project or require a stable library, consider using [`uom`](https://crates.io/crates/uom) or [`dimensioned`](https://crates.io/crates/dimensioned), both of which do not require any experimental features and are much more mature libraries in general.
 
 ## Features
 * Invalid operations between physical quantities turn into compile errors.
@@ -126,7 +126,7 @@ For example:
 * `Debug` is implemented and will print the quantity in its representation of the "closest" unit. For example `Length::meters(100.0)` would be debug printed as `0.1 km`. If printing in a specific unit is required, conversion methods are available for each unit (such as `Length::in_meters`).
 * `.value()` provides access to the underlying storage type of a dimensionless quantity.
 * `.value_unchecked()` provides access to the underlying storage type for all quantities if absolutely required. This is not unit-safe since the value will depend on the unit system!
-* Similarly, new quantities can be constructed from storage types using `Vec::new_unchecked`. This is also not unit-safe.
+* Similarly, new quantities can be constructed from storage types using `Quantity::new_unchecked`. This is also not unit-safe.
 
 Some other, more complex operations are also allowed:
 ```
