@@ -168,6 +168,14 @@ macro_rules! gen_tests_for_float {
             }
 
             #[test]
+            fn mul_assign_float_quantity() {
+                let mut x = 3.0;
+                let y = Dimensionless::dimensionless(2.0);
+                x *= y;
+                assert_is_close_float(x, 6.0);
+            }
+
+            #[test]
             fn div_quantity_quantity() {
                 let x = Length::meters(6.0);
                 let y = Time::seconds(2.0);
@@ -202,6 +210,14 @@ macro_rules! gen_tests_for_float {
                 let x = 2.0;
                 let y = Velocity::meters_per_second(6.0);
                 assert_is_close(x / y, Time::seconds(2.0) / Length::meters(6.0));
+            }
+
+            #[test]
+            fn div_assign_float_quantity() {
+                let mut x = 6.0;
+                let y = Dimensionless::dimensionless(2.0);
+                x /= y;
+                assert_is_close_float(x, 3.0);
             }
 
             #[test]

@@ -363,6 +363,36 @@ impl NumericTrait {
             lhs,
         }
     }
+
+    /// For an impl of MulAssign or DivAssign between a quantity and a storage type
+    fn mul_or_div_assign_type_quantity(
+        defs: &Defs,
+        name: TokenStream,
+        fn_name: TokenStream,
+        fn_return_expr: TokenStream,
+        lhs: &Type,
+    ) -> Self {
+        let Defs {
+            quantity_type,
+            dimension_type,
+            ..
+        } = defs;
+        let rhs = quote! { #quantity_type<RHS, D> };
+        Self {
+            name: name.clone(),
+            fn_name,
+            fn_return_expr,
+            fn_return_type: quote! {()},
+            fn_args: quote! { &mut self, rhs: #rhs },
+            trait_bound_impl: quote! {
+                #lhs: #name<RHS>,
+            },
+            output_type_def: quote! {},
+            impl_generics: quote! { < const D: #dimension_type, RHS > },
+            rhs,
+            lhs: quote! { #lhs },
+        }
+    }
 }
 
 impl Defs {
@@ -489,6 +519,20 @@ impl Defs {
                             quote! { std::ops::DivAssign },
                             quote! { div_assign },
                             quote! { self.0 /= rhs; },
+                            &storage_type,
+                        ),
+                        NumericTrait::mul_or_div_assign_type_quantity(
+                            self,
+                            quote! { std::ops::MulAssign },
+                            quote! { mul_assign },
+                            quote! { *self *= rhs.0; },
+                            &storage_type,
+                        ),
+                        NumericTrait::mul_or_div_assign_type_quantity(
+                            self,
+                            quote! { std::ops::DivAssign },
+                            quote! { div_assign },
+                            quote! { *self /= rhs.0; },
                             &storage_type,
                         ),
                         NumericTrait::mul_type_quantity(
