@@ -333,6 +333,119 @@ impl NumericTrait {
             lhs,
         }
     }
+
+    /// For an impl of MulAssign or DivAssign between a quantity and a storage type
+    fn mul_or_div_assign_quantity_type(
+        defs: &Defs,
+        name: TokenStream,
+        fn_name: TokenStream,
+        fn_return_expr: TokenStream,
+        rhs: &Type,
+    ) -> Self {
+        let Defs {
+            quantity_type,
+            dimension_type,
+            ..
+        } = defs;
+        let lhs = quote! { #quantity_type<LHS, DL> };
+        Self {
+            name: name.clone(),
+            fn_name,
+            fn_return_expr,
+            fn_return_type: quote! {()},
+            fn_args: quote! { &mut self, rhs: #rhs },
+            trait_bound_impl: quote! {
+                LHS: #name<#rhs>,
+            },
+            output_type_def: quote! {},
+            impl_generics: quote! { < const DL: #dimension_type, LHS > },
+            rhs: quote! { #rhs },
+            lhs,
+        }
+    }
+
+    /// For an impl of MulAssign or DivAssign between a quantity and a storage type
+    fn mul_or_div_assign_type_quantity(
+        defs: &Defs,
+        name: TokenStream,
+        fn_name: TokenStream,
+        fn_return_expr: TokenStream,
+        lhs: &Type,
+    ) -> Self {
+        let Defs {
+            quantity_type,
+            dimension_type,
+            ..
+        } = defs;
+        let rhs = quote! { #quantity_type<RHS, D> };
+        Self {
+            name: name.clone(),
+            fn_name,
+            fn_return_expr,
+            fn_return_type: quote! {()},
+            fn_args: quote! { &mut self, rhs: #rhs },
+            trait_bound_impl: quote! {
+                #lhs: #name<RHS>,
+            },
+            output_type_def: quote! {},
+            impl_generics: quote! { < const D: #dimension_type, RHS > },
+            rhs,
+            lhs: quote! { #lhs },
+        }
+    }
+
+    fn cmp_trait_quantity_type(
+        defs: &Defs,
+        rhs: &Type,
+        name: TokenStream,
+        fn_name: TokenStream,
+        fn_return_type: TokenStream,
+    ) -> Self {
+        let Defs {
+            quantity_type,
+            dimension_type,
+            ..
+        } = defs;
+        Self {
+            name: name.clone(),
+            fn_name: fn_name.clone(),
+            fn_return_type,
+            fn_args: quote! { &self, other: &#rhs },
+            fn_return_expr: quote! { self.0.#fn_name(other) },
+            trait_bound_impl: quote! { LHS: #name<#rhs> },
+            output_type_def: quote! {},
+            impl_generics: quote! { < LHS > },
+            rhs: quote! { #rhs },
+            lhs: quote! { #quantity_type<LHS, {#dimension_type::none()} > },
+        }
+    }
+
+    fn cmp_trait_type_quantity(
+        defs: &Defs,
+        lhs: &Type,
+        name: TokenStream,
+        fn_name: TokenStream,
+        fn_return_type: TokenStream,
+    ) -> Self {
+        let Defs {
+            quantity_type,
+            dimension_type,
+            ..
+        } = defs;
+        let rhs = quote! { #quantity_type<RHS, {#dimension_type::none()} > };
+        Self {
+            name: name.clone(),
+            fn_name: fn_name.clone(),
+            fn_return_type,
+            fn_args: quote! { &self, other: &#rhs },
+            fn_return_expr: quote! { self.#fn_name(&other.0) },
+            trait_bound_impl: quote! { #lhs: #name<RHS> },
+            output_type_def: quote! {},
+            impl_generics: quote! { < RHS > },
+            rhs,
+            lhs: quote! { #lhs },
+        }
+    }
 }
 
 impl Defs {
@@ -447,6 +560,34 @@ impl Defs {
                             quote! { #quantity_type(self.0 / rhs) },
                             &storage_type,
                         ),
+                        NumericTrait::mul_or_div_assign_quantity_type(
+                            self,
+                            quote! { std::ops::MulAssign },
+                            quote! { mul_assign },
+                            quote! { self.0 *= rhs; },
+                            &storage_type,
+                        ),
+                        NumericTrait::mul_or_div_assign_quantity_type(
+                            self,
+                            quote! { std::ops::DivAssign },
+                            quote! { div_assign },
+                            quote! { self.0 /= rhs; },
+                            &storage_type,
+                        ),
+                        NumericTrait::mul_or_div_assign_type_quantity(
+                            self,
+                            quote! { std::ops::MulAssign },
+                            quote! { mul_assign },
+                            quote! { *self *= rhs.0; },
+                            &storage_type,
+                        ),
+                        NumericTrait::mul_or_div_assign_type_quantity(
+                            self,
+                            quote! { std::ops::DivAssign },
+                            quote! { div_assign },
+                            quote! { *self /= rhs.0; },
+                            &storage_type,
+                        ),
                         NumericTrait::mul_type_quantity(
                             self,
                             quote! { std::ops::Mul },
@@ -488,6 +629,34 @@ impl Defs {
                             quote! { sub_assign },
                             quote! { *self -= rhs.0; },
                             &storage_type,
+                        ),
+                        NumericTrait::cmp_trait_quantity_type(
+                            self,
+                            &storage_type,
+                            quote! { std::cmp::PartialEq },
+                            quote! { eq },
+                            quote! { bool },
+                        ),
+                        NumericTrait::cmp_trait_type_quantity(
+                            self,
+                            &storage_type,
+                            quote! { std::cmp::PartialEq },
+                            quote! { eq },
+                            quote! { bool },
+                        ),
+                        NumericTrait::cmp_trait_quantity_type(
+                            self,
+                            &storage_type,
+                            quote! { std::cmp::PartialOrd },
+                            quote! { partial_cmp },
+                            quote! { Option<std::cmp::Ordering> },
+                        ),
+                        NumericTrait::cmp_trait_type_quantity(
+                            self,
+                            &storage_type,
+                            quote! { std::cmp::PartialOrd },
+                            quote! { partial_cmp },
+                            quote! { Option<std::cmp::Ordering> },
                         ),
                     ]
                     .into_iter()

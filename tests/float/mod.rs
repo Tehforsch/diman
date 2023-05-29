@@ -153,10 +153,26 @@ macro_rules! gen_tests_for_float {
             }
 
             #[test]
+            fn mul_assign_quantity_float() {
+                let mut x = Force::newtons(2.0);
+                let y = 3.0;
+                x *= y;
+                assert_is_close(x, Force::newtons(6.0));
+            }
+
+            #[test]
             fn mul_float_quantity() {
                 let x = 3.0;
                 let y = Force::newtons(2.0);
                 assert_is_close(x * y, Force::newtons(6.0));
+            }
+
+            #[test]
+            fn mul_assign_float_quantity() {
+                let mut x = 3.0;
+                let y = Dimensionless::dimensionless(2.0);
+                x *= y;
+                assert_is_close_float(x, 6.0);
             }
 
             #[test]
@@ -182,10 +198,26 @@ macro_rules! gen_tests_for_float {
             }
 
             #[test]
+            fn div_assign_quantity_float() {
+                let mut x = Length::meters(6.0);
+                let y = 2.0;
+                x /= y;
+                assert_is_close(x, Length::meters(3.0));
+            }
+
+            #[test]
             fn div_float_quantity() {
                 let x = 2.0;
                 let y = Velocity::meters_per_second(6.0);
                 assert_is_close(x / y, Time::seconds(2.0) / Length::meters(6.0));
+            }
+
+            #[test]
+            fn div_assign_float_quantity() {
+                let mut x = 6.0;
+                let y = Dimensionless::dimensionless(2.0);
+                x /= y;
+                assert_is_close_float(x, 3.0);
             }
 
             #[test]
@@ -219,6 +251,48 @@ macro_rules! gen_tests_for_float {
             fn deref_dimensionless() {
                 let x = Dimensionless::dimensionless(128.3);
                 assert_eq!(x.round(), 128.0);
+            }
+
+            #[test]
+            fn partial_eq_quantity_quantity() {
+                let x = Length::meters(50.0);
+                let y = Length::meters(50.0);
+                assert!(x == y);
+            }
+
+            #[test]
+            fn partial_eq_quantity_type() {
+                let x = Dimensionless::dimensionless(50.0);
+                let y = 50.0;
+                assert!(x == y);
+            }
+
+            #[test]
+            fn partial_eq_type_quantity() {
+                let x = 50.0;
+                let y = Dimensionless::dimensionless(50.0);
+                assert!(x == y);
+            }
+
+            #[test]
+            fn partial_ord_quantity_quantity() {
+                let x = Length::meters(50.0);
+                let y = Length::meters(49.0);
+                assert!(x > y);
+            }
+
+            #[test]
+            fn partial_ord_quantity_type() {
+                let x = Dimensionless::dimensionless(50.0);
+                let y = 49.0;
+                assert!(x >= y);
+            }
+
+            #[test]
+            fn partial_ord_type_quantity() {
+                let x = 50.0;
+                let y = Dimensionless::dimensionless(49.0);
+                assert!(x > y);
             }
         }
     };
