@@ -153,6 +153,14 @@ macro_rules! gen_tests_for_float {
             }
 
             #[test]
+            fn mul_assign_quantity_float() {
+                let mut x = Force::newtons(2.0);
+                let y = 3.0;
+                x *= y;
+                assert_is_close(x, Force::newtons(6.0));
+            }
+
+            #[test]
             fn mul_float_quantity() {
                 let x = 3.0;
                 let y = Force::newtons(2.0);
@@ -179,6 +187,14 @@ macro_rules! gen_tests_for_float {
                 let x = Length::meters(6.0);
                 let y = 2.0;
                 assert_is_close(x / y, Length::meters(3.0));
+            }
+
+            #[test]
+            fn div_assign_quantity_float() {
+                let mut x = Length::meters(6.0);
+                let y = 2.0;
+                x /= y;
+                assert_is_close(x, Length::meters(3.0));
             }
 
             #[test]

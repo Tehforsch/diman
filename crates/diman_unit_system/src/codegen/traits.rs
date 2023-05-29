@@ -333,6 +333,36 @@ impl NumericTrait {
             lhs,
         }
     }
+
+    /// For an impl of MulAssign or DivAssign between a quantity and a storage type
+    fn mul_or_div_assign_quantity_type(
+        defs: &Defs,
+        name: TokenStream,
+        fn_name: TokenStream,
+        fn_return_expr: TokenStream,
+        rhs: &Type,
+    ) -> Self {
+        let Defs {
+            quantity_type,
+            dimension_type,
+            ..
+        } = defs;
+        let lhs = quote! { #quantity_type<LHS, DL> };
+        Self {
+            name: name.clone(),
+            fn_name,
+            fn_return_expr,
+            fn_return_type: quote! {()},
+            fn_args: quote! { &mut self, rhs: #rhs },
+            trait_bound_impl: quote! {
+                LHS: #name<#rhs>,
+            },
+            output_type_def: quote! {},
+            impl_generics: quote! { < const DL: #dimension_type, LHS > },
+            rhs: quote! { #rhs },
+            lhs,
+        }
+    }
 }
 
 impl Defs {
@@ -445,6 +475,20 @@ impl Defs {
                             quote! { std::ops::Div },
                             quote! { div },
                             quote! { #quantity_type(self.0 / rhs) },
+                            &storage_type,
+                        ),
+                        NumericTrait::mul_or_div_assign_quantity_type(
+                            self,
+                            quote! { std::ops::MulAssign },
+                            quote! { mul_assign },
+                            quote! { self.0 *= rhs; },
+                            &storage_type,
+                        ),
+                        NumericTrait::mul_or_div_assign_quantity_type(
+                            self,
+                            quote! { std::ops::DivAssign },
+                            quote! { div_assign },
+                            quote! { self.0 /= rhs; },
                             &storage_type,
                         ),
                         NumericTrait::mul_type_quantity(
