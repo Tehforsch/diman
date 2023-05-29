@@ -273,6 +273,27 @@ macro_rules! gen_tests_for_float {
                 let y = Dimensionless::dimensionless(50.0);
                 assert!(x == y);
             }
+
+            #[test]
+            fn partial_ord_quantity_quantity() {
+                let x = Length::meters(50.0);
+                let y = Length::meters(49.0);
+                assert!(x > y);
+            }
+
+            #[test]
+            fn partial_ord_quantity_type() {
+                let x = Dimensionless::dimensionless(50.0);
+                let y = 49.0;
+                assert!(x >= y);
+            }
+
+            #[test]
+            fn partial_ord_type_quantity() {
+                let x = 50.0;
+                let y = Dimensionless::dimensionless(49.0);
+                assert!(x > y);
+            }
         }
     };
 }

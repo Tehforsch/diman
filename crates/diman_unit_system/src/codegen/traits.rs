@@ -394,19 +394,25 @@ impl NumericTrait {
         }
     }
 
-    fn partial_eq_quantity_type(defs: &Defs, rhs: &Type) -> Self {
+    fn cmp_trait_quantity_type(
+        defs: &Defs,
+        rhs: &Type,
+        name: TokenStream,
+        fn_name: TokenStream,
+        fn_return_type: TokenStream,
+    ) -> Self {
         let Defs {
             quantity_type,
             dimension_type,
             ..
         } = defs;
         Self {
-            name: quote! { std::cmp::PartialEq },
-            fn_name: quote! { eq },
-            fn_return_type: quote! { bool },
+            name: name.clone(),
+            fn_name: fn_name.clone(),
+            fn_return_type,
             fn_args: quote! { &self, other: &#rhs },
-            fn_return_expr: quote! { self.0.eq(other) },
-            trait_bound_impl: quote! { LHS: std::cmp::PartialEq<#rhs> },
+            fn_return_expr: quote! { self.0.#fn_name(other) },
+            trait_bound_impl: quote! { LHS: #name<#rhs> },
             output_type_def: quote! {},
             impl_generics: quote! { < LHS > },
             rhs: quote! { #rhs },
@@ -414,7 +420,13 @@ impl NumericTrait {
         }
     }
 
-    fn partial_eq_type_quantity(defs: &Defs, lhs: &Type) -> Self {
+    fn cmp_trait_type_quantity(
+        defs: &Defs,
+        lhs: &Type,
+        name: TokenStream,
+        fn_name: TokenStream,
+        fn_return_type: TokenStream,
+    ) -> Self {
         let Defs {
             quantity_type,
             dimension_type,
@@ -422,15 +434,15 @@ impl NumericTrait {
         } = defs;
         let rhs = quote! { #quantity_type<RHS, {#dimension_type::none()} > };
         Self {
-            name: quote! { std::cmp::PartialEq },
-            fn_name: quote! { eq },
-            fn_return_type: quote! { bool },
+            name: name.clone(),
+            fn_name: fn_name.clone(),
+            fn_return_type,
             fn_args: quote! { &self, other: &#rhs },
-            fn_return_expr: quote! { self.eq(&other.0) },
-            trait_bound_impl: quote! { #lhs: std::cmp::PartialEq<RHS> },
+            fn_return_expr: quote! { self.#fn_name(&other.0) },
+            trait_bound_impl: quote! { #lhs: #name<RHS> },
             output_type_def: quote! {},
             impl_generics: quote! { < RHS > },
-            rhs: rhs,
+            rhs,
             lhs: quote! { #lhs },
         }
     }
@@ -618,8 +630,34 @@ impl Defs {
                             quote! { *self -= rhs.0; },
                             &storage_type,
                         ),
-                        NumericTrait::partial_eq_quantity_type(self, &storage_type),
-                        NumericTrait::partial_eq_type_quantity(self, &storage_type),
+                        NumericTrait::cmp_trait_quantity_type(
+                            self,
+                            &storage_type,
+                            quote! { std::cmp::PartialEq },
+                            quote! { eq },
+                            quote! { bool },
+                        ),
+                        NumericTrait::cmp_trait_type_quantity(
+                            self,
+                            &storage_type,
+                            quote! { std::cmp::PartialEq },
+                            quote! { eq },
+                            quote! { bool },
+                        ),
+                        NumericTrait::cmp_trait_quantity_type(
+                            self,
+                            &storage_type,
+                            quote! { std::cmp::PartialOrd },
+                            quote! { partial_cmp },
+                            quote! { Option<std::cmp::Ordering> },
+                        ),
+                        NumericTrait::cmp_trait_type_quantity(
+                            self,
+                            &storage_type,
+                            quote! { std::cmp::PartialOrd },
+                            quote! { partial_cmp },
+                            quote! { Option<std::cmp::Ordering> },
+                        ),
                     ]
                     .into_iter()
                 }),
