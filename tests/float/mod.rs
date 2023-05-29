@@ -252,6 +252,27 @@ macro_rules! gen_tests_for_float {
                 let x = Dimensionless::dimensionless(128.3);
                 assert_eq!(x.round(), 128.0);
             }
+
+            #[test]
+            fn partial_eq_quantity_quantity() {
+                let x = Length::meters(50.0);
+                let y = Length::meters(50.0);
+                assert!(x == y);
+            }
+
+            #[test]
+            fn partial_eq_quantity_type() {
+                let x = Dimensionless::dimensionless(50.0);
+                let y = 50.0;
+                assert!(x == y);
+            }
+
+            #[test]
+            fn partial_eq_type_quantity() {
+                let x = 50.0;
+                let y = Dimensionless::dimensionless(50.0);
+                assert!(x == y);
+            }
         }
     };
 }

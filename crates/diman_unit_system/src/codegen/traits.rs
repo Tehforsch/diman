@@ -393,6 +393,47 @@ impl NumericTrait {
             lhs: quote! { #lhs },
         }
     }
+
+    fn partial_eq_quantity_type(defs: &Defs, rhs: &Type) -> Self {
+        let Defs {
+            quantity_type,
+            dimension_type,
+            ..
+        } = defs;
+        Self {
+            name: quote! { std::cmp::PartialEq },
+            fn_name: quote! { eq },
+            fn_return_type: quote! { bool },
+            fn_args: quote! { &self, other: &#rhs },
+            fn_return_expr: quote! { self.0.eq(other) },
+            trait_bound_impl: quote! { LHS: std::cmp::PartialEq<#rhs> },
+            output_type_def: quote! {},
+            impl_generics: quote! { < LHS > },
+            rhs: quote! { #rhs },
+            lhs: quote! { #quantity_type<LHS, {#dimension_type::none()} > },
+        }
+    }
+
+    fn partial_eq_type_quantity(defs: &Defs, lhs: &Type) -> Self {
+        let Defs {
+            quantity_type,
+            dimension_type,
+            ..
+        } = defs;
+        let rhs = quote! { #quantity_type<RHS, {#dimension_type::none()} > };
+        Self {
+            name: quote! { std::cmp::PartialEq },
+            fn_name: quote! { eq },
+            fn_return_type: quote! { bool },
+            fn_args: quote! { &self, other: &#rhs },
+            fn_return_expr: quote! { self.eq(&other.0) },
+            trait_bound_impl: quote! { #lhs: std::cmp::PartialEq<RHS> },
+            output_type_def: quote! {},
+            impl_generics: quote! { < RHS > },
+            rhs: rhs,
+            lhs: quote! { #lhs },
+        }
+    }
 }
 
 impl Defs {
@@ -577,6 +618,8 @@ impl Defs {
                             quote! { *self -= rhs.0; },
                             &storage_type,
                         ),
+                        NumericTrait::partial_eq_quantity_type(self, &storage_type),
+                        NumericTrait::partial_eq_type_quantity(self, &storage_type),
                     ]
                     .into_iter()
                 }),
