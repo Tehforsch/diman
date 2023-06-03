@@ -11,6 +11,7 @@ macro_rules! gen_tests_for_float {
             use crate::example_system::$float_name::SOLAR_MASS;
             use crate::example_system::$float_name::SOLAR_MASS_AWKWARD;
             use crate::example_system::$float_name::SOLAR_MASS_GRAMS;
+            use crate::example_system::Quantity;
             use $assert_is_close as assert_is_close;
             use $assert_is_close_float as assert_is_close_float;
 

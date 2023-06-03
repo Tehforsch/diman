@@ -20,3 +20,18 @@ mod serde;
 
 #[cfg(feature = "rand")]
 mod rand;
+
+#[test]
+#[cfg(feature = "f32")]
+fn compile_fail_float() {
+    let t = trybuild::TestCases::new();
+    t.compile_fail("tests/compile_fail/float_*.rs");
+}
+
+#[test]
+#[cfg(feature = "glam-vec2")]
+#[cfg(feature = "f32")]
+fn compile_fail_glam() {
+    let t = trybuild::TestCases::new();
+    t.compile_fail("tests/compile_fail/glam_*.rs");
+}
