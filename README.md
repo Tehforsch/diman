@@ -52,6 +52,7 @@ If you cannot use unstable Rust for your project or require a stable library, co
 ## Design
 Diman aims to make it as easy as possible to add compile-time unit safety to Rust code. Physical quantities are represented by the `Quantity<S, D>` struct, where `S` is the underlying storage type (`f32`, `f64`, ...) and `D` is the  dimension of the quantity. For example, in order to represent the [SI system of units](https://www.nist.gov/pml/owm/metric-si/si-units), the dimension type would look as follows:
 ```rust
+#![feature(adt_const_params)]
 use diman::dimension;
 
 #[dimension]
