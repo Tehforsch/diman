@@ -51,8 +51,7 @@ impl Defs {
         } = unit;
         let name = &float_type.name;
         let span = self.dimension_type.span();
-        quote_spanned! {
-            span =>
+        quote_spanned! {span =>
             impl #quantity_type<#name, {#quantity_dimension}> {
                 pub fn #unit_name(val: #name) -> #quantity_type<#name, {#quantity_dimension}> {
                     #quantity_type::<#name, {#quantity_dimension}>(val * (#factor as #name))
@@ -90,7 +89,8 @@ impl Defs {
             3 => quote! { x, y, z },
             _ => unreachable!(),
         };
-        quote! {
+        let span = self.dimension_type.span();
+        quote_spanned! {span => 
             impl #quantity_type<#name, {#quantity_dimension}> {
                 pub fn #unit_name(#fn_args) -> #quantity_type<#name, {#quantity_dimension}> {
                     #quantity_type::<#name, {#quantity_dimension}>(#name::new(#call_args) * (#factor as #float_type))

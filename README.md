@@ -44,14 +44,15 @@ If you cannot use unstable Rust for your project or require a stable library, co
 * Systems of units and quantities can be user defined via the `unit_system!` macro. This gives the user complete freedom over the choice of quantities and makes them part of the user's library, so that arbitrary new methods can be implemented on them.
 * `f32` and `f64` float storage types (behind the `f32` and `f64` feature gate respectively).
 * Vector storage types via [`glam`](https://crates.io/crates/glam/) (behind the `glam-vec2`, `glam-vec3`, `glam-dvec2` and `glam-dvec3` features).
-* Serialization and Deserialization via [`serde`](https://crates.io/crates/serde) (behind the `serde` feature gate).
+* Serialization and Deserialization via [`serde`](https://crates.io/crates/serde) (behind the `serde` feature gate, see the official documentation for more info).
 * HDF5 support using [`hdf5-rs`](https://crates.io/crates/hdf5-rs/) (behind the `hdf5` feature gate).
-* Quantities can be sent via MPI using [`mpi`](https://crates.io/crates/mpi) (behind the `mpi` feature gate).
-* Random quantities can be generated via [`rand`](https://crates.io/crates/rand) (behind the `rand` feature gate).
+* Quantities implement the `Equivalence` trait so that they can be sent via MPI using [`mpi`](https://crates.io/crates/mpi) (behind the `mpi` feature gate).
+* Random quantities can be generated via [`rand`](https://crates.io/crates/rand) (behind the `rand` feature gate, see the official documentation for more info).
 
 ## Design
 Diman aims to make it as easy as possible to add compile-time unit safety to Rust code. Physical quantities are represented by the `Quantity<S, D>` struct, where `S` is the underlying storage type (`f32`, `f64`, ...) and `D` is the  dimension of the quantity. For example, in order to represent the [SI system of units](https://www.nist.gov/pml/owm/metric-si/si-units), the dimension type would look as follows:
 ```rust
+#![feature(adt_const_params)]
 use diman::dimension;
 
 #[dimension]
@@ -147,45 +148,4 @@ use diman::{Product, Quotient};
 let x: Product<(Length, Time)> = Length::meters(10.0) * Time::seconds(2.0);
 let y: Product<(Length, Time, Velocity)> = Area::square_meters(5.0);
 let z: Quotient<Length, Time> = Length::meters(10.0) / Time::seconds(2.0);
-```
-
-
-## Serde
-Serialization and deserialization of the units is provided via `serde` if the `serde` feature gate is enabled:
-```rust
-use diman::si::f64::{Length, Velocity};
-use serde::{Serialize, Deserialize};
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
-struct Parameters {
-    my_length: Length,
-    my_vel: Velocity,
-}
-
-let params: Parameters = 
-     serde_yaml::from_str("
-        my_length: 100 m
-        my_vel: 10 m s^-1
-    ").unwrap();
-assert_eq!(
-    params, 
-    Parameters {
-        my_length: Length::meters(100.0),
-        my_vel: Velocity::meters_per_second(10.0),
-    }
-)
-```
-
-## Rand
-Random quantities can be generated via `rand`
-```rust
-use rand::Rng;
-
-use diman::si::f64::Length;
-
-let mut rng = rand::thread_rng();
-for _ in 0..100 {
-    let x = rng.gen_range(Length::meters(0.0)..Length::kilometers(1.0));
-    assert!(Length::meters(0.0) <= x);
-    assert!(x < Length::meters(1000.0));
-}
 ```

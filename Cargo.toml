@@ -45,3 +45,4 @@ diman_unit_system = { path = "crates/diman_unit_system", version = "0.2" }
 [dev-dependencies]
 serde_yaml = "0.9.21"
 lazy_static = "1.4.0"
+trybuild = "1.0"

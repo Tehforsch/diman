@@ -14,8 +14,7 @@ impl Defs {
             ..
         } = &self;
         let span = quantity_type.span();
-        quote_spanned! {
-            span =>
+        quote_spanned! {span =>
                 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Default)]
                 #[repr(transparent)]
                 pub struct #quantity_type<S: 'static, const D: #dimension_type>(pub(crate) S);
@@ -79,8 +78,7 @@ impl Defs {
             })
             .collect();
         let span = self.quantity_type.span();
-        quote_spanned! {
-            span =>
+        quote_spanned! {span =>
                 #dimension_type {
                     #field_updates
                     ..#dimension_type::none()
@@ -145,8 +143,7 @@ impl Defs {
                 let quantity_name = &quantity.name;
                 let type_ = type_.name();
                 let span = self.dimension_type.span();
-                quote_spanned! {
-                    span =>
+                quote_spanned! {span =>
                     pub type #quantity_name = #quantity_type::<#type_, { #dimension }>;
                 }
             })
