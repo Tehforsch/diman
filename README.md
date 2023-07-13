@@ -139,7 +139,7 @@ assert_eq!(vol, Volume::cubic_meters(27.0))
 This includes `squared`, `cubed`, `sqrt`, `cbrt` as well as `powi`.
 
 ## Quantity products and quotients
-Sometimes, intermediate types in computations are quantities that doesn't really have a nice name and are also
+Sometimes, intermediate types in computations are quantities that don't really have a nice name and are also
 not needed too many times. Having to add a definition to the unit system for this case can be cumbersome.
 This is why the `Product` and `Quotient` types are provided:
 ```rust
