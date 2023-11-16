@@ -126,7 +126,9 @@ impl NumericTrait {
             dimension_type,
             ..
         } = defs;
-        let quantity = quote! { #quantity_type::<#storage_type, { #dimension_type::none() }> };
+        let span = defs.span();
+        let quantity =
+            quote_spanned! {span=> #quantity_type::<#storage_type, { #dimension_type::none() }> };
         let fn_return_expr = quote! { #quantity( #fn_inner_return_expr ) };
         Self {
             impl_generics: quote! {},
