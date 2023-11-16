@@ -1,5 +1,5 @@
 error[E0308]: mismatched types
- --> tests/compile_fail/type_mismatch_mul_div_expression.rs:7:17
+ --> tests/compile_fail/type_mismatch_div_quantity.rs:7:17
   |
 7 |     let x: () = Length::meters(1.0) / Length::meters(1.0);
   |            --   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `()`, found `Quantity<f64, Dimension>`
