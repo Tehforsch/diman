@@ -9,6 +9,9 @@ mod float;
 
 mod type_aliases;
 
+#[cfg(feature = "f64")]
+mod gas;
+
 #[cfg(feature = "glam")]
 mod glam;
 
