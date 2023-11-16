@@ -38,7 +38,7 @@ impl Defs {
                         }
                     };
                     let val = self.0.representative_value();
-                    let units = #units;
+                    let units: &[(#dimension_type, _, _)] = &#units;
                     let (unit_name, unit_value) = units
                         .iter()
                         .filter(|(d, _, _)| d == &D)
