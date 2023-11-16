@@ -41,7 +41,7 @@ impl<U: Resolvable<Resolved = R>, R> Resolver<U, R> {
                 let resolved = next_resolvable.resolve(&self.resolved);
                 self.resolved.insert(name, resolved);
             } else {
-                return Err(Error::unresolvable(
+                return Err(Error::Unresolvable(
                     self.unresolved.drain(..).map(|x| x.ident()).collect(),
                 ));
             }

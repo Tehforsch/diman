@@ -26,6 +26,7 @@ impl UnresolvedDefs {
             .chain(self.constants.iter().map(|u| u.to_unresolved_item()))
             .collect();
         check_no_undefined_identifiers(&items)?;
+        check_no_multiply_defined_identifiers(&items)?;
         let mut items = Resolver::resolve(items)?;
         let quantities = convert_vec_to_resolved(self.quantities, &mut items);
         let units = convert_vec_to_resolved(self.units, &mut items);
@@ -52,6 +53,30 @@ fn convert_vec_to_resolved<T: ItemConversion>(
         .collect()
 }
 
+fn check_no_multiply_defined_identifiers(items: &[UnresolvedItem]) -> Result<()> {
+    let mut counter: HashMap<_, usize> = items.iter().map(|item| (&item.name, 0)).collect();
+    for item in items.iter() {
+        *counter.get_mut(&item.name).unwrap() += 1;
+    }
+    if items.as_ref().iter().any(|item| counter[&item.name] > 1) {
+        Err(Error::Multiple(
+            counter
+                .iter()
+                .filter(|(_, count)| **count > 1)
+                .map(|(multiply_defined_name, _)| {
+                    items
+                        .iter()
+                        .map(|item| item.name.clone())
+                        .filter(|name| &name == multiply_defined_name)
+                        .collect()
+                })
+                .collect(),
+        ))
+    } else {
+        Ok(())
+    }
+}
+
 fn check_no_undefined_identifiers(items: &[UnresolvedItem]) -> Result<()> {
     let lhs_idents: HashSet<Ident> = items.iter().map(|item| item.name.clone()).collect();
     let mut undefined_rhs_idents = vec![];
@@ -75,6 +100,6 @@ fn check_no_undefined_identifiers(items: &[UnresolvedItem]) -> Result<()> {
     if undefined_rhs_idents.is_empty() {
         Ok(())
     } else {
-        Err(Error::undefined(undefined_rhs_idents))
+        Err(Error::Undefined(undefined_rhs_idents))
     }
 }

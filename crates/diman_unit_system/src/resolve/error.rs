@@ -1,48 +1,56 @@
+use proc_macro::{Diagnostic, Level};
 use syn::Ident;
 
-pub struct Error {
-    idents: Vec<Ident>,
-    kind: ErrorKind,
+pub enum Error {
+    Unresolvable(Vec<Ident>),
+    Undefined(Vec<Ident>),
+    Multiple(Vec<Vec<Ident>>),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-pub enum ErrorKind {
-    Unresolvable,
-    Undefined,
+impl Error {
+    pub fn emit(self) {
+        match self {
+            Error::Unresolvable(idents) => emit_unresolvable(idents),
+            Error::Undefined(idents) => emit_undefined(idents),
+            Error::Multiple(idents) => emit_multiple(idents),
+        }
+    }
 }
 
-impl Error {
-    pub fn undefined(idents: Vec<Ident>) -> Self {
-        Self {
-            idents,
-            kind: ErrorKind::Undefined,
-        }
+fn emit_undefined(idents: Vec<Ident>) {
+    for ident in idents {
+        ident
+            .span()
+            .unwrap()
+            .error(format!("Undefined identifier \"{}\".", ident))
+            .emit();
     }
+}
 
-    pub fn unresolvable(idents: Vec<Ident>) -> Self {
-        Self {
-            idents,
-            kind: ErrorKind::Unresolvable,
-        }
+fn emit_unresolvable(idents: Vec<Ident>) {
+    for ident in idents {
+        ident
+            .span()
+            .unwrap()
+            .error(format!("Unresolvable definition \"{}\".", ident))
+            .help("Remove recursive definitions.")
+            .emit();
     }
+}
 
-    pub fn emit(self) {
-        let error_msg = match self.kind {
-            ErrorKind::Unresolvable => "Unresolvable definition:",
-            ErrorKind::Undefined => "Undefined identifier:",
-        };
-        let help = match self.kind {
-            ErrorKind::Unresolvable => "Possible cause: recursive definitions?",
-            ErrorKind::Undefined => "This identifier only appears on the right hand side.",
-        };
-        for ident in self.idents.iter() {
-            ident
-                .span()
-                .unwrap()
-                .error(format!("{} \"{}\"", error_msg, ident))
-                .help(help)
-                .emit();
-        }
+fn emit_multiple(idents: Vec<Vec<Ident>>) {
+    for idents in idents {
+        let name = &idents[0];
+        Diagnostic::spanned(
+            idents
+                .iter()
+                .map(|ident| ident.span().unwrap())
+                .collect::<Vec<_>>(),
+            Level::Error,
+            format!("Identifier \"{}\" defined multiple times.", name),
+        )
+        .emit();
     }
 }
