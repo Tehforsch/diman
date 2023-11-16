@@ -35,3 +35,9 @@ fn compile_fail_glam() {
     let t = trybuild::TestCases::new();
     t.compile_fail("tests/compile_fail/glam_*.rs");
 }
+
+#[test]
+fn compile_fail_resolver() {
+    let t = trybuild::TestCases::new();
+    t.compile_fail("tests/compile_fail/resolver_*.rs");
+}
