@@ -110,16 +110,16 @@ impl Defs {
                     #quantity_type::<#float_type, { D.dimension_cbrt() }>(self.0.cbrt())
                 }
 
-                pub fn min(self, other: Self) -> Self {
-                    Self(self.0.min(other.0))
+                pub fn min<Q: Into<Self>>(self, other: Q) -> Self {
+                    Self(self.0.min(other.into().0))
                 }
 
-                pub fn max(self, other: Self) -> Self {
-                    Self(self.0.max(other.0))
+                pub fn max<Q: Into<Self>>(self, other: Q) -> Self {
+                    Self(self.0.max(other.into().0))
                 }
 
-                pub fn clamp(self, min: Self, max: Self) -> Self {
-                    Self(self.0.clamp(min.0, max.0))
+                pub fn clamp<Q: Into<Self>>(self, min: Q, max: Q) -> Self {
+                    Self(self.0.clamp(min.into().0, max.into().0))
                 }
 
                 pub fn zero() -> Self {

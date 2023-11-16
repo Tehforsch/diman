@@ -294,6 +294,59 @@ macro_rules! gen_tests_for_float {
                 let y = Dimensionless::dimensionless(49.0);
                 assert!(x > y);
             }
+
+            #[test]
+            fn clamp_quantity_quantity() {
+                let x = Length::meters(10.0);
+                let y = Length::kilometers(20.0);
+                assert!(Length::meters(1.0).clamp(x, y) == x);
+                assert!(Length::meters(50.0).clamp(x, y) == Length::meters(50.0));
+                assert!(Length::meters(50000.0).clamp(x, y) == y);
+            }
+
+            #[test]
+            fn clamp_quantity_type() {
+                let x = 10.0;
+                let y = 20.0;
+                assert!(Dimensionless::dimensionless(5.0).clamp(x, y) == x);
+                assert!(
+                    Dimensionless::dimensionless(15.0).clamp(x, y)
+                        == Dimensionless::dimensionless(15.0)
+                );
+                assert!(Dimensionless::dimensionless(50.0).clamp(x, y) == y);
+            }
+
+            #[test]
+            fn max_quantity_quantity() {
+                let x = Length::meters(10.0);
+                assert!(Length::meters(5.0).max(x) == x);
+                assert!(Length::meters(15.0).max(x) == Length::meters(15.0));
+            }
+
+            #[test]
+            fn max_quantity_type() {
+                let x = 10.0;
+                assert!(Dimensionless::dimensionless(5.0).max(x) == x);
+                assert!(
+                    Dimensionless::dimensionless(15.0).max(x) == Dimensionless::dimensionless(15.0)
+                );
+            }
+
+            #[test]
+            fn min_quantity_quantity() {
+                let x = Length::meters(10.0);
+                assert!(Length::meters(5.0).min(x) == Length::meters(5.0));
+                assert!(Length::meters(15.0).min(x) == x);
+            }
+
+            #[test]
+            fn min_quantity_type() {
+                let x = 10.0;
+                assert!(
+                    Dimensionless::dimensionless(5.0).min(x) == Dimensionless::dimensionless(5.0)
+                );
+                assert!(Dimensionless::dimensionless(15.0).min(x) == x);
+            }
         }
     };
 }

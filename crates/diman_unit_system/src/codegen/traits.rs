@@ -671,10 +671,12 @@ impl Defs {
             .collect();
         let sum = self.impl_sum();
         let neg = self.impl_neg();
+        let from = self.impl_from();
         quote! {
             #ops
             #sum
             #neg
+            #from
         }
     }
 
@@ -740,6 +742,24 @@ impl Defs {
                     Self(-self.0)
                 }
             }
+        }
+    }
+
+    fn impl_from(&self) -> TokenStream {
+        let Self {
+            quantity_type,
+            dimension_type,
+            ..
+        } = self;
+        quote! {
+            impl<S> From<S>
+                for #quantity_type<S, { #dimension_type::none() }>
+            {
+                fn from(other: S) -> Self {
+                    Self(other)
+                }
+            }
+
         }
     }
 }
