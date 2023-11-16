@@ -1,0 +1,7 @@
+error: Unresolvable definition "undefined".
+  --> tests/compile_fail/resolver_partial_resolution.rs:20:15
+   |
+20 |         unit (undefined, "u") = undefined,
+   |               ^^^^^^^^^
+   |
+   = help: Remove recursive definitions.

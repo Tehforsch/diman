@@ -18,13 +18,14 @@ pub struct Resolver<U, R> {
 }
 
 impl<U: Resolvable<Resolved = R>, R> Resolver<U, R> {
-    pub fn resolve(unresolved: Vec<U>) -> Result<HashMap<Ident, R>> {
+    pub fn resolve(unresolved: Vec<U>) -> (HashMap<Ident, R>, Result<()>) {
         let mut resolver = Self {
             unresolved,
             resolved: HashMap::new(),
         };
-        resolver.run()?;
-        Ok(resolver.resolved)
+
+        let result = resolver.run();
+        (resolver.resolved, result)
     }
 
     fn run(&mut self) -> Result<()> {
