@@ -90,7 +90,7 @@ impl Defs {
             _ => unreachable!(),
         };
         let span = self.dimension_type.span();
-        quote_spanned! {span => 
+        quote_spanned! {span =>
             impl #quantity_type<#name, {#quantity_dimension}> {
                 pub fn #unit_name(#fn_args) -> #quantity_type<#name, {#quantity_dimension}> {
                     #quantity_type::<#name, {#quantity_dimension}>(#name::new(#call_args) * (#factor as #float_type))

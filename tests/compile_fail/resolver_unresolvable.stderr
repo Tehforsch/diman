@@ -1,0 +1,15 @@
+error: Unresolvable definition "meters".
+  --> tests/compile_fail/resolver_unresolvable.rs:17:15
+   |
+17 |         unit (meters, "m") = 0.001 * kilometers,
+   |               ^^^^^^
+   |
+   = help: Remove recursive definitions.
+
+error: Unresolvable definition "kilometers".
+  --> tests/compile_fail/resolver_unresolvable.rs:18:15
+   |
+18 |         unit (kilometers, "km") = 1000.0 * meters,
+   |               ^^^^^^^^^^
+   |
+   = help: Remove recursive definitions.
