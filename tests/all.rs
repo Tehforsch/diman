@@ -9,6 +9,8 @@ mod float;
 
 mod type_aliases;
 
+mod quantity_defs;
+
 #[cfg(feature = "f64")]
 mod gas;
 
