@@ -51,9 +51,14 @@ use verify::Verify;
 #[proc_macro]
 pub fn unit_system(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let defs = parse_macro_input!(item as parse::types::Defs);
-    let defs: types::UnresolvedDefs = defs.verify().unwrap();
-    let resolved = defs.resolve();
-    resolved.code_gen().into()
+    let defs: Result<types::UnresolvedDefs> = defs.verify();
+    match defs {
+        Err(err) => return err.to_compile_error().into(),
+        Ok(defs) => {
+            let resolved = defs.resolve();
+            resolved.code_gen().into()
+        }
+    }
 }
 
 /// Derives all required methods for a dimension type.

@@ -12,6 +12,7 @@ pub struct Prefixes(pub Punctuated<Prefix, Token![,]>);
 
 pub struct DimensionInt(pub Lit);
 
+#[derive(Clone)]
 pub struct Factor(pub Lit);
 
 pub struct Symbol(pub Lit);
@@ -29,7 +30,13 @@ pub struct Dimensions {
     pub fields: Vec<DimensionEntry>,
 }
 
-pub type QuantityExpression = Expr<Ident>;
+pub enum QuantityIdent {
+    // This will be verified to only be 1.0 or 1
+    Factor(Factor),
+    Quantity(Ident),
+}
+
+pub type QuantityExpression = Expr<QuantityIdent>;
 
 #[derive(Verify)]
 #[verified(crate::types::UnitFactor)]

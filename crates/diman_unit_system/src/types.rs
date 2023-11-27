@@ -17,7 +17,13 @@ pub struct Dimensions {
     pub fields: Vec<DimensionEntry>,
 }
 
-pub type QuantityExpression = Expr<Ident>;
+#[derive(Clone)]
+pub enum QuantityIdent {
+    One,
+    Quantity(Ident),
+}
+
+pub type QuantityExpression = Expr<QuantityIdent>;
 
 #[derive(Clone)]
 pub enum UnitFactor {

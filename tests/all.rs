@@ -45,8 +45,15 @@ fn compile_fail_resolver() {
     t.compile_fail("tests/compile_fail/resolver_*.rs");
 }
 
+
 #[test]
 fn compile_fail_type_mismatch() {
     let t = trybuild::TestCases::new();
     t.compile_fail("tests/compile_fail/type_mismatch_*.rs");
+}
+
+#[test]
+fn compile_fail_quantity_def_numeric_factor() {
+    let t = trybuild::TestCases::new();
+    t.compile_fail("tests/compile_fail/quantity_definition_with_numeric_factor.rs");
 }

@@ -129,3 +129,31 @@ impl Verify for ptype::Prefixes {
         self.0.into_iter().map(|x| x.verify()).collect()
     }
 }
+
+
+impl Verify for ptype::QuantityIdent {
+    type Verified = QuantityIdent;
+
+    fn verify(self) -> Result<Self::Verified> {
+        Ok(match self {
+            ptype::QuantityIdent::Factor(factor) => {
+                factor_is_one(factor)?;
+                QuantityIdent::One
+            }
+            ptype::QuantityIdent::Quantity(quantity) => QuantityIdent::Quantity(quantity),
+        })
+    }
+}
+
+fn factor_is_one(factor: ptype::Factor) -> Result<()> {
+    let val = factor.clone().verify()?;
+    if val == 1.0 {
+        Ok(())
+    } else {
+        Err(Error::new(
+            factor.0.span(),
+            "Only 1 and 1.0 are valid factors in quantity definitions.".to_string(),
+        ))
+    }
+}
+
