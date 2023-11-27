@@ -256,12 +256,13 @@ impl NumericTrait {
         storage_type: &Type,
     ) -> NumericTrait {
         let Defs { quantity_type, .. } = defs;
+        let span = defs.span();
         Self {
             trait_bound_impl: quote! {
                 #storage_type: #name<RHS>,
                 #quantity_type<#storage_type, { D.dimension_inv() }>:,
             },
-            output_type_def: quote! {
+            output_type_def: quote_spanned! {span=>
                 type Output = #quantity_type<
                     <#storage_type as #name<RHS>>::Output,
                     { D.dimension_inv() },
