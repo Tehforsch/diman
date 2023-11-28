@@ -23,7 +23,9 @@ pub enum QuantityIdent {
     Quantity(Ident),
 }
 
-pub type QuantityExpression = Expr<QuantityIdent>;
+pub type IntExponent = i32;
+
+pub type QuantityExpression = Expr<QuantityIdent, IntExponent>;
 
 #[derive(Clone)]
 pub enum UnitFactor {
@@ -31,7 +33,7 @@ pub enum UnitFactor {
     Number(f64),
 }
 
-pub type UnitExpression = Expr<UnitFactor>;
+pub type UnitExpression = Expr<UnitFactor, IntExponent>;
 
 pub enum QuantityDefinition {
     Dimensions(Dimensions),

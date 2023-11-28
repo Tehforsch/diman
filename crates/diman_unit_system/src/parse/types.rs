@@ -17,6 +17,8 @@ pub struct Factor(pub Lit);
 
 pub struct Symbol(pub Lit);
 
+pub struct Exponent(pub Lit);
+
 #[derive(Verify)]
 #[verified(crate::types::DimensionEntry)]
 pub struct DimensionEntry {
@@ -36,7 +38,7 @@ pub enum QuantityIdent {
     Quantity(Ident),
 }
 
-pub type QuantityExpression = Expr<QuantityIdent>;
+pub type QuantityExpression = Expr<QuantityIdent, Exponent>;
 
 #[derive(Verify)]
 #[verified(crate::types::UnitFactor)]
@@ -45,7 +47,7 @@ pub enum UnitFactor {
     Number(Factor),
 }
 
-pub type UnitExpression = Expr<UnitFactor>;
+pub type UnitExpression = Expr<UnitFactor, Exponent>;
 
 #[derive(Verify)]
 #[verified(crate::types::QuantityDefinition)]
