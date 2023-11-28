@@ -44,3 +44,9 @@ fn compile_fail_resolver() {
     let t = trybuild::TestCases::new();
     t.compile_fail("tests/compile_fail/resolver_*.rs");
 }
+
+#[test]
+fn compile_fail_type_mismatch() {
+    let t = trybuild::TestCases::new();
+    t.compile_fail("tests/compile_fail/type_mismatch_*.rs");
+}

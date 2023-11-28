@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
-use quote::quote;
-use syn::Type;
+use quote::{quote, quote_spanned};
+use syn::{spanned::Spanned, Type};
 
 use crate::types::Defs;
 
@@ -126,7 +126,9 @@ impl NumericTrait {
             dimension_type,
             ..
         } = defs;
-        let quantity = quote! { #quantity_type::<#storage_type, { #dimension_type::none() }> };
+        let span = defs.span();
+        let quantity =
+            quote_spanned! {span=> #quantity_type::<#storage_type, { #dimension_type::none() }> };
         let fn_return_expr = quote! { #quantity( #fn_inner_return_expr ) };
         Self {
             impl_generics: quote! {},
@@ -183,6 +185,7 @@ impl NumericTrait {
             dimension_type,
             ..
         } = defs;
+        let span = defs.span();
         let lhs = quote! { #quantity_type<LHS, DL> };
         let rhs = quote! { #quantity_type<RHS, DR> };
         Self {
@@ -195,7 +198,8 @@ impl NumericTrait {
                 LHS: #name<RHS>,
                 #quantity_type<LHS, { DL.#dimension_fn(DR) }>:,
             },
-            output_type_def: quote! {
+            output_type_def: quote_spanned! {
+                span=>
                 type Output = #quantity_type<
                     <LHS as #name<RHS>>::Output,
                     { DL.#dimension_fn(DR) },
@@ -252,12 +256,13 @@ impl NumericTrait {
         storage_type: &Type,
     ) -> NumericTrait {
         let Defs { quantity_type, .. } = defs;
+        let span = defs.span();
         Self {
             trait_bound_impl: quote! {
                 #storage_type: #name<RHS>,
                 #quantity_type<#storage_type, { D.dimension_inv() }>:,
             },
-            output_type_def: quote! {
+            output_type_def: quote_spanned! {span=>
                 type Output = #quantity_type<
                     <#storage_type as #name<RHS>>::Output,
                     { D.dimension_inv() },
@@ -449,6 +454,10 @@ impl NumericTrait {
 }
 
 impl Defs {
+    pub fn span(&self) -> proc_macro2::Span {
+        self.dimension_type.span()
+    }
+
     pub(crate) fn qproduct_trait(&self) -> TokenStream {
         let Self {
             quantity_type,
