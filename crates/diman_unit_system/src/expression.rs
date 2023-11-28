@@ -1,9 +1,34 @@
 #[derive(Clone, Debug)]
 #[cfg_attr(test, derive(PartialEq))]
+pub enum Operator {
+    Mul,
+    Div,
+}
+
+#[derive(Clone, Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 pub enum Expr<T> {
     Value(Factor<T>),
-    Times(Factor<T>, Box<Expr<T>>),
-    Over(Factor<T>, Box<Expr<T>>),
+    Binary(BinaryOperator<T>),
+}
+
+#[cfg(test)]
+impl<T> Expr<T> {
+    pub fn value(factor: Factor<T>) -> Box<Self> {
+        Box::new(Self::Value(factor))
+    }
+
+    pub fn binary(bin: BinaryOperator<T>) -> Box<Self> {
+        Box::new(Self::Binary(bin))
+    }
+}
+
+#[derive(Clone, Debug)]
+#[cfg_attr(test, derive(PartialEq))]
+pub struct BinaryOperator<T> {
+    pub lhs: Box<Expr<T>>,
+    pub rhs: Factor<T>,
+    pub operator: Operator,
 }
 
 #[derive(Clone, Debug)]
@@ -30,16 +55,21 @@ impl<T> Expr<T> {
     {
         match self {
             Expr::Value(val) => Expr::Value(val.map(f)),
-            Expr::Times(val, expr) => Expr::Times(val.map(f.clone()), Box::new(expr.map(f))),
-            Expr::Over(val, expr) => Expr::Over(val.map(f.clone()), Box::new(expr.map(f))),
+            Expr::Binary(bin) => {
+                let bin = BinaryOperator {
+                    lhs: Box::new(bin.lhs.map(f.clone())),
+                    rhs: bin.rhs.map(f.clone()),
+                    operator: bin.operator,
+                };
+                Expr::Binary(bin)
+            }
         }
     }
 
     pub fn iter_vals<'a>(&'a self) -> Box<dyn Iterator<Item = &'a T> + 'a> {
         match self {
             Expr::Value(val) => Box::new(val.iter_vals()),
-            Expr::Times(val, expr) => Box::new(val.iter_vals().chain(expr.iter_vals())),
-            Expr::Over(val, expr) => Box::new(val.iter_vals().chain(expr.iter_vals())),
+            Expr::Binary(bin) => Box::new(bin.lhs.iter_vals().chain(bin.rhs.iter_vals())),
         }
     }
 }
@@ -66,8 +96,14 @@ impl<T: MulDiv> Expr<T> {
     pub fn eval(&self) -> T {
         match self {
             Expr::Value(val) => val.eval(),
-            Expr::Times(val, expr) => val.eval() * expr.eval(),
-            Expr::Over(val, expr) => val.eval() / expr.eval(),
+            Expr::Binary(bin) => {
+                let lhs = bin.lhs.eval();
+                let rhs = bin.rhs.eval();
+                match bin.operator {
+                    Operator::Mul => lhs * rhs,
+                    Operator::Div => lhs / rhs,
+                }
+            }
         }
     }
 }
