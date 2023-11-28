@@ -10,7 +10,8 @@ use syn::{
 
 use self::types::{
     ConstantEntry, Defs, DimensionEntry, DimensionInt, Dimensions, Entry, Factor, Prefix, Prefixes,
-    QuantityDefinition, QuantityEntry, Symbol, UnitEntry, UnitExpression, UnitFactor,
+    QuantityDefinition, QuantityEntry, QuantityIdent, Symbol, UnitEntry, UnitExpression,
+    UnitFactor,
 };
 
 impl Parse for Symbol {
@@ -70,6 +71,17 @@ impl Parse for UnitFactor {
             Ok(Self::Number(input.parse()?))
         } else {
             Err(lookahead.error())
+        }
+    }
+}
+
+impl Parse for QuantityIdent {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let lookahead = input.lookahead1();
+        if lookahead.peek(Lit) {
+            Ok(Self::Factor(input.parse()?))
+        } else {
+            Ok(Self::Quantity(input.parse()?))
         }
     }
 }
