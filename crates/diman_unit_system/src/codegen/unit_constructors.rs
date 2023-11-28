@@ -51,10 +51,25 @@ impl Defs {
         } = unit;
         let name = &float_type.name;
         let span = self.dimension_type.span();
+        // Without const_fn_floating_point_arithmetic (https://github.com/rust-lang/rust/issues/57241)
+        // we cannot make unit constructors a const fn in general (since it requires the unstable
+        // const_fn_floating_point_arithmetic feature). The following allows the constructor with 1.0
+        // conversion factor to be const.
+        let const_fn = *factor == 1.0;
+        let fn_def = if const_fn {
+            quote! { const fn }
+        } else {
+            quote! { fn }
+        };
+        let value = if const_fn {
+            quote! { val }
+        } else {
+            quote! { val * #factor as #name }
+        };
         quote_spanned! {span =>
             impl #quantity_type<#name, {#quantity_dimension}> {
-                pub fn #unit_name(val: #name) -> #quantity_type<#name, {#quantity_dimension}> {
-                    #quantity_type::<#name, {#quantity_dimension}>(val * (#factor as #name))
+                pub #fn_def #unit_name(val: #name) -> #quantity_type<#name, {#quantity_dimension}> {
+                    #quantity_type::<#name, {#quantity_dimension}>(#value)
                 }
             }
         }
