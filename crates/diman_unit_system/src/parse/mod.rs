@@ -9,8 +9,8 @@ use syn::{
 };
 
 use self::types::{
-    ConstantEntry, Defs, DimensionEntry, DimensionInt, Dimensions, Entry, Factor, Prefix, Prefixes,
-    QuantityDefinition, QuantityEntry, QuantityIdent, Symbol, UnitEntry, UnitExpression,
+    ConstantEntry, Defs, DimensionEntry, DimensionInt, Dimensions, Entry, Exponent, Factor, Prefix,
+    Prefixes, QuantityDefinition, QuantityEntry, QuantityIdent, Symbol, UnitEntry, UnitExpression,
     UnitFactor,
 };
 
@@ -27,6 +27,12 @@ impl Parse for Factor {
 }
 
 impl Parse for DimensionInt {
+    fn parse(input: ParseStream) -> Result<Self> {
+        Ok(Self(input.parse()?))
+    }
+}
+
+impl Parse for Exponent {
     fn parse(input: ParseStream) -> Result<Self> {
         Ok(Self(input.parse()?))
     }

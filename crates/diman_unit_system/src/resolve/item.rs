@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use syn::Ident;
 
-use crate::{dimension_math::DimensionsAndFactor, expression::Expr};
+use crate::{dimension_math::DimensionsAndFactor, expression::Expr, types::IntExponent};
 
 use super::resolver::Resolvable;
 
@@ -13,7 +13,7 @@ pub enum IdentOrFactor {
 
 pub enum ValueOrExpr {
     Value(DimensionsAndFactor),
-    Expr(Expr<IdentOrFactor>),
+    Expr(Expr<IdentOrFactor, IntExponent>),
 }
 
 pub struct UnresolvedItem {

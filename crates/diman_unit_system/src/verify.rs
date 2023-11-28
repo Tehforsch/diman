@@ -38,8 +38,8 @@ macro_rules! verify_endpoint {
 verify_endpoint!(syn::Type);
 verify_endpoint!(syn::Ident);
 
-impl<T: Verify> Verify for Expr<T> {
-    type Verified = Expr<<T as Verify>::Verified>;
+impl<T: Verify, E: Verify> Verify for Expr<T, E> {
+    type Verified = Expr<<T as Verify>::Verified, <E as Verify>::Verified>;
 
     fn verify(self) -> Result<Self::Verified> {
         Ok(match self {
@@ -53,13 +53,14 @@ impl<T: Verify> Verify for Expr<T> {
     }
 }
 
-impl<T: Verify> Verify for Factor<T> {
-    type Verified = Factor<<T as Verify>::Verified>;
+impl<T: Verify, E: Verify> Verify for Factor<T, E> {
+    type Verified = Factor<<T as Verify>::Verified, <E as Verify>::Verified>;
 
     fn verify(self) -> Result<Self::Verified> {
         Ok(match self {
             Factor::Value(val) => Factor::Value(val.verify()?),
             Factor::ParenExpr(expr) => Factor::ParenExpr(Box::new(expr.verify()?)),
+            Factor::Power(val, exponent) => Factor::Power(val.verify()?, exponent.verify()?),
         })
     }
 }
@@ -107,6 +108,20 @@ impl Verify for ptype::DimensionInt {
     }
 }
 
+impl Verify for ptype::Exponent {
+    type Verified = IntExponent;
+
+    fn verify(self) -> Result<Self::Verified> {
+        match self.0 {
+            Lit::Int(s) => Ok(s.base10_parse()?),
+            _ => Err(Error::new(
+                self.0.span(),
+                "Unexpected literal, expected an integer value".to_string(),
+            )),
+        }
+    }
+}
+
 impl Verify for ptype::Prefix {
     type Verified = Prefix;
 
@@ -133,7 +148,6 @@ impl Verify for ptype::Prefixes {
     }
 }
 
-
 impl Verify for ptype::QuantityIdent {
     type Verified = QuantityIdent;
 
@@ -159,4 +173,3 @@ fn factor_is_one(factor: ptype::Factor) -> Result<()> {
         ))
     }
 }
-

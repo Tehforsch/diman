@@ -1,4 +1,7 @@
-use crate::types::Dimensions;
+use crate::{
+    expression::MulDiv,
+    types::{DimensionEntry, Dimensions},
+};
 
 #[derive(Clone)]
 pub struct DimensionsAndFactor {
@@ -39,6 +42,25 @@ impl std::ops::Div for DimensionsAndFactor {
     #[allow(clippy::suspicious_arithmetic_impl)]
     fn div(self, rhs: Self) -> Self::Output {
         self * rhs.inv()
+    }
+}
+
+impl MulDiv for DimensionsAndFactor {
+    fn powi(self, pow: i32) -> Self {
+        Self {
+            factor: self.factor.powi(pow),
+            dimensions: Dimensions {
+                fields: self
+                    .dimensions
+                    .fields
+                    .into_iter()
+                    .map(|entry| DimensionEntry {
+                        ident: entry.ident,
+                        value: entry.value * pow as i32,
+                    })
+                    .collect(),
+            },
+        }
     }
 }
 

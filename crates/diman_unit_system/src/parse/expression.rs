@@ -22,20 +22,25 @@ impl Parse for Operator {
     }
 }
 
-impl<T: Parse> Parse for Factor<T> {
+impl<T: Parse, E: Parse> Parse for Factor<T, E> {
     fn parse(input: ParseStream) -> Result<Self> {
-        let lookahead = input.lookahead1();
-        if lookahead.peek(Paren) {
+        if input.peek(Paren) {
             let content;
             let _: token::Paren = parenthesized!(content in input);
-            Ok(Self::ParenExpr(Box::new(content.parse()?)))
+            return Ok(Self::ParenExpr(Box::new(content.parse()?)));
+        }
+        let val = input.parse()?;
+        if input.peek(Token![^]) {
+            let _: Token![^] = input.parse()?;
+            let exponent: E = input.parse()?;
+            Ok(Self::Power(val, exponent))
         } else {
-            Ok(Self::Value(input.parse()?))
+            Ok(Self::Value(val))
         }
     }
 }
 
-impl<T: Parse> Parse for Expr<T> {
+impl<T: Parse, E: Parse> Parse for Expr<T, E> {
     fn parse(input: ParseStream) -> Result<Self> {
         let mut lhs = Expr::Value(input.parse()?);
         while {
@@ -68,7 +73,7 @@ pub mod tests {
     };
 
     #[derive(Debug, PartialEq, Eq, Clone)]
-    pub struct MyInt(pub isize);
+    pub struct MyInt(pub i32);
 
     impl Parse for MyInt {
         fn parse(input: parse::ParseStream) -> Result<Self> {
@@ -80,7 +85,7 @@ pub mod tests {
         }
     }
 
-    pub fn parse_expr(input: TokenStream) -> Expr<MyInt> {
+    pub fn parse_expr(input: TokenStream) -> Expr<MyInt, MyInt> {
         syn::parse2(input).unwrap()
     }
 
@@ -161,6 +166,27 @@ pub mod tests {
                 rhs: Value(MyInt(3)),
                 operator: Div,
             })
+        );
+    }
+
+    #[test]
+    fn parse_expr_exponent() {
+        use super::Factor::*;
+        use super::Operator::{Div, Mul};
+        let x = parse_expr(quote! { 1 ^ 2 });
+        assert_eq!(x, Expr::Value(Power(MyInt(1), MyInt(2))),);
+        let x = parse_expr(quote! { 1 * 2 ^ 3 / 4 });
+        assert_eq!(
+            x,
+            Expr::Binary(BinaryOperator {
+                lhs: Expr::binary(BinaryOperator {
+                    lhs: Expr::value(Value(MyInt(1))),
+                    rhs: Power(MyInt(2), MyInt(3)),
+                    operator: Mul,
+                }),
+                rhs: Value(MyInt(4)),
+                operator: Div,
+            }),
         );
     }
 }
