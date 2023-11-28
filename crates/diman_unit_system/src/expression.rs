@@ -163,5 +163,7 @@ mod tests {
             parse_expr(quote! { (1 * 3 * 4) / (2 * 3) }).eval(),
             MyInt(2)
         );
+        assert_eq!(parse_expr(quote! { 1 * 2 ^ 3 / 4 }).eval(), MyInt(2));
+        assert_eq!(parse_expr(quote! { 1 * 2 ^ 5 / 4^2 }).eval(), MyInt(2));
     }
 }
