@@ -122,10 +122,10 @@ impl<T: MulDiv, I: Into<IntExponent> + Clone> Factor<T, I> {
 
 #[cfg(test)]
 mod tests {
-    use crate::parse::expression::tests::MyInt;
+    use crate::parse::tests::MyInt;
     use quote::quote;
 
-    use super::{super::parse::expression::tests::parse_expr, MulDiv};
+    use super::{super::parse::tests::parse_expr, MulDiv};
 
     impl std::ops::Mul for MyInt {
         type Output = MyInt;

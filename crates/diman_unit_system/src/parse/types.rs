@@ -1,9 +1,8 @@
 use diman_derive_verify::Verify;
 use syn::{punctuated::Punctuated, *};
 
-use crate::expression::Expr;
-
 use super::tokens::PrefixSeparator;
+use crate::expression::Expr;
 
 pub enum Prefix {
     Ident(Ident),
@@ -15,7 +14,7 @@ pub struct Prefixes(pub Punctuated<Prefix, PrefixSeparator>);
 pub struct DimensionInt(pub Lit);
 
 #[derive(Clone)]
-pub struct Factor(pub Lit);
+pub struct LitFactor(pub Lit);
 
 pub struct Symbol(pub Lit);
 
@@ -36,7 +35,7 @@ pub struct Dimensions {
 
 pub enum QuantityIdent {
     // This will be verified to only be 1.0 or 1
-    Factor(Factor),
+    Factor(LitFactor),
     Quantity(Ident),
 }
 
@@ -46,7 +45,7 @@ pub type QuantityExpression = Expr<QuantityIdent, Exponent>;
 #[verified(crate::types::UnitFactor)]
 pub enum UnitFactor {
     UnitOrQuantity(Ident),
-    Number(Factor),
+    Number(LitFactor),
 }
 
 pub type UnitExpression = Expr<UnitFactor, Exponent>;

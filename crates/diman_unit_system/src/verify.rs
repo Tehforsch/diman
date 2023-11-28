@@ -79,7 +79,7 @@ impl Verify for ptype::Symbol {
     }
 }
 
-impl Verify for ptype::Factor {
+impl Verify for ptype::LitFactor {
     type Verified = f64;
 
     fn verify(self) -> Result<Self::Verified> {
@@ -162,7 +162,7 @@ impl Verify for ptype::QuantityIdent {
     }
 }
 
-fn factor_is_one(factor: ptype::Factor) -> Result<()> {
+fn factor_is_one(factor: ptype::LitFactor) -> Result<()> {
     let val = factor.clone().verify()?;
     if val == 1.0 {
         Ok(())
