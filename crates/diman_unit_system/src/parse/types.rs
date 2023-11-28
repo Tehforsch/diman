@@ -3,12 +3,14 @@ use syn::{punctuated::Punctuated, *};
 
 use crate::expression::Expr;
 
+use super::tokens::PrefixSeparator;
+
 pub enum Prefix {
     Ident(Ident),
     Lit(Lit),
 }
 
-pub struct Prefixes(pub Punctuated<Prefix, Token![,]>);
+pub struct Prefixes(pub Punctuated<Prefix, PrefixSeparator>);
 
 pub struct DimensionInt(pub Lit);
 

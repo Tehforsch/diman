@@ -8,11 +8,36 @@ use syn::{
     *,
 };
 
-use self::types::{
-    ConstantEntry, Defs, DimensionEntry, DimensionInt, Dimensions, Entry, Exponent, Factor, Prefix,
-    Prefixes, QuantityDefinition, QuantityEntry, QuantityIdent, Symbol, UnitEntry, UnitExpression,
-    UnitFactor,
+use self::{
+    tokens::{
+        AssignmentToken, DimensionEntryAssignment, DimensionEntrySeparator, StatementSeparator,
+        UnitDefDelimiter, UnitDefSeparator,
+    },
+    types::{
+        ConstantEntry, Defs, DimensionEntry, DimensionInt, Dimensions, Entry, Exponent, Factor,
+        Prefix, Prefixes, QuantityDefinition, QuantityEntry, QuantityIdent, Symbol, UnitEntry,
+        UnitExpression, UnitFactor,
+    },
 };
+
+pub mod keywords {
+    syn::custom_keyword!(def);
+    syn::custom_keyword!(unit);
+    syn::custom_keyword!(constant);
+}
+
+pub mod tokens {
+    pub type UnitDefDelimiter = syn::token::Paren;
+    syn::custom_punctuation!(DimensionEntryAssignment, :);
+    syn::custom_punctuation!(DimensionEntrySeparator, ,);
+    syn::custom_punctuation!(UnitDefSeparator, ,);
+    syn::custom_punctuation!(AssignmentToken, =);
+    syn::custom_punctuation!(PrefixSeparator, ,);
+    syn::custom_punctuation!(MultiplicationToken, *);
+    syn::custom_punctuation!(DivisionToken, /);
+    syn::custom_punctuation!(ExponentiationToken, ^);
+    syn::custom_punctuation!(StatementSeparator, ,);
+}
 
 impl Parse for Symbol {
     fn parse(input: ParseStream) -> Result<Self> {
@@ -62,7 +87,7 @@ impl Parse for Prefixes {
 impl Parse for DimensionEntry {
     fn parse(input: ParseStream) -> Result<Self> {
         let ident: Ident = input.parse()?;
-        let _: Token![:] = input.parse()?;
+        let _: DimensionEntryAssignment = input.parse()?;
         let value: DimensionInt = input.parse()?;
         Ok(Self { ident, value })
     }
@@ -114,13 +139,13 @@ impl Parse for UnitEntry {
             symbol = None;
         } else if lookahead.peek(Paren) {
             let content;
-            let _: token::Paren = parenthesized! { content in input };
+            let _: UnitDefDelimiter = parenthesized! { content in input };
             name = content.parse()?;
-            let _: Token![,] = content.parse()?;
+            let _: UnitDefSeparator = content.parse()?;
             symbol = Some(content.parse()?);
             let lookahead = content.lookahead1();
-            if lookahead.peek(Token![,]) {
-                let _: Token![,] = content.parse()?;
+            if lookahead.peek(UnitDefSeparator) {
+                let _: UnitDefSeparator = content.parse()?;
                 prefixes = content.parse()?;
             } else if !content.is_empty() {
                 return Err(lookahead.error());
@@ -128,7 +153,7 @@ impl Parse for UnitEntry {
         } else {
             return Err(lookahead.error());
         }
-        let _: Token![=] = input.parse()?;
+        let _: AssignmentToken = input.parse()?;
         let rhs: UnitExpression = input.parse()?;
         Ok(Self {
             name,
@@ -143,7 +168,7 @@ impl Parse for Dimensions {
     fn parse(input: ParseStream) -> Result<Self> {
         let content;
         let _: token::Brace = braced!(content in input);
-        let fields: Punctuated<DimensionEntry, Token![,]> =
+        let fields: Punctuated<DimensionEntry, DimensionEntrySeparator> =
             content.parse_terminated(DimensionEntry::parse)?;
         Ok(Self {
             fields: fields.into_iter().collect(),
@@ -154,7 +179,7 @@ impl Parse for Dimensions {
 impl Parse for QuantityEntry {
     fn parse(input: ParseStream) -> Result<Self> {
         let name = input.parse()?;
-        let _: Token![=] = input.parse()?;
+        let _: AssignmentToken = input.parse()?;
         let rhs = input.parse()?;
         Ok(Self { name, rhs })
     }
@@ -163,7 +188,7 @@ impl Parse for QuantityEntry {
 impl Parse for ConstantEntry {
     fn parse(input: ParseStream) -> Result<Self> {
         let name = input.parse()?;
-        let _: Token![=] = input.parse()?;
+        let _: AssignmentToken = input.parse()?;
         let rhs: UnitExpression = input.parse()?;
         Ok(Self { name, rhs })
     }
@@ -171,18 +196,21 @@ impl Parse for ConstantEntry {
 
 impl Parse for Entry {
     fn parse(input: ParseStream) -> Result<Self> {
-        let keyword: Ident = input.parse()?;
-        match keyword.to_string().as_str() {
-            "def" => Ok(Self::Quantity(input.parse()?)),
-            "unit" => Ok(Self::Unit(input.parse()?)),
-            "constant" => Ok(Self::Constant(input.parse()?)),
-            ident => Err(Error::new(
-                keyword.span(),
-                format!(
-                    "Unexpected identifier: {}, expected \"def\", \"unit\" or \"constant\"",
-                    ident
-                ),
-            )),
+        use keywords as kw;
+        if input.peek(kw::def) {
+            let _ = input.parse::<kw::def>()?;
+            Ok(Self::Quantity(input.parse()?))
+        } else if input.peek(kw::unit) {
+            let _ = input.parse::<kw::unit>()?;
+            Ok(Self::Unit(input.parse()?))
+        } else if input.peek(kw::constant) {
+            let _ = input.parse::<kw::constant>()?;
+            Ok(Self::Constant(input.parse()?))
+        } else {
+            Err(Error::new(
+                input.span(),
+                format!("Unexpected token. Expected \"def\", \"unit\" or \"constant\"",),
+            ))
         }
     }
 }
@@ -190,16 +218,16 @@ impl Parse for Entry {
 impl Parse for Defs {
     fn parse(input: ParseStream) -> Result<Self> {
         let quantity_type: Type = input.parse()?;
-        let _: Token![,] = input.parse()?;
+        let _: StatementSeparator = input.parse()?;
         let dimension_type: Type = input.parse()?;
-        let _: Token![,] = input.parse()?;
+        let _: StatementSeparator = input.parse()?;
         let content;
         let _: token::Bracket = bracketed!(content in input);
         let mut quantities = vec![];
         let mut units = vec![];
         let mut constants = vec![];
         for item in content
-            .parse_terminated::<_, Token![,]>(Entry::parse)?
+            .parse_terminated::<_, StatementSeparator>(Entry::parse)?
             .into_iter()
         {
             match item {

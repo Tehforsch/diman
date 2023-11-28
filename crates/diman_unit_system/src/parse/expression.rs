@@ -7,14 +7,16 @@ use syn::{
 use crate::expression::Factor;
 use crate::expression::{BinaryOperator, Expr, Operator};
 
+use super::tokens::{DivisionToken, ExponentiationToken, MultiplicationToken, StatementSeparator};
+
 impl Parse for Operator {
     fn parse(input: ParseStream) -> Result<Self> {
         let lookahead = input.lookahead1();
-        if lookahead.peek(Token![*]) {
-            let _: Token![*] = input.parse()?;
+        if lookahead.peek(MultiplicationToken) {
+            let _: MultiplicationToken = input.parse()?;
             Ok(Self::Mul)
-        } else if lookahead.peek(Token![/]) {
-            let _: Token![/] = input.parse()?;
+        } else if lookahead.peek(DivisionToken) {
+            let _: DivisionToken = input.parse()?;
             Ok(Self::Div)
         } else {
             Err(lookahead.error())
@@ -30,8 +32,8 @@ impl<T: Parse, E: Parse> Parse for Factor<T, E> {
             return Ok(Self::ParenExpr(Box::new(content.parse()?)));
         }
         let val = input.parse()?;
-        if input.peek(Token![^]) {
-            let _: Token![^] = input.parse()?;
+        if input.peek(ExponentiationToken) {
+            let _: ExponentiationToken = input.parse()?;
             let exponent: E = input.parse()?;
             Ok(Self::Power(val, exponent))
         } else {
@@ -45,7 +47,7 @@ impl<T: Parse, E: Parse> Parse for Expr<T, E> {
         let mut lhs = Expr::Value(input.parse()?);
         while {
             let lookahead = input.lookahead1();
-            !(input.is_empty() || lookahead.peek(Token![,]))
+            !(input.is_empty() || lookahead.peek(StatementSeparator))
         } {
             let operator = input.parse()?;
             let rhs = input.parse()?;
