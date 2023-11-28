@@ -1,5 +1,5 @@
-use crate::parse::types as ptype;
 use crate::types::*;
+use crate::{expression::BinaryOperator, parse::types as ptype};
 use syn::{Error, Lit, Result};
 
 use crate::expression::{Expr, Factor};
@@ -44,8 +44,11 @@ impl<T: Verify> Verify for Expr<T> {
     fn verify(self) -> Result<Self::Verified> {
         Ok(match self {
             Expr::Value(val) => Expr::Value(val.verify()?),
-            Expr::Times(val, expr) => Expr::Times(val.verify()?, Box::new(expr.verify()?)),
-            Expr::Over(val, expr) => Expr::Over(val.verify()?, Box::new(expr.verify()?)),
+            Expr::Binary(bin) => Expr::Binary(BinaryOperator {
+                lhs: Box::new(bin.lhs.verify()?),
+                rhs: bin.rhs.verify()?,
+                operator: bin.operator,
+            }),
         })
     }
 }

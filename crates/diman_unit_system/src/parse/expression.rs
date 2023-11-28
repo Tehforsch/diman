@@ -4,8 +4,23 @@ use syn::{
     *,
 };
 
-use crate::expression::Expr;
 use crate::expression::Factor;
+use crate::expression::{BinaryOperator, Expr, Operator};
+
+impl Parse for Operator {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let lookahead = input.lookahead1();
+        if lookahead.peek(Token![*]) {
+            let _: Token![*] = input.parse()?;
+            Ok(Self::Mul)
+        } else if lookahead.peek(Token![/]) {
+            let _: Token![/] = input.parse()?;
+            Ok(Self::Div)
+        } else {
+            Err(lookahead.error())
+        }
+    }
+}
 
 impl<T: Parse> Parse for Factor<T> {
     fn parse(input: ParseStream) -> Result<Self> {
@@ -22,21 +37,20 @@ impl<T: Parse> Parse for Factor<T> {
 
 impl<T: Parse> Parse for Expr<T> {
     fn parse(input: ParseStream) -> Result<Self> {
-        let first_factor: Factor<T> = input.parse()?;
-        let lookahead = input.lookahead1();
-        if input.is_empty() || lookahead.peek(Token![,]) {
-            Ok(Self::Value(first_factor))
-        } else if lookahead.peek(Token![*]) {
-            let _: Token![*] = input.parse().unwrap();
-            let second_expr: Expr<T> = input.parse()?;
-            Ok(Self::Times(first_factor, Box::new(second_expr)))
-        } else if lookahead.peek(Token![/]) {
-            let _: Token![/] = input.parse().unwrap();
-            let second_expr: Expr<T> = input.parse()?;
-            Ok(Self::Over(first_factor, Box::new(second_expr)))
-        } else {
-            Err(lookahead.error())
+        let mut lhs = Expr::Value(input.parse()?);
+        while {
+            let lookahead = input.lookahead1();
+            !(input.is_empty() || lookahead.peek(Token![,]))
+        } {
+            let operator = input.parse()?;
+            let rhs = input.parse()?;
+            lhs = Expr::Binary(BinaryOperator {
+                lhs: Box::new(lhs),
+                operator,
+                rhs,
+            });
         }
+        Ok(lhs)
     }
 }
 
@@ -44,6 +58,8 @@ impl<T: Parse> Parse for Expr<T> {
 pub mod tests {
     use proc_macro2::TokenStream;
     use quote::quote;
+
+    use crate::expression::BinaryOperator;
 
     use super::Expr;
     use syn::{
@@ -70,47 +86,81 @@ pub mod tests {
 
     #[test]
     fn parse_exprs() {
-        use super::Expr::{Over, Times};
+        use super::Expr::Binary;
         use super::Factor::*;
+        use super::Operator::*;
         let x = parse_expr(quote! { 1 });
         assert_eq!(x, Expr::Value(Value(MyInt(1))));
         let x = parse_expr(quote! { 1 * 2 });
         assert_eq!(
             x,
-            Times(Value(MyInt(1)), Box::new(Expr::Value(Value(MyInt(2)))))
+            Binary(BinaryOperator {
+                lhs: Expr::value(Value(MyInt(1))),
+                operator: Mul,
+                rhs: Value(MyInt(2))
+            })
         );
         let x = parse_expr(quote! { 1 / 2 });
         assert_eq!(
             x,
-            Over(Value(MyInt(1)), Box::new(Expr::Value(Value(MyInt(2)))))
+            Binary(BinaryOperator {
+                lhs: Expr::value(Value(MyInt(1))),
+                operator: Div,
+                rhs: Value(MyInt(2))
+            })
         );
         let x = parse_expr(quote! { 1 / (2 * 3) });
         assert_eq!(
             x,
-            Over(
-                Value(MyInt(1)),
-                Box::new(Expr::Value(ParenExpr(Box::new(Times(
-                    Value(MyInt(2)),
-                    Box::new(Expr::Value(Value(MyInt(3)))),
-                )))))
-            )
+            Binary(BinaryOperator {
+                lhs: Expr::value(Value(MyInt(1))),
+                operator: Div,
+                rhs: ParenExpr(Expr::binary(BinaryOperator {
+                    lhs: Expr::value(Value(MyInt(2))),
+                    rhs: Value(MyInt(3)),
+                    operator: Mul
+                })),
+            })
         );
     }
 
     #[test]
     fn parse_expr_with_multiple_factors() {
-        use super::Expr::Times;
+        use super::Expr::Binary;
         use super::Factor::*;
+        use super::Operator::Mul;
         let x = parse_expr(quote! { 1 * 2 * 3 });
         assert_eq!(
             x,
-            Times(
-                Value(MyInt(1)),
-                Box::new(Times(
-                    Value(MyInt(2)),
-                    Box::new(Expr::Value(Value(MyInt(3))))
-                ))
-            )
+            Binary(BinaryOperator {
+                lhs: Expr::binary(BinaryOperator {
+                    operator: Mul,
+                    lhs: Expr::value(Value(MyInt(1))),
+                    rhs: Value(MyInt(2)),
+                }),
+                rhs: Value(MyInt(3)),
+                operator: Mul,
+            })
+        );
+    }
+
+    #[test]
+    fn parse_expr_left_associativity() {
+        use super::Expr::Binary;
+        use super::Factor::*;
+        use super::Operator::{Div, Mul};
+        let x = parse_expr(quote! { 1 * 2 / 3 });
+        assert_eq!(
+            x,
+            Binary(BinaryOperator {
+                lhs: Expr::binary(BinaryOperator {
+                    operator: Mul,
+                    lhs: Expr::value(Value(MyInt(1))),
+                    rhs: Value(MyInt(2)),
+                }),
+                rhs: Value(MyInt(3)),
+                operator: Div,
+            })
         );
     }
 }
