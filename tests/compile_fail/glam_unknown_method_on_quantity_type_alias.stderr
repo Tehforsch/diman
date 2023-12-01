@@ -8,3 +8,14 @@ error[E0599]: no function or associated item named `unknown_method` found for st
   |
   |     Quantity,
   |     -------- function or associated item `unknown_method` not found for this struct
+  |
+note: if you're trying to build a new `example_system::Quantity<Vec2, Dimension>` consider using one of the following associated functions:
+      example_system::Quantity::<Vec2, Dimension>::dimensionless
+      example_system::Quantity::<Vec2, Dimension>::meters
+      example_system::Quantity::<Vec2, Dimension>::kilometers
+      example_system::Quantity::<Vec2, Dimension>::seconds
+      and $N others
+  --> tests/compile_fail/example_system/mod.rs
+   |
+   |     Dimension,
+   |     ^^^^^^^^^
