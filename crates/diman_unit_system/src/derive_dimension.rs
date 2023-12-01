@@ -13,7 +13,7 @@ fn str_to_snakecase(s: &str) -> String {
         .join("_")
 }
 
-fn to_snakecase(dim: &proc_macro2::Ident) -> Ident {
+pub fn to_snakecase(dim: &proc_macro2::Ident) -> Ident {
     let snake_case = str_to_snakecase(&dim.to_string());
     Ident::new(&snake_case, dim.span())
 }

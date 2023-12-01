@@ -7,7 +7,6 @@ unit_system!(
     quantity_type Quantity,
     dimension_type Dimension,
     dimension Length,
-    def Length = { length: 1 },
     unit (meters, "m") = Length,
     unit (meters, "m") = Length,
     unit (kilometers, "km") = 1000.0 * meters,

@@ -7,7 +7,6 @@ unit_system!(
     quantity_type Quantity,
     dimension_type Dimension,
     dimension Length,
-    def Length = { length: 1 },
     unit (kilometers, "km") = 1000.0 * meters,
 );
 

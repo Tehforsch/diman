@@ -8,7 +8,10 @@ use std::collections::{HashMap, HashSet};
 use proc_macro2::Span;
 use syn::Ident;
 
-use crate::types::{Defs, UnresolvedDefs};
+use crate::{
+    derive_dimension::to_snakecase,
+    types::{Defs, DimensionEntry, Dimensions, QuantityDefinition, QuantityEntry, UnresolvedDefs},
+};
 
 use self::{
     error::{Emit, Error, MultipleTypeDefinitionsError, Result},
@@ -34,9 +37,19 @@ fn emit_errors<T, E: Emit>((input, result): (T, std::result::Result<(), E>)) -> 
 }
 
 impl UnresolvedDefs {
-    pub fn resolve(self) -> Defs {
+    pub fn resolve(mut self) -> Defs {
         let quantity_type = emit_errors(get_single_ident(self.quantity_types, "quantity type"));
         let dimension_type = emit_errors(get_single_ident(self.dimension_types, "dimension type"));
+        self.quantities
+            .extend(self.dimensions.iter().map(|dim| QuantityEntry {
+                name: dim.clone(),
+                rhs: QuantityDefinition::Dimensions(Dimensions {
+                    fields: vec![DimensionEntry {
+                        ident: to_snakecase(dim),
+                        value: 1,
+                    }],
+                }),
+            }));
         let items: Vec<UnresolvedItem> = self
             .quantities
             .iter()
