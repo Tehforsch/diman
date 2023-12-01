@@ -12,14 +12,15 @@ mod serde;
 mod traits;
 pub mod type_defs;
 mod unit_constructors;
-mod utils;
 mod vector_methods;
 
 use proc_macro2::TokenStream;
 
 use crate::types::Defs;
 
-use self::utils::join;
+pub fn join<const D: usize>(streams: [TokenStream; D]) -> TokenStream {
+    streams.into_iter().collect()
+}
 
 impl Defs {
     pub fn code_gen(&self) -> TokenStream {

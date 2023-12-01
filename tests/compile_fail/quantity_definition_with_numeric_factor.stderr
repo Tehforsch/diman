@@ -1,5 +1,5 @@
 error: Only 1 and 1.0 are valid factors in quantity definitions.
-  --> tests/compile_fail/quantity_definition_with_numeric_factor.rs:17:22
+  --> tests/compile_fail/quantity_definition_with_numeric_factor.rs:11:22
    |
-17 |         def Length = 2.0 / Dimensionless,
+11 |         def Length = 2.0 / Dimensionless,
    |                      ^^^

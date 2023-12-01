@@ -59,7 +59,6 @@ mod type_aliases;
 pub mod si;
 
 pub use debug_storage_type::DebugStorageType;
-pub use diman_unit_system::dimension;
 pub use diman_unit_system::unit_system;
 pub use type_aliases::Product;
 pub use type_aliases::QProduct;

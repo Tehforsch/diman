@@ -1,21 +1,17 @@
 use crate as diman;
-use crate::dimension;
 use crate::unit_system;
-
-#[dimension]
-pub struct Dimension {
-    pub length: i32,
-    pub time: i32,
-    pub mass: i32,
-    pub temperature: i32,
-    pub current: i32,
-    pub amount_of_substance: i32,
-    pub luminous_intensity: i32,
-}
 
 unit_system!(
     Quantity,
-    Dimension,
+    Dimension {
+        Length,
+        Time,
+        Mass,
+        Temperature,
+        Current,
+        AmountOfSubstance,
+        LuminousIntensity,
+    },
     [
         def Dimensionless = {},
         unit dimensionless = Dimensionless,

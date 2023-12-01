@@ -5,7 +5,7 @@ mod resolver;
 
 use std::collections::{HashMap, HashSet};
 
-use syn::Ident;
+use syn::{Ident, Type};
 
 use crate::types::{Defs, UnresolvedDefs};
 
@@ -29,7 +29,7 @@ fn emit_errors<T>((input, result): (T, Result<()>)) -> T {
 }
 
 impl UnresolvedDefs {
-    pub fn resolve(self) -> Defs {
+    pub fn resolve(self, dimension_type: &Type) -> Defs {
         let items: Vec<UnresolvedItem> = self
             .quantities
             .iter()
@@ -44,7 +44,7 @@ impl UnresolvedDefs {
         let units = convert_vec_to_resolved(self.units, &mut resolved_items);
         let constants = convert_vec_to_resolved(self.constants, &mut resolved_items);
         Defs {
-            dimension_type: self.dimension_type,
+            dimension_type: dimension_type.clone(),
             quantity_type: self.quantity_type,
             quantities,
             units,

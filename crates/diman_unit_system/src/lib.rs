@@ -11,6 +11,7 @@ mod types;
 mod verify;
 
 use derive_dimension::dimension_impl;
+use proc_macro2::TokenStream;
 use syn::*;
 use verify::Verify;
 
@@ -23,17 +24,16 @@ use verify::Verify;
 /// #![allow(incomplete_features)]
 /// #![feature(generic_const_exprs, adt_const_params)]
 /// use diman::unit_system;
-/// use diman::dimension;
 ///
 /// #[dimension]
-/// pub struct Dimension {
-///     pub length: i32,
-///     pub time: i32,
-/// }
+/// pub struct
 ///
 /// unit_system!(
 ///     Quantity,
-///     Dimension,
+///     Dimension {
+///         Length,
+///         Time,
+///     },
 ///     [
 ///         def Length = { length: 1 },
 ///         def Time = { time: 1 },
@@ -55,19 +55,11 @@ pub fn unit_system(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
     match defs {
         Err(err) => err.to_compile_error().into(),
         Ok(defs) => {
-            let resolved = defs.resolve();
-            resolved.code_gen().into()
+            let dimension_impl = dimension_impl(&defs.dimension_type);
+            let type_name = defs.dimension_type.name.clone();
+            let resolved = defs.resolve(&type_name);
+            let impls: TokenStream = resolved.code_gen().into();
+            self::codegen::join([dimension_impl.into(), impls.into()]).into()
         }
     }
-}
-
-/// Derives all required methods for a dimension type.
-/// Only works on structs on which every field is `i32`.
-/// Also adds derives of `PartialEq`, `Eq`, `Clone` and `Debug`.
-#[proc_macro_attribute]
-pub fn dimension(
-    _args: proc_macro::TokenStream,
-    input: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    dimension_impl(input)
 }

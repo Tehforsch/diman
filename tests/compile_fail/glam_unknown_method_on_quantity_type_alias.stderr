@@ -15,7 +15,7 @@ note: if you're trying to build a new `example_system::Quantity<Vec2, Dimension>
       example_system::Quantity::<Vec2, Dimension>::kilometers
       example_system::Quantity::<Vec2, Dimension>::seconds
       and $N others
-  --> tests/compile_fail/example_system/mod.rs
-   |
-   |     Dimension,
-   |     ^^^^^^^^^
+ --> tests/compile_fail/example_system/mod.rs
+  |
+  |     Dimension {
+  |     ^^^^^^^^^

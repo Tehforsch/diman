@@ -87,9 +87,16 @@ pub enum Entry {
 }
 
 #[derive(Verify)]
+#[verified(crate::types::DimensionDefinition)]
+pub struct DimensionDefinition {
+    pub name: Type,
+    pub dimensions: Vec<Ident>,
+}
+
+#[derive(Verify)]
 #[verified(crate::types::UnresolvedDefs)]
 pub struct Defs {
-    pub dimension_type: Type,
+    pub dimension_type: DimensionDefinition,
     pub quantity_type: Type,
     pub quantities: Vec<QuantityEntry>,
     pub units: Vec<UnitEntry>,

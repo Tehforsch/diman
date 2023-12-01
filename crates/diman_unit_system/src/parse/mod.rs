@@ -12,14 +12,14 @@ use crate::expression::{BinaryOperator, Expr, Factor, Operator};
 
 use self::{
     tokens::{
-        AssignmentToken, DimensionEntryAssignment, DimensionEntrySeparator, DivisionToken,
-        ExponentiationToken, MultiplicationToken, StatementSeparator, UnitDefDelimiter,
-        UnitDefSeparator,
+        AssignmentToken, DimensionEntryAssignment, DimensionEntrySeparator, DimensionSeparator,
+        DivisionToken, ExponentiationToken, MultiplicationToken, StatementSeparator,
+        UnitDefDelimiter, UnitDefSeparator,
     },
     types::{
-        ConstantEntry, Defs, DimensionEntry, DimensionInt, Dimensions, Entry, Exponent, LitFactor,
-        Prefix, Prefixes, QuantityDefinition, QuantityEntry, QuantityIdent, Symbol, UnitEntry,
-        UnitExpression, UnitFactor,
+        ConstantEntry, Defs, DimensionDefinition, DimensionEntry, DimensionInt, Dimensions, Entry,
+        Exponent, LitFactor, Prefix, Prefixes, QuantityDefinition, QuantityEntry, QuantityIdent,
+        Symbol, UnitEntry, UnitExpression, UnitFactor,
     },
 };
 
@@ -33,6 +33,7 @@ pub mod tokens {
     pub type UnitDefDelimiter = syn::token::Paren;
     syn::custom_punctuation!(DimensionEntryAssignment, :);
     syn::custom_punctuation!(DimensionEntrySeparator, ,);
+    syn::custom_punctuation!(DimensionSeparator, ,);
     syn::custom_punctuation!(UnitDefSeparator, ,);
     syn::custom_punctuation!(AssignmentToken, =);
     syn::custom_punctuation!(PrefixSeparator, ,);
@@ -270,11 +271,25 @@ impl<T: Parse, E: Parse> Parse for Expr<T, E> {
     }
 }
 
+impl Parse for DimensionDefinition {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let name: Type = input.parse()?;
+        let content;
+        let _: token::Brace = braced!(content in input);
+        let dimensions: Punctuated<Ident, DimensionSeparator> =
+            content.parse_terminated(Ident::parse)?;
+        Ok(Self {
+            dimensions: dimensions.into_iter().collect(),
+            name,
+        })
+    }
+}
+
 impl Parse for Defs {
     fn parse(input: ParseStream) -> Result<Self> {
         let quantity_type: Type = input.parse()?;
         let _: StatementSeparator = input.parse()?;
-        let dimension_type: Type = input.parse()?;
+        let dimension_type: DimensionDefinition = input.parse()?;
         let _: StatementSeparator = input.parse()?;
         let content;
         let _: token::Bracket = bracketed!(content in input);

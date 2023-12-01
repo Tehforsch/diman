@@ -6,7 +6,7 @@ use crate::{
     types::Defs,
 };
 
-use super::utils::join;
+use super::join;
 
 impl Defs {
     pub fn hdf5_impl(&self) -> TokenStream {
