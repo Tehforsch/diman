@@ -10,7 +10,6 @@ mod storage_types;
 mod types;
 mod verify;
 
-use derive_dimension::dimension_impl;
 use proc_macro2::TokenStream;
 use syn::*;
 use verify::Verify;
@@ -55,9 +54,8 @@ pub fn unit_system(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
     match defs {
         Err(err) => err.to_compile_error().into(),
         Ok(defs) => {
-            let dimension_impl = dimension_impl(&defs.dimension_type);
-            let type_name = defs.dimension_type.name.clone();
-            let resolved = defs.resolve(&type_name);
+            let resolved = defs.resolve();
+            let dimension_impl = resolved.dimension_impl();
             let impls: TokenStream = resolved.code_gen().into();
             self::codegen::join([dimension_impl.into(), impls.into()]).into()
         }

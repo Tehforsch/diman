@@ -5,23 +5,28 @@ mod resolver;
 
 use std::collections::{HashMap, HashSet};
 
-use syn::{Ident, Type};
+use proc_macro2::Span;
+use syn::Ident;
 
 use crate::types::{Defs, UnresolvedDefs};
 
 use self::{
-    error::{Error, Result},
+    error::{Emit, Error, MultipleTypeDefinitionsError, Result},
     item::{IdentOrFactor, ResolvedItem, UnresolvedItem, ValueOrExpr},
     item_conversion::ItemConversion,
     resolver::Resolver,
 };
+
+fn default_dimension_type() -> Ident {
+    Ident::new("Dimension", Span::call_site())
+}
 
 /// A helper function for emitting all the errors contained in the
 /// result types but continuing with a partial result anyways This is
 /// done so that we at least define all the quantities that can be
 /// partially resolved in order to keep the amount of error messages
 /// manageable.
-fn emit_errors<T>((input, result): (T, Result<()>)) -> T {
+fn emit_errors<T, E: Emit>((input, result): (T, std::result::Result<(), E>)) -> T {
     if let Err(err) = result {
         err.emit();
     }
@@ -29,7 +34,9 @@ fn emit_errors<T>((input, result): (T, Result<()>)) -> T {
 }
 
 impl UnresolvedDefs {
-    pub fn resolve(self, dimension_type: &Type) -> Defs {
+    pub fn resolve(self) -> Defs {
+        let quantity_type = emit_errors(get_single_ident(self.quantity_types, "quantity type"));
+        let dimension_type = emit_errors(get_single_ident(self.dimension_types, "dimension type"));
         let items: Vec<UnresolvedItem> = self
             .quantities
             .iter()
@@ -43,13 +50,35 @@ impl UnresolvedDefs {
         let quantities = convert_vec_to_resolved(self.quantities, &mut resolved_items);
         let units = convert_vec_to_resolved(self.units, &mut resolved_items);
         let constants = convert_vec_to_resolved(self.constants, &mut resolved_items);
+        let dimensions = self.dimensions;
         Defs {
-            dimension_type: dimension_type.clone(),
-            quantity_type: self.quantity_type,
+            dimension_type,
+            quantity_type,
+            dimensions,
             quantities,
             units,
             constants,
         }
+    }
+}
+
+fn get_single_ident(
+    mut dimension_types: Vec<Ident>,
+    type_name: &'static str,
+) -> (Ident, std::result::Result<(), MultipleTypeDefinitionsError>) {
+    if dimension_types.len() == 1 {
+        (dimension_types.remove(0), Ok(()))
+    } else if dimension_types.is_empty() {
+        (default_dimension_type(), Ok(()))
+    } else {
+        let dimension_type = dimension_types[0].clone();
+        (
+            dimension_type,
+            Err(MultipleTypeDefinitionsError {
+                idents: dimension_types,
+                type_name,
+            }),
+        )
     }
 }
 

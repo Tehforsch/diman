@@ -4,7 +4,6 @@ use crate::{
 };
 use proc_macro2::TokenStream;
 use quote::{quote, quote_spanned};
-use syn::spanned::Spanned;
 
 impl Defs {
     pub(crate) fn type_definition(&self) -> TokenStream {

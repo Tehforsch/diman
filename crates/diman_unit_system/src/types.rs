@@ -57,14 +57,12 @@ pub struct ConstantEntry {
     pub rhs: UnitExpression,
 }
 
-pub struct DimensionDefinition {
-    pub name: Type,
-    pub dimensions: Vec<Ident>,
-}
+pub type DimensionEntry2 = Ident;
 
 pub struct UnresolvedDefs {
-    pub dimension_type: DimensionDefinition,
-    pub quantity_type: Type,
+    pub dimension_types: Vec<Ident>,
+    pub quantity_types: Vec<Ident>,
+    pub dimensions: Vec<DimensionEntry2>,
     pub quantities: Vec<QuantityEntry>,
     pub units: Vec<UnitEntry>,
     pub constants: Vec<ConstantEntry>,
@@ -89,8 +87,9 @@ pub struct Constant {
 }
 
 pub struct Defs {
-    pub dimension_type: Type,
-    pub quantity_type: Type,
+    pub dimension_type: Ident,
+    pub quantity_type: Ident,
+    pub dimensions: Vec<DimensionEntry2>,
     pub quantities: Vec<Quantity>,
     pub units: Vec<Unit>,
     pub constants: Vec<Constant>,

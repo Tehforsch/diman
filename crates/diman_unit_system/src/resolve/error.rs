@@ -7,10 +7,34 @@ pub enum Error {
     Multiple(Vec<Vec<Ident>>),
 }
 
+pub struct MultipleTypeDefinitionsError {
+    pub type_name: &'static str,
+    pub idents: Vec<Ident>,
+}
+
 pub type Result<T> = std::result::Result<T, Error>;
 
-impl Error {
-    pub fn emit(self) {
+pub trait Emit {
+    fn emit(self);
+}
+
+impl Emit for MultipleTypeDefinitionsError {
+    fn emit(self) {
+        for ident in self.idents {
+            ident
+                .span()
+                .unwrap()
+                .error(format!(
+                    "Multiple definitions for {} \"{}\".",
+                    self.type_name, ident
+                ))
+                .emit();
+        }
+    }
+}
+
+impl Emit for Error {
+    fn emit(self) {
         match self {
             Error::Unresolvable(idents) => emit_unresolvable(idents),
             Error::Undefined(idents) => emit_undefined(idents),

@@ -5,27 +5,30 @@ use syn::{
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
     token::{self, Brace, Bracket, Paren},
-    Error, Ident, Lit, Result, Type,
+    Error, Ident, Lit, Result,
 };
 
 use crate::expression::{BinaryOperator, Expr, Factor, Operator};
 
 use self::{
     tokens::{
-        AssignmentToken, DimensionEntryAssignment, DimensionEntrySeparator, DimensionSeparator,
-        DivisionToken, ExponentiationToken, MultiplicationToken, StatementSeparator,
-        UnitDefDelimiter, UnitDefSeparator,
+        AssignmentToken, DimensionEntryAssignment, DimensionEntrySeparator, DivisionToken,
+        ExponentiationToken, MultiplicationToken, StatementSeparator, UnitDefDelimiter,
+        UnitDefSeparator,
     },
     types::{
-        ConstantEntry, Defs, DimensionDefinition, DimensionEntry, DimensionInt, Dimensions, Entry,
-        Exponent, LitFactor, Prefix, Prefixes, QuantityDefinition, QuantityEntry, QuantityIdent,
-        Symbol, UnitEntry, UnitExpression, UnitFactor,
+        ConstantEntry, Defs, DimensionEntry, DimensionInt, Dimensions, Entry, Exponent, LitFactor,
+        Prefix, Prefixes, QuantityDefinition, QuantityEntry, QuantityIdent, Symbol, UnitEntry,
+        UnitExpression, UnitFactor,
     },
 };
 
 pub mod keywords {
     syn::custom_keyword!(def);
     syn::custom_keyword!(unit);
+    syn::custom_keyword!(dimension);
+    syn::custom_keyword!(quantity_type);
+    syn::custom_keyword!(dimension_type);
     syn::custom_keyword!(constant);
 }
 
@@ -201,7 +204,16 @@ impl Parse for ConstantEntry {
 impl Parse for Entry {
     fn parse(input: ParseStream) -> Result<Self> {
         use keywords as kw;
-        if input.peek(kw::def) {
+        if input.peek(kw::quantity_type) {
+            let _ = input.parse::<kw::quantity_type>()?;
+            Ok(Self::QuantityType(input.parse()?))
+        } else if input.peek(kw::dimension_type) {
+            let _ = input.parse::<kw::dimension_type>()?;
+            Ok(Self::DimensionType(input.parse()?))
+        } else if input.peek(kw::dimension) {
+            let _ = input.parse::<kw::dimension>()?;
+            Ok(Self::Dimension(input.parse()?))
+        } else if input.peek(kw::def) {
             let _ = input.parse::<kw::def>()?;
             Ok(Self::Quantity(input.parse()?))
         } else if input.peek(kw::unit) {
@@ -271,32 +283,15 @@ impl<T: Parse, E: Parse> Parse for Expr<T, E> {
     }
 }
 
-impl Parse for DimensionDefinition {
-    fn parse(input: ParseStream) -> Result<Self> {
-        let name: Type = input.parse()?;
-        let content;
-        let _: token::Brace = braced!(content in input);
-        let dimensions: Punctuated<Ident, DimensionSeparator> =
-            content.parse_terminated(Ident::parse)?;
-        Ok(Self {
-            dimensions: dimensions.into_iter().collect(),
-            name,
-        })
-    }
-}
-
 impl Parse for Defs {
     fn parse(input: ParseStream) -> Result<Self> {
-        let quantity_type: Type = input.parse()?;
-        let _: StatementSeparator = input.parse()?;
-        let dimension_type: DimensionDefinition = input.parse()?;
-        let _: StatementSeparator = input.parse()?;
-        let content;
-        let _: token::Bracket = bracketed!(content in input);
         let mut quantities = vec![];
         let mut units = vec![];
         let mut constants = vec![];
-        for item in content
+        let mut dimensions = vec![];
+        let mut quantity_types = vec![];
+        let mut dimension_types = vec![];
+        for item in input
             .parse_terminated::<_, StatementSeparator>(Entry::parse)?
             .into_iter()
         {
@@ -304,11 +299,15 @@ impl Parse for Defs {
                 Entry::Quantity(q) => quantities.push(q),
                 Entry::Unit(u) => units.push(u),
                 Entry::Constant(c) => constants.push(c),
+                Entry::Dimension(dim) => dimensions.push(dim),
+                Entry::QuantityType(q) => quantity_types.push(q),
+                Entry::DimensionType(d) => dimension_types.push(d),
             }
         }
         Ok(Self {
-            dimension_type,
-            quantity_type,
+            dimension_types,
+            quantity_types,
+            dimensions,
             quantities,
             units,
             constants,

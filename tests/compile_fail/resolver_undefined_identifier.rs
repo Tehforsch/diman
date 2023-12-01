@@ -4,12 +4,11 @@
 use diman::unit_system;
 
 unit_system!(
-    Quantity,
-    Dimension { Length },
-    [
-        def Length = { length: 1 },
-        unit (kilometers, "km") = 1000.0 * meters,
-    ]
+    quantity_type Quantity,
+    dimension_type Dimension,
+    dimension Length,
+    def Length = { length: 1 },
+    unit (kilometers, "km") = 1000.0 * meters,
 );
 
 fn main() {}

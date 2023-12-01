@@ -6,8 +6,8 @@ error[E0599]: no function or associated item named `unknown_method` found for st
   |
  ::: tests/compile_fail/example_system/mod.rs
   |
-  |     Quantity,
-  |     -------- function or associated item `unknown_method` not found for this struct
+  |     quantity_type Quantity,
+  |                   -------- function or associated item `unknown_method` not found for this struct
   |
 note: if you're trying to build a new `example_system::Quantity<f64, Dimension>` consider using one of the following associated functions:
       example_system::Quantity::<f64, Dimension>::dimensionless
@@ -17,5 +17,5 @@ note: if you're trying to build a new `example_system::Quantity<f64, Dimension>`
       and $N others
  --> tests/compile_fail/example_system/mod.rs
   |
-  |     Dimension {
-  |     ^^^^^^^^^
+  |     dimension_type Dimension,
+  |                    ^^^^^^^^^

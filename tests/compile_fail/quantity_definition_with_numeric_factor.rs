@@ -4,12 +4,10 @@
 use ::diman::unit_system;
 
 unit_system!(
-    Quantity,
-    Dimension {},
-    [
-        def Dimensionless = {},
-        def Length = 2.0 / Dimensionless,
-    ]
+    quantity_type Quantity,
+    dimension_type Dimension,
+    def Dimensionless = {},
+    def Length = 2.0 / Dimensionless,
 );
 
 fn main() {

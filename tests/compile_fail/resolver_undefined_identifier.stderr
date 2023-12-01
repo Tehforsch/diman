@@ -1,5 +1,5 @@
 error: Undefined identifier "meters".
-  --> tests/compile_fail/resolver_undefined_identifier.rs:11:44
+  --> tests/compile_fail/resolver_undefined_identifier.rs:11:40
    |
-11 |         unit (kilometers, "km") = 1000.0 * meters,
-   |                                            ^^^^^^
+11 |     unit (kilometers, "km") = 1000.0 * meters,
+   |                                        ^^^^^^

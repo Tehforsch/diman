@@ -73,6 +73,8 @@ pub struct QuantityEntry {
     pub rhs: QuantityDefinition,
 }
 
+pub type DimensionEntry2 = Ident;
+
 #[derive(Verify)]
 #[verified(crate::types::ConstantEntry)]
 pub struct ConstantEntry {
@@ -81,23 +83,20 @@ pub struct ConstantEntry {
 }
 
 pub enum Entry {
+    Dimension(DimensionEntry2),
+    QuantityType(Ident),
+    DimensionType(Ident),
     Quantity(QuantityEntry),
     Unit(UnitEntry),
     Constant(ConstantEntry),
 }
 
 #[derive(Verify)]
-#[verified(crate::types::DimensionDefinition)]
-pub struct DimensionDefinition {
-    pub name: Type,
-    pub dimensions: Vec<Ident>,
-}
-
-#[derive(Verify)]
 #[verified(crate::types::UnresolvedDefs)]
 pub struct Defs {
-    pub dimension_type: DimensionDefinition,
-    pub quantity_type: Type,
+    pub dimension_types: Vec<Ident>,
+    pub quantity_types: Vec<Ident>,
+    pub dimensions: Vec<DimensionEntry2>,
     pub quantities: Vec<QuantityEntry>,
     pub units: Vec<UnitEntry>,
     pub constants: Vec<ConstantEntry>,

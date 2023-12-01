@@ -1,173 +1,163 @@
 use quote::quote;
 use syn::Ident;
 
-use crate::types::DimensionDefinition;
+use crate::types::Defs;
 
 fn as_snakecase(dim: &proc_macro2::Ident) -> Ident {
     let snake_case = dim.to_string().to_lowercase();
     Ident::new(&snake_case, dim.span())
 }
 
-impl DimensionDefinition {
-    fn iter_dimension_fields(&self) -> impl Iterator<Item = Ident> + '_ {
-        self.dimensions.iter().map(as_snakecase)
+impl Defs {
+    pub(crate) fn dimension_impl(&self) -> proc_macro::TokenStream {
+        let name = &self.dimension_type;
+        let dimensions = &self.dimensions;
+
+        let dimensions: proc_macro2::TokenStream = dimensions
+            .iter()
+            .map(|dim| {
+                let name = as_snakecase(dim);
+                quote! {
+                    #name: i32,
+                }
+            })
+            .collect();
+        let methods_impl: proc_macro2::TokenStream = self.dimension_methods_impl().into();
+        let output = quote! {
+            #[derive(::std::cmp::PartialEq, ::std::cmp::Eq, ::std::clone::Clone, ::std::fmt::Debug, ::std::marker::ConstParamTy)]
+            pub struct #name {
+                #dimensions
+            }
+
+            #methods_impl
+        };
+        output.into()
     }
-}
 
-pub(crate) fn dimension_impl(dimension_type: &DimensionDefinition) -> proc_macro::TokenStream {
-    let name = &dimension_type.name;
-    let dimensions = &dimension_type.dimensions;
+    pub(crate) fn dimension_methods_impl(&self) -> proc_macro::TokenStream {
+        let type_name = &self.dimension_type;
+        let iter_dimensions = || self.dimensions.iter().map(|x| as_snakecase(&x));
+        let none_gen: proc_macro2::TokenStream = iter_dimensions()
+            .map(|ident| {
+                quote! {
+                    #ident: 0,
+                }
+            })
+            .collect();
 
-    let dimensions: proc_macro2::TokenStream = dimensions
-        .iter()
-        .map(|dim| {
-            let name = as_snakecase(dim);
+        let mul_gen: proc_macro2::TokenStream = iter_dimensions()
+            .map(|ident| {
+                quote! {
+                    #ident: self.#ident + other.#ident,
+                }
+            })
+            .collect();
+
+        let div_gen: proc_macro2::TokenStream = iter_dimensions()
+            .map(|ident| {
+                quote! {
+                    #ident: self.#ident - other.#ident,
+                }
+            })
+            .collect();
+
+        let inv_gen: proc_macro2::TokenStream = iter_dimensions()
+            .map(|ident| {
+                quote! {
+                    #ident: -self.#ident,
+                }
+            })
+            .collect();
+
+        let powi_gen: proc_macro2::TokenStream = iter_dimensions()
+            .map(|ident| {
+                quote! {
+                    #ident: self.#ident * other,
+                }
+            })
+            .collect();
+
+        let sqrt_safety_gen: proc_macro2::TokenStream = iter_dimensions()
+            .map(|ident| {
             quote! {
-                #name: i32,
-            }
-        })
-        .collect();
-    let methods_impl: proc_macro2::TokenStream = dimension_methods_impl(dimension_type).into();
-    let output = quote! {
-        #[derive(::std::cmp::PartialEq, ::std::cmp::Eq, ::std::clone::Clone, ::std::fmt::Debug, ::std::marker::ConstParamTy)]
-        pub struct #name {
-            #dimensions
-        }
-
-        #methods_impl
-    };
-    output.into()
-}
-
-pub(crate) fn dimension_methods_impl(
-    dimension_type: &DimensionDefinition,
-) -> proc_macro::TokenStream {
-    let none_gen: proc_macro2::TokenStream = dimension_type
-        .iter_dimension_fields()
-        .map(|ident| {
-            quote! {
-                #ident: 0,
-            }
-        })
-        .collect();
-
-    let mul_gen: proc_macro2::TokenStream = dimension_type
-        .iter_dimension_fields()
-        .map(|ident| {
-            quote! {
-                #ident: self.#ident + other.#ident,
-            }
-        })
-        .collect();
-
-    let div_gen: proc_macro2::TokenStream = dimension_type
-        .iter_dimension_fields()
-        .map(|ident| {
-            quote! {
-                #ident: self.#ident - other.#ident,
-            }
-        })
-        .collect();
-
-    let inv_gen: proc_macro2::TokenStream = dimension_type
-        .iter_dimension_fields()
-        .map(|ident| {
-            quote! {
-                #ident: -self.#ident,
-            }
-        })
-        .collect();
-
-    let powi_gen: proc_macro2::TokenStream = dimension_type
-        .iter_dimension_fields()
-        .map(|ident| {
-            quote! {
-                #ident: self.#ident * other,
-            }
-        })
-        .collect();
-
-    let sqrt_safety_gen: proc_macro2::TokenStream = dimension_type.iter_dimension_fields().map(|ident| {
-        quote! {
-            if self.#ident % 2 != 0 {
-                panic!("Cannot take square root of quantity with a dimension that is not divisible by 2 in all components.");
-            }
-        }
-    }).collect();
-
-    let sqrt_gen: proc_macro2::TokenStream = dimension_type
-        .iter_dimension_fields()
-        .map(|ident| {
-            quote! {
-                #ident: self.#ident / 2,
-            }
-        })
-        .collect();
-
-    let cbrt_safety_gen: proc_macro2::TokenStream = dimension_type.iter_dimension_fields().map(|ident| {
-        quote! {
-            if self.#ident % 3 != 0 {
-                panic!("Cannot take cubic root of quantity with a dimension that is not divisible by 3 in all components.");
-            }
-        }
-    }).collect();
-
-    let cbrt_gen: proc_macro2::TokenStream = dimension_type
-        .iter_dimension_fields()
-        .map(|ident| {
-            quote! {
-                #ident: self.#ident / 3,
-            }
-        })
-        .collect();
-
-    let type_name = &dimension_type.name;
-    let gen = quote! {
-        impl #type_name {
-            pub const fn none() -> Self {
-                Self {
-                    #none_gen
+                if self.#ident % 2 != 0 {
+                    panic!("Cannot take square root of quantity with a dimension that is not divisible by 2 in all components.");
                 }
             }
+        }).collect();
 
-            pub const fn dimension_mul(self, other: Self) -> Self {
-                Self {
-                    #mul_gen
+        let sqrt_gen: proc_macro2::TokenStream = iter_dimensions()
+            .map(|ident| {
+                quote! {
+                    #ident: self.#ident / 2,
+                }
+            })
+            .collect();
+
+        let cbrt_safety_gen: proc_macro2::TokenStream = iter_dimensions()
+            .map(|ident| {
+            quote! {
+                if self.#ident % 3 != 0 {
+                    panic!("Cannot take cubic root of quantity with a dimension that is not divisible by 3 in all components.");
                 }
             }
+        }).collect();
 
-            pub const fn dimension_div(self, other: Self) -> Self {
-                Self {
-                    #div_gen
+        let cbrt_gen: proc_macro2::TokenStream = iter_dimensions()
+            .map(|ident| {
+                quote! {
+                    #ident: self.#ident / 3,
+                }
+            })
+            .collect();
+
+        let gen = quote! {
+            impl #type_name {
+                pub const fn none() -> Self {
+                    Self {
+                        #none_gen
+                    }
+                }
+
+                pub const fn dimension_mul(self, other: Self) -> Self {
+                    Self {
+                        #mul_gen
+                    }
+                }
+
+                pub const fn dimension_div(self, other: Self) -> Self {
+                    Self {
+                        #div_gen
+                    }
+                }
+
+                pub const fn dimension_inv(self) -> Self {
+                    Self {
+                        #inv_gen
+                    }
+                }
+
+                pub const fn dimension_powi(self, other: i32) -> Self {
+                    Self {
+                        #powi_gen
+                    }
+                }
+
+                pub const fn dimension_sqrt(self) -> Self {
+                    #sqrt_safety_gen
+                    Self {
+                        #sqrt_gen
+                    }
+                }
+
+                pub const fn dimension_cbrt(self) -> Self {
+                    #cbrt_safety_gen
+                    Self {
+                        #cbrt_gen
+                    }
                 }
             }
-
-            pub const fn dimension_inv(self) -> Self {
-                Self {
-                    #inv_gen
-                }
-            }
-
-            pub const fn dimension_powi(self, other: i32) -> Self {
-                Self {
-                    #powi_gen
-                }
-            }
-
-            pub const fn dimension_sqrt(self) -> Self {
-                #sqrt_safety_gen
-                Self {
-                    #sqrt_gen
-                }
-            }
-
-            pub const fn dimension_cbrt(self) -> Self {
-                #cbrt_safety_gen
-                Self {
-                    #cbrt_gen
-                }
-            }
-        }
-    };
-    gen.into()
+        };
+        gen.into()
+    }
 }
