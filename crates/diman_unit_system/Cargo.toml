@@ -1,6 +1,6 @@
 [package]
 name = "diman_unit_system"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 authors = [
     "Toni Peter <mail@tonipeter.de>",
@@ -24,7 +24,7 @@ hdf5 = []
 gen-vec-names = [] 
 
 [dependencies]
-diman_derive_verify = { path = "../../crates/diman_derive_verify", version = "0.2" }
+diman_derive_verify = { path = "../../crates/diman_derive_verify", version = "0.3" }
 syn = { version = "1.0", features = ["full", "extra-traits"] }
 quote = "1.0"
 proc-macro2 = "1.0"

@@ -79,7 +79,7 @@ impl Defs {
                 } else {
                     (unit_str, 1)
                 };
-                let units = #units;
+                let units: &[(#dimension_type, &str, f64)] = &#units;
                 let (dimension, _, factor) = units
                     .iter()
                     .find(|(_, known_unit_name, _)| &unit == known_unit_name)
@@ -195,7 +195,7 @@ impl Defs {
                 where
                     S: serde::Serializer,
                 {
-                    let units = #units;
+                    let units: &[(#dimension_type, &str, f64)] = &#units;
                     if D == #dimension_type::none() {
                         serializer.#serialize_method(self.0)
                     } else {
@@ -300,7 +300,7 @@ impl Defs {
                     if D == #dimension_type::none() {
                         serializer.serialize_str(&vec_to_string(self.0))
                     } else {
-                        let units = #units;
+                        let units: &[(#dimension_type, &str, f64)] = &#units;
                         let unit_name = units
                             .iter()
                             .filter(|(d, _, _)| d == &D)

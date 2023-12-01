@@ -39,7 +39,7 @@ Moreover, Diman is in its early stages of development and APIs will change.
 If you cannot use unstable Rust for your project or require a stable library, consider using [`uom`](https://crates.io/crates/uom) or [`dimensioned`](https://crates.io/crates/dimensioned), both of which do not require any experimental features and are much more mature libraries in general.
 
 ## Features
-* Invalid operations between physical quantities turn into compile errors.
+* Invalid operations between physical quantities (adding length and time, for example) turn into compile errors.
 * Newly created quantities are automatically converted to an underlying base representation. This means that the used types are quantities (such as `Length`) instead of concrete units (such as `meters`) which makes for more meaningful code.
 * Systems of units and quantities can be user defined via the `unit_system!` macro. This gives the user complete freedom over the choice of quantities and makes them part of the user's library, so that arbitrary new methods can be implemented on them.
 * `f32` and `f64` float storage types (behind the `f32` and `f64` feature gate respectively).
@@ -143,9 +143,13 @@ Sometimes, intermediate types in computations are quantities that don't really h
 not needed too many times. Having to add a definition to the unit system for this case can be cumbersome.
 This is why the `Product` and `Quotient` types are provided:
 ```rust
-use diman::si::f64::{Length, Time, Velocity, Area};
+use diman::si::f64::{Length, Time, Velocity, Area, Volume};
 use diman::{Product, Quotient};
-let x: Product<(Length, Time)> = Length::meters(10.0) * Time::seconds(2.0);
-let y: Product<(Length, Time, Velocity)> = Area::square_meters(5.0);
-let z: Quotient<Length, Time> = Length::meters(10.0) / Time::seconds(2.0);
+fn foo(l: Length, t: Time, vol: Volume) -> Product<(Length, Time, Volume)> {
+    l * t * vol
+}
+
+fn bar(l: Length, t: Time) -> Quotient<Length, Time> {
+    l / t
+}
 ```

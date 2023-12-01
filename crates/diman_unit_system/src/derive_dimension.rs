@@ -7,7 +7,7 @@ pub(crate) fn dimension_impl(input: proc_macro::TokenStream) -> proc_macro::Toke
     let input: DeriveInput = syn::parse(input).unwrap();
     let methods_impl: proc_macro2::TokenStream = dimension_methods_impl(&input).into();
     let output = quote! {
-        #[derive(PartialEq, Eq, Clone, Debug, ::std::marker::ConstParamTy)]
+        #[derive(::std::cmp::PartialEq, ::std::cmp::Eq, ::std::clone::Clone, ::std::fmt::Debug, ::std::marker::ConstParamTy)]
         #input
 
         #methods_impl

@@ -56,7 +56,7 @@ impl MulDiv for DimensionsAndFactor {
                     .into_iter()
                     .map(|entry| DimensionEntry {
                         ident: entry.ident,
-                        value: entry.value * pow as i32,
+                        value: entry.value * pow,
                     })
                     .collect(),
             },

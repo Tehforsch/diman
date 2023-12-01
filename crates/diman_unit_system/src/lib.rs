@@ -53,7 +53,7 @@ pub fn unit_system(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let defs = parse_macro_input!(item as parse::types::Defs);
     let defs: Result<types::UnresolvedDefs> = defs.verify();
     match defs {
-        Err(err) => return err.to_compile_error().into(),
+        Err(err) => err.to_compile_error().into(),
         Ok(defs) => {
             let resolved = defs.resolve();
             resolved.code_gen().into()
