@@ -206,7 +206,7 @@ impl Defs {
                             .map(|(_, name, _)| name)
                             .next()
                             .unwrap_or_else(|| {
-                                panic!("Attempt to deserialize quantity with unnamed unit.")
+                                panic!("Attempt to serialize quantity with dimension: {D:?}. Make sure that the unit with conversion factor 1 for this dimension is named.")
                             });
                         serializer.serialize_str(&format!("{} {}", self.0.to_string(), unit_name))
                     }
@@ -308,7 +308,7 @@ impl Defs {
                             .map(|(_, name, _)| name)
                             .next()
                             .unwrap_or_else(|| {
-                                panic!("Attempt to deserialize quantity with unnamed unit.")
+                                panic!("Attempt to serialize quantity with dimension: {D:?}. Make sure that the unit with conversion factor 1 for this dimension is named.")
                             });
                         serializer.serialize_str(&format!("{} {}", vec_to_string(self.0), unit_name))
                     }
