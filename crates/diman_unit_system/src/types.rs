@@ -45,6 +45,7 @@ pub struct UnitEntry {
     pub symbol: Option<String>,
     pub prefixes: Vec<Prefix>,
     pub rhs: UnitExpression,
+    pub dimension_annotation: Option<Ident>,
 }
 
 pub struct QuantityEntry {

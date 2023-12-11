@@ -13,8 +13,8 @@ use crate::expression::{BinaryOperator, Expr, Factor, Operator};
 use self::{
     tokens::{
         AssignmentToken, DimensionEntryAssignment, DimensionEntrySeparator, DivisionToken,
-        ExponentiationToken, MultiplicationToken, StatementSeparator, UnitDefDelimiter,
-        UnitDefSeparator,
+        ExponentiationToken, MultiplicationToken, StatementSeparator, TypeAnnotationToken,
+        UnitDefDelimiter, UnitDefSeparator,
     },
     types::{
         ConstantEntry, Defs, DimensionEntry, DimensionInt, Dimensions, Entry, Exponent, LitFactor,
@@ -39,6 +39,7 @@ pub mod tokens {
     syn::custom_punctuation!(DimensionSeparator, ,);
     syn::custom_punctuation!(UnitDefSeparator, ,);
     syn::custom_punctuation!(AssignmentToken, =);
+    syn::custom_punctuation!(TypeAnnotationToken, :);
     syn::custom_punctuation!(PrefixSeparator, ,);
     syn::custom_punctuation!(MultiplicationToken, *);
     syn::custom_punctuation!(DivisionToken, /);
@@ -160,6 +161,13 @@ impl Parse for UnitEntry {
         } else {
             return Err(lookahead.error());
         }
+        let lookahead = input.lookahead1();
+        let dimension_annotation = if lookahead.peek(TypeAnnotationToken) {
+            let _: TypeAnnotationToken = input.parse()?;
+            Some(input.parse()?)
+        } else {
+            None
+        };
         let _: AssignmentToken = input.parse()?;
         let rhs: UnitExpression = input.parse()?;
         Ok(Self {
@@ -167,6 +175,7 @@ impl Parse for UnitEntry {
             symbol,
             prefixes,
             rhs,
+            dimension_annotation,
         })
     }
 }

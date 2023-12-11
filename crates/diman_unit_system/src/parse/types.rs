@@ -64,6 +64,7 @@ pub struct UnitEntry {
     pub symbol: Option<Symbol>,
     pub prefixes: Prefixes,
     pub rhs: UnitExpression,
+    pub dimension_annotation: Option<Ident>,
 }
 
 #[derive(Verify)]
