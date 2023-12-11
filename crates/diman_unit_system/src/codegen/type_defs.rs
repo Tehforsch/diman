@@ -1,6 +1,6 @@
 use crate::{
     storage_types::StorageType,
-    types::{Defs, Dimensions},
+    types::{BaseDimensions, Defs},
 };
 use proc_macro2::TokenStream;
 use quote::{quote, quote_spanned};
@@ -65,7 +65,7 @@ impl Defs {
         }
     }
 
-    pub fn get_dimension_expr(&self, dim: &Dimensions) -> TokenStream {
+    pub fn get_dimension_expr(&self, dim: &BaseDimensions) -> TokenStream {
         let dimension_type = &self.dimension_type;
         let field_updates: TokenStream = dim
             .fields
@@ -134,7 +134,7 @@ impl Defs {
     }
 
     pub fn quantity_definitions_for_storage_type<T: StorageType>(&self, type_: &T) -> TokenStream {
-        self.quantities
+        self.dimensions
             .iter()
             .map(|quantity| {
                 let dimension = self.get_dimension_expr(&quantity.dimension);

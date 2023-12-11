@@ -37,14 +37,14 @@ impl UnresolvedDefs {
     pub fn resolve(self) -> Defs {
         let quantity_type = emit_errors(get_single_ident(self.quantity_types, "quantity type"));
         let dimension_type = emit_errors(get_single_ident(self.dimension_types, "dimension type"));
-        let dimensions = self
-            .quantities
+        let base_dimensions = self
+            .dimensions
             .iter()
             .filter(|d| d.is_base_dimension())
             .map(|d| d.dimension_entry_name())
             .collect();
         let items: Vec<UnresolvedItem> = self
-            .quantities
+            .dimensions
             .iter()
             .map(|q| q.to_unresolved_item())
             .chain(self.units.iter().map(|u| u.to_unresolved_item()))
@@ -53,16 +53,16 @@ impl UnresolvedDefs {
         let items = emit_errors(filter_undefined_identifiers(items));
         let items = emit_errors(filter_multiply_defined_identifiers(items));
         let mut resolved_items = emit_errors(Resolver::resolve(items));
-        let quantities = convert_vec_to_resolved(self.quantities, &mut resolved_items);
+        let dimensions = convert_vec_to_resolved(self.dimensions, &mut resolved_items);
         let units = convert_vec_to_resolved(self.units, &mut resolved_items);
         let constants = convert_vec_to_resolved(self.constants, &mut resolved_items);
         Defs {
             dimension_type,
             quantity_type,
-            quantities,
+            dimensions,
             units,
             constants,
-            dimensions,
+            base_dimensions,
         }
     }
 }

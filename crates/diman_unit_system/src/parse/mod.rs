@@ -17,9 +17,9 @@ use self::{
         UnitDefDelimiter, UnitDefSeparator,
     },
     types::{
-        ConstantEntry, Defs, DimensionEntry, DimensionInt, Dimensions, Entry, Exponent, LitFactor,
-        Prefix, Prefixes, QuantityDefinition, QuantityEntry, QuantityIdent, Symbol, UnitEntry,
-        UnitExpression, UnitFactor,
+        BaseDimensionEntry, BaseDimensions, ConstantEntry, Defs, DimensionDefinition,
+        DimensionEntry, DimensionIdent, DimensionInt, Entry, Exponent, LitFactor, Prefix, Prefixes,
+        Symbol, UnitEntry, UnitExpression, UnitFactor,
     },
 };
 
@@ -91,7 +91,7 @@ impl Parse for Prefixes {
     }
 }
 
-impl Parse for DimensionEntry {
+impl Parse for BaseDimensionEntry {
     fn parse(input: ParseStream) -> Result<Self> {
         let ident: Ident = input.parse()?;
         let _: DimensionEntryAssignment = input.parse()?;
@@ -104,7 +104,7 @@ impl Parse for UnitFactor {
     fn parse(input: ParseStream) -> Result<Self> {
         let lookahead = input.lookahead1();
         if lookahead.peek(Ident) {
-            Ok(Self::UnitOrQuantity(input.parse()?))
+            Ok(Self::UnitOrDimension(input.parse()?))
         } else if lookahead.peek(Lit) {
             Ok(Self::Number(input.parse()?))
         } else {
@@ -113,25 +113,25 @@ impl Parse for UnitFactor {
     }
 }
 
-impl Parse for QuantityIdent {
+impl Parse for DimensionIdent {
     fn parse(input: ParseStream) -> Result<Self> {
         let lookahead = input.lookahead1();
         if lookahead.peek(Lit) {
-            Ok(Self::Factor(input.parse()?))
+            Ok(Self::One(input.parse()?))
         } else {
-            Ok(Self::Quantity(input.parse()?))
+            Ok(Self::Dimension(input.parse()?))
         }
     }
 }
 
-impl Parse for QuantityDefinition {
+impl Parse for DimensionDefinition {
     fn parse(input: ParseStream) -> Result<Self> {
         let lookahead = input.lookahead1();
         if lookahead.peek(AssignmentToken) {
             let _: AssignmentToken = input.parse()?;
             let lookahead = input.lookahead1();
             if lookahead.peek(Brace) {
-                Ok(Self::Dimensions(input.parse()?))
+                Ok(Self::BaseDimensions(input.parse()?))
             } else {
                 Ok(Self::Expression(input.parse()?))
             }
@@ -190,19 +190,19 @@ fn parse_unit_rhs_and_annotation(input: ParseStream) -> Result<(UnitExpression, 
     Ok((rhs, dimension_annotation))
 }
 
-impl Parse for Dimensions {
+impl Parse for BaseDimensions {
     fn parse(input: ParseStream) -> Result<Self> {
         let content;
         let _: token::Brace = braced!(content in input);
-        let fields: Punctuated<DimensionEntry, DimensionEntrySeparator> =
-            content.parse_terminated(DimensionEntry::parse)?;
+        let fields: Punctuated<BaseDimensionEntry, DimensionEntrySeparator> =
+            content.parse_terminated(BaseDimensionEntry::parse)?;
         Ok(Self {
             fields: fields.into_iter().collect(),
         })
     }
 }
 
-impl Parse for QuantityEntry {
+impl Parse for DimensionEntry {
     fn parse(input: ParseStream) -> Result<Self> {
         let name = input.parse()?;
         let rhs = input.parse()?;
@@ -233,7 +233,7 @@ impl Parse for Entry {
             Ok(Self::DimensionType(input.parse()?))
         } else if input.peek(kw::dimension) {
             let _ = input.parse::<kw::dimension>()?;
-            Ok(Self::Quantity(input.parse()?))
+            Ok(Self::Dimension(input.parse()?))
         } else if input.peek(kw::unit) {
             let _ = input.parse::<kw::unit>()?;
             Ok(Self::Unit(input.parse()?))
@@ -303,7 +303,7 @@ impl<T: Parse, E: Parse> Parse for Expr<T, E> {
 
 impl Parse for Defs {
     fn parse(input: ParseStream) -> Result<Self> {
-        let mut quantities = vec![];
+        let mut dimensions = vec![];
         let mut units = vec![];
         let mut constants = vec![];
         let mut quantity_types = vec![];
@@ -313,7 +313,7 @@ impl Parse for Defs {
             .into_iter()
         {
             match item {
-                Entry::Quantity(q) => quantities.push(q),
+                Entry::Dimension(q) => dimensions.push(q),
                 Entry::Unit(u) => units.push(u),
                 Entry::Constant(c) => constants.push(c),
                 Entry::QuantityType(q) => quantity_types.push(q),
@@ -323,7 +323,7 @@ impl Parse for Defs {
         Ok(Self {
             dimension_types,
             quantity_types,
-            quantities,
+            dimensions,
             units,
             constants,
         })

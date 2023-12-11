@@ -21,40 +21,40 @@ pub struct Symbol(pub Lit);
 pub struct Exponent(pub Lit);
 
 #[derive(Verify)]
-#[verified(crate::types::DimensionEntry)]
-pub struct DimensionEntry {
+#[verified(crate::types::BaseDimensionEntry)]
+pub struct BaseDimensionEntry {
     pub ident: Ident,
     pub value: DimensionInt,
 }
 
 #[derive(Verify)]
-#[verified(crate::types::Dimensions)]
-pub struct Dimensions {
-    pub fields: Vec<DimensionEntry>,
+#[verified(crate::types::BaseDimensions)]
+pub struct BaseDimensions {
+    pub fields: Vec<BaseDimensionEntry>,
 }
 
-pub enum QuantityIdent {
+pub enum DimensionIdent {
     // This will be verified to only be 1.0 or 1
-    Factor(LitFactor),
-    Quantity(Ident),
+    One(LitFactor),
+    Dimension(Ident),
 }
 
-pub type QuantityExpression = Expr<QuantityIdent, Exponent>;
+pub type DimensionExpression = Expr<DimensionIdent, Exponent>;
 
 #[derive(Verify)]
 #[verified(crate::types::UnitFactor)]
 pub enum UnitFactor {
-    UnitOrQuantity(Ident),
+    UnitOrDimension(Ident),
     Number(LitFactor),
 }
 
 pub type UnitExpression = Expr<UnitFactor, Exponent>;
 
 #[derive(Verify)]
-#[verified(crate::types::QuantityDefinition)]
-pub enum QuantityDefinition {
-    Dimensions(Dimensions),
-    Expression(QuantityExpression),
+#[verified(crate::types::DimensionDefinition)]
+pub enum DimensionDefinition {
+    BaseDimensions(BaseDimensions),
+    Expression(DimensionExpression),
     Base,
 }
 
@@ -69,10 +69,10 @@ pub struct UnitEntry {
 }
 
 #[derive(Verify)]
-#[verified(crate::types::QuantityEntry)]
-pub struct QuantityEntry {
+#[verified(crate::types::DimensionEntry)]
+pub struct DimensionEntry {
     pub name: Ident,
-    pub rhs: QuantityDefinition,
+    pub rhs: DimensionDefinition,
 }
 
 #[derive(Verify)]
@@ -86,7 +86,7 @@ pub struct ConstantEntry {
 pub enum Entry {
     QuantityType(Ident),
     DimensionType(Ident),
-    Quantity(QuantityEntry),
+    Dimension(DimensionEntry),
     Unit(UnitEntry),
     Constant(ConstantEntry),
 }
@@ -96,7 +96,7 @@ pub enum Entry {
 pub struct Defs {
     pub dimension_types: Vec<Ident>,
     pub quantity_types: Vec<Ident>,
-    pub quantities: Vec<QuantityEntry>,
+    pub dimensions: Vec<DimensionEntry>,
     pub units: Vec<UnitEntry>,
     pub constants: Vec<ConstantEntry>,
 }

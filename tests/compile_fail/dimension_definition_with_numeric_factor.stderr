@@ -1,0 +1,5 @@
+error: Only 1 and 1.0 are valid factors in dimension definitions.
+  --> tests/compile_fail/dimension_definition_with_numeric_factor.rs:10:24
+   |
+10 |     dimension Length = 2.0 / Dimensionless,
+   |                        ^^^

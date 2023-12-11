@@ -3,8 +3,8 @@ use syn::Ident;
 use crate::{
     dimension_math::DimensionsAndFactor,
     types::{
-        Constant, ConstantEntry, DimensionEntry, Dimensions, Quantity, QuantityDefinition,
-        QuantityEntry, QuantityIdent, Unit, UnitEntry, UnitFactor,
+        BaseDimensionEntry, BaseDimensions, Constant, ConstantEntry, Dimension,
+        DimensionDefinition, DimensionEntry, DimensionIdent, Unit, UnitEntry, UnitFactor,
     },
 };
 
@@ -18,27 +18,29 @@ pub trait ItemConversion {
     fn ident(&self) -> &Ident;
 }
 
-impl ItemConversion for QuantityEntry {
-    type Resolved = Quantity;
+impl ItemConversion for DimensionEntry {
+    type Resolved = Dimension;
 
     fn to_unresolved_item(&self) -> UnresolvedItem {
         let val = match &self.rhs {
-            QuantityDefinition::Dimensions(dimensions) => ValueOrExpr::Value(DimensionsAndFactor {
-                dimensions: dimensions.clone(),
-                factor: 1.0,
-            }),
-            QuantityDefinition::Expression(expr) => {
+            DimensionDefinition::BaseDimensions(dimensions) => {
+                ValueOrExpr::Value(DimensionsAndFactor {
+                    dimensions: dimensions.clone(),
+                    factor: 1.0,
+                })
+            }
+            DimensionDefinition::Expression(expr) => {
                 ValueOrExpr::Expr(expr.clone().map(|val| match val {
-                    QuantityIdent::One => IdentOrFactor::Factor(DimensionsAndFactor {
-                        dimensions: Dimensions { fields: vec![] },
+                    DimensionIdent::One => IdentOrFactor::Factor(DimensionsAndFactor {
+                        dimensions: BaseDimensions { fields: vec![] },
                         factor: 1.0,
                     }),
-                    QuantityIdent::Quantity(ident) => IdentOrFactor::Ident(ident),
+                    DimensionIdent::Dimension(ident) => IdentOrFactor::Ident(ident),
                 }))
             }
-            QuantityDefinition::Base => ValueOrExpr::Value(DimensionsAndFactor {
-                dimensions: Dimensions {
-                    fields: vec![DimensionEntry {
+            DimensionDefinition::Base => ValueOrExpr::Value(DimensionsAndFactor {
+                dimensions: BaseDimensions {
+                    fields: vec![BaseDimensionEntry {
                         ident: self.dimension_entry_name(),
                         value: 1,
                     }],
@@ -53,7 +55,7 @@ impl ItemConversion for QuantityEntry {
     }
 
     fn into_resolved(self, item: ResolvedItem) -> Self::Resolved {
-        Quantity {
+        Dimension {
             name: self.name,
             dimension: item.val.dimensions,
         }
@@ -69,10 +71,10 @@ impl ItemConversion for UnitEntry {
 
     fn to_unresolved_item(&self) -> UnresolvedItem {
         let val = ValueOrExpr::Expr(self.rhs.clone().map(|x| match x {
-            UnitFactor::UnitOrQuantity(ident) => IdentOrFactor::Ident(ident),
+            UnitFactor::UnitOrDimension(ident) => IdentOrFactor::Ident(ident),
             UnitFactor::Number(factor) => IdentOrFactor::Factor(DimensionsAndFactor {
                 factor,
-                dimensions: Dimensions::none(),
+                dimensions: BaseDimensions::none(),
             }),
         }));
         UnresolvedItem {
@@ -100,10 +102,10 @@ impl ItemConversion for ConstantEntry {
 
     fn to_unresolved_item(&self) -> UnresolvedItem {
         let val = ValueOrExpr::Expr(self.rhs.clone().map(|x| match x {
-            UnitFactor::UnitOrQuantity(ident) => IdentOrFactor::Ident(ident),
+            UnitFactor::UnitOrDimension(ident) => IdentOrFactor::Ident(ident),
             UnitFactor::Number(factor) => IdentOrFactor::Factor(DimensionsAndFactor {
                 factor,
-                dimensions: Dimensions::none(),
+                dimensions: BaseDimensions::none(),
             }),
         }));
         UnresolvedItem {

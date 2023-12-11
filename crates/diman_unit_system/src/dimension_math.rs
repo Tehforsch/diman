@@ -1,15 +1,15 @@
 use crate::{
     expression::MulDiv,
-    types::{DimensionEntry, Dimensions},
+    types::{BaseDimensionEntry, BaseDimensions},
 };
 
 #[derive(Clone)]
 pub struct DimensionsAndFactor {
-    pub dimensions: Dimensions,
+    pub dimensions: BaseDimensions,
     pub factor: f64,
 }
 
-impl Dimensions {
+impl BaseDimensions {
     pub fn none() -> Self {
         Self { fields: vec![] }
     }
@@ -29,7 +29,7 @@ impl std::ops::Mul for DimensionsAndFactor {
             }
         }
         Self {
-            dimensions: Dimensions { fields },
+            dimensions: BaseDimensions { fields },
             factor: self.factor * rhs.factor,
         }
     }
@@ -49,12 +49,12 @@ impl MulDiv for DimensionsAndFactor {
     fn powi(self, pow: i32) -> Self {
         Self {
             factor: self.factor.powi(pow),
-            dimensions: Dimensions {
+            dimensions: BaseDimensions {
                 fields: self
                     .dimensions
                     .fields
                     .into_iter()
-                    .map(|entry| DimensionEntry {
+                    .map(|entry| BaseDimensionEntry {
                         ident: entry.ident,
                         value: entry.value * pow,
                     })

@@ -148,16 +148,16 @@ impl Verify for ptype::Prefixes {
     }
 }
 
-impl Verify for ptype::QuantityIdent {
-    type Verified = QuantityIdent;
+impl Verify for ptype::DimensionIdent {
+    type Verified = DimensionIdent;
 
     fn verify(self) -> Result<Self::Verified> {
         Ok(match self {
-            ptype::QuantityIdent::Factor(factor) => {
+            ptype::DimensionIdent::One(factor) => {
                 factor_is_one(factor)?;
-                QuantityIdent::One
+                DimensionIdent::One
             }
-            ptype::QuantityIdent::Quantity(quantity) => QuantityIdent::Quantity(quantity),
+            ptype::DimensionIdent::Dimension(dimension) => DimensionIdent::Dimension(dimension),
         })
     }
 }
@@ -169,7 +169,7 @@ fn factor_is_one(factor: ptype::LitFactor) -> Result<()> {
     } else {
         Err(Error::new(
             factor.0.span(),
-            "Only 1 and 1.0 are valid factors in quantity definitions.".to_string(),
+            "Only 1 and 1.0 are valid factors in dimension definitions.".to_string(),
         ))
     }
 }

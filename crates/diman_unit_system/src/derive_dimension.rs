@@ -23,7 +23,7 @@ impl Defs {
         let name = &self.dimension_type;
 
         let dimensions: proc_macro2::TokenStream = self
-            .dimensions()
+            .base_dimensions()
             .map(|dim| {
                 quote! {
                     #dim: i32,
@@ -45,7 +45,7 @@ impl Defs {
     pub(crate) fn dimension_methods_impl(&self) -> proc_macro::TokenStream {
         let type_name = &self.dimension_type;
         let none_gen: proc_macro2::TokenStream = self
-            .dimensions()
+            .base_dimensions()
             .map(|ident| {
                 quote! {
                     #ident: 0,
@@ -54,7 +54,7 @@ impl Defs {
             .collect();
 
         let mul_gen: proc_macro2::TokenStream = self
-            .dimensions()
+            .base_dimensions()
             .map(|ident| {
                 quote! {
                     #ident: self.#ident + other.#ident,
@@ -63,7 +63,7 @@ impl Defs {
             .collect();
 
         let div_gen: proc_macro2::TokenStream = self
-            .dimensions()
+            .base_dimensions()
             .map(|ident| {
                 quote! {
                     #ident: self.#ident - other.#ident,
@@ -72,7 +72,7 @@ impl Defs {
             .collect();
 
         let inv_gen: proc_macro2::TokenStream = self
-            .dimensions()
+            .base_dimensions()
             .map(|ident| {
                 quote! {
                     #ident: -self.#ident,
@@ -81,7 +81,7 @@ impl Defs {
             .collect();
 
         let powi_gen: proc_macro2::TokenStream = self
-            .dimensions()
+            .base_dimensions()
             .map(|ident| {
                 quote! {
                     #ident: self.#ident * other,
@@ -89,7 +89,7 @@ impl Defs {
             })
             .collect();
 
-        let sqrt_safety_gen: proc_macro2::TokenStream = self.dimensions()
+        let sqrt_safety_gen: proc_macro2::TokenStream = self.base_dimensions()
             .map(|ident| {
             quote! {
                 if self.#ident % 2 != 0 {
@@ -99,7 +99,7 @@ impl Defs {
         }).collect();
 
         let sqrt_gen: proc_macro2::TokenStream = self
-            .dimensions()
+            .base_dimensions()
             .map(|ident| {
                 quote! {
                     #ident: self.#ident / 2,
@@ -107,7 +107,7 @@ impl Defs {
             })
             .collect();
 
-        let cbrt_safety_gen: proc_macro2::TokenStream = self.dimensions()
+        let cbrt_safety_gen: proc_macro2::TokenStream = self.base_dimensions()
             .map(|ident| {
             quote! {
                 if self.#ident % 3 != 0 {
@@ -117,7 +117,7 @@ impl Defs {
         }).collect();
 
         let cbrt_gen: proc_macro2::TokenStream = self
-            .dimensions()
+            .base_dimensions()
             .map(|ident| {
                 quote! {
                     #ident: self.#ident / 3,

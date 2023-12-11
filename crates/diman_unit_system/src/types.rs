@@ -7,37 +7,37 @@ pub struct Prefix {
 }
 
 #[derive(Clone)]
-pub struct DimensionEntry {
+pub struct BaseDimensionEntry {
     pub ident: Ident,
     pub value: i32,
 }
 
 #[derive(Clone)]
-pub struct Dimensions {
-    pub fields: Vec<DimensionEntry>,
+pub struct BaseDimensions {
+    pub fields: Vec<BaseDimensionEntry>,
 }
 
 #[derive(Clone)]
-pub enum QuantityIdent {
+pub enum DimensionIdent {
     One,
-    Quantity(Ident),
+    Dimension(Ident),
 }
 
 pub type IntExponent = i32;
 
-pub type QuantityExpression = Expr<QuantityIdent, IntExponent>;
+pub type DimensionExpression = Expr<DimensionIdent, IntExponent>;
 
 #[derive(Clone)]
 pub enum UnitFactor {
-    UnitOrQuantity(Ident),
+    UnitOrDimension(Ident),
     Number(f64),
 }
 
 pub type UnitExpression = Expr<UnitFactor, IntExponent>;
 
-pub enum QuantityDefinition {
-    Dimensions(Dimensions),
-    Expression(QuantityExpression),
+pub enum DimensionDefinition {
+    BaseDimensions(BaseDimensions),
+    Expression(DimensionExpression),
     Base,
 }
 
@@ -49,14 +49,14 @@ pub struct UnitEntry {
     pub dimension_annotation: Option<Ident>,
 }
 
-pub struct QuantityEntry {
+pub struct DimensionEntry {
     pub name: Ident,
-    pub rhs: QuantityDefinition,
+    pub rhs: DimensionDefinition,
 }
 
-impl QuantityEntry {
+impl DimensionEntry {
     pub fn is_base_dimension(&self) -> bool {
-        matches!(self.rhs, QuantityDefinition::Base)
+        matches!(self.rhs, DimensionDefinition::Base)
     }
 
     pub fn dimension_entry_name(&self) -> Ident {
@@ -73,40 +73,40 @@ pub struct ConstantEntry {
 pub struct UnresolvedDefs {
     pub dimension_types: Vec<Ident>,
     pub quantity_types: Vec<Ident>,
-    pub quantities: Vec<QuantityEntry>,
+    pub dimensions: Vec<DimensionEntry>,
     pub units: Vec<UnitEntry>,
     pub constants: Vec<ConstantEntry>,
 }
 
-pub struct Quantity {
+pub struct Dimension {
     pub name: Ident,
-    pub dimension: Dimensions,
+    pub dimension: BaseDimensions,
 }
 
 pub struct Unit {
     pub name: Ident,
-    pub dimension: Dimensions,
+    pub dimension: BaseDimensions,
     pub factor: f64,
     pub symbol: Option<String>,
 }
 
 pub struct Constant {
     pub name: Ident,
-    pub dimension: Dimensions,
+    pub dimension: BaseDimensions,
     pub factor: f64,
 }
 
 pub struct Defs {
     pub dimension_type: Ident,
     pub quantity_type: Ident,
-    pub quantities: Vec<Quantity>,
+    pub dimensions: Vec<Dimension>,
     pub units: Vec<Unit>,
     pub constants: Vec<Constant>,
-    pub dimensions: Vec<Ident>,
+    pub base_dimensions: Vec<Ident>,
 }
 
 impl Defs {
-    pub fn dimensions(&self) -> impl Iterator<Item = &Ident> + '_ {
-        self.dimensions.iter()
+    pub fn base_dimensions(&self) -> impl Iterator<Item = &Ident> + '_ {
+        self.base_dimensions.iter()
     }
 }
