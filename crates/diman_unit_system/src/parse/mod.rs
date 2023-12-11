@@ -161,15 +161,7 @@ impl Parse for UnitEntry {
         } else {
             return Err(lookahead.error());
         }
-        let lookahead = input.lookahead1();
-        let dimension_annotation = if lookahead.peek(TypeAnnotationToken) {
-            let _: TypeAnnotationToken = input.parse()?;
-            Some(input.parse()?)
-        } else {
-            None
-        };
-        let _: AssignmentToken = input.parse()?;
-        let rhs: UnitExpression = input.parse()?;
+        let (rhs, dimension_annotation) = parse_unit_rhs_and_annotation(input)?;
         Ok(Self {
             name,
             symbol,
@@ -178,6 +170,19 @@ impl Parse for UnitEntry {
             dimension_annotation,
         })
     }
+}
+
+fn parse_unit_rhs_and_annotation(input: ParseStream) -> Result<(UnitExpression, Option<Ident>)> {
+    let lookahead = input.lookahead1();
+    let dimension_annotation = if lookahead.peek(TypeAnnotationToken) {
+        let _: TypeAnnotationToken = input.parse()?;
+        Some(input.parse()?)
+    } else {
+        None
+    };
+    let _: AssignmentToken = input.parse()?;
+    let rhs: UnitExpression = input.parse()?;
+    Ok((rhs, dimension_annotation))
 }
 
 impl Parse for Dimensions {
@@ -204,9 +209,12 @@ impl Parse for QuantityEntry {
 impl Parse for ConstantEntry {
     fn parse(input: ParseStream) -> Result<Self> {
         let name = input.parse()?;
-        let _: AssignmentToken = input.parse()?;
-        let rhs: UnitExpression = input.parse()?;
-        Ok(Self { name, rhs })
+        let (rhs, dimension_annotation) = parse_unit_rhs_and_annotation(input)?;
+        Ok(Self {
+            name,
+            rhs,
+            dimension_annotation,
+        })
     }
 }
 

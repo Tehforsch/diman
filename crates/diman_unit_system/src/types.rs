@@ -56,6 +56,7 @@ pub struct QuantityEntry {
 pub struct ConstantEntry {
     pub name: Ident,
     pub rhs: UnitExpression,
+    pub dimension_annotation: Option<Ident>,
 }
 
 pub type DimensionEntry2 = Ident;
