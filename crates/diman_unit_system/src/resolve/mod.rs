@@ -8,10 +8,7 @@ use std::collections::{HashMap, HashSet};
 use proc_macro2::Span;
 use syn::Ident;
 
-use crate::{
-    derive_dimension::to_snakecase,
-    types::{Defs, DimensionEntry, Dimensions, QuantityDefinition, QuantityEntry, UnresolvedDefs},
-};
+use crate::types::{Defs, UnresolvedDefs};
 
 use self::{
     error::{Emit, Error, MultipleTypeDefinitionsError, Result},
@@ -37,19 +34,15 @@ fn emit_errors<T, E: Emit>((input, result): (T, std::result::Result<(), E>)) -> 
 }
 
 impl UnresolvedDefs {
-    pub fn resolve(mut self) -> Defs {
+    pub fn resolve(self) -> Defs {
         let quantity_type = emit_errors(get_single_ident(self.quantity_types, "quantity type"));
         let dimension_type = emit_errors(get_single_ident(self.dimension_types, "dimension type"));
-        self.quantities
-            .extend(self.dimensions.iter().map(|dim| QuantityEntry {
-                name: dim.clone(),
-                rhs: QuantityDefinition::Dimensions(Dimensions {
-                    fields: vec![DimensionEntry {
-                        ident: to_snakecase(dim),
-                        value: 1,
-                    }],
-                }),
-            }));
+        let dimensions = self
+            .quantities
+            .iter()
+            .filter(|d| d.is_base_dimension())
+            .map(|d| d.dimension_entry_name())
+            .collect();
         let items: Vec<UnresolvedItem> = self
             .quantities
             .iter()
@@ -63,14 +56,13 @@ impl UnresolvedDefs {
         let quantities = convert_vec_to_resolved(self.quantities, &mut resolved_items);
         let units = convert_vec_to_resolved(self.units, &mut resolved_items);
         let constants = convert_vec_to_resolved(self.constants, &mut resolved_items);
-        let dimensions = self.dimensions;
         Defs {
             dimension_type,
             quantity_type,
-            dimensions,
             quantities,
             units,
             constants,
+            dimensions,
         }
     }
 }

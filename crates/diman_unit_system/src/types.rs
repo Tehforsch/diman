@@ -1,6 +1,6 @@
 use syn::*;
 
-use crate::expression::Expr;
+use crate::{derive_dimension::to_snakecase, expression::Expr};
 
 pub struct Prefix {
     pub name: String,
@@ -38,6 +38,7 @@ pub type UnitExpression = Expr<UnitFactor, IntExponent>;
 pub enum QuantityDefinition {
     Dimensions(Dimensions),
     Expression(QuantityExpression),
+    Base,
 }
 
 pub struct UnitEntry {
@@ -53,18 +54,25 @@ pub struct QuantityEntry {
     pub rhs: QuantityDefinition,
 }
 
+impl QuantityEntry {
+    pub fn is_base_dimension(&self) -> bool {
+        matches!(self.rhs, QuantityDefinition::Base)
+    }
+
+    pub fn dimension_entry_name(&self) -> Ident {
+        to_snakecase(&self.name)
+    }
+}
+
 pub struct ConstantEntry {
     pub name: Ident,
     pub rhs: UnitExpression,
     pub dimension_annotation: Option<Ident>,
 }
 
-pub type DimensionEntry2 = Ident;
-
 pub struct UnresolvedDefs {
     pub dimension_types: Vec<Ident>,
     pub quantity_types: Vec<Ident>,
-    pub dimensions: Vec<DimensionEntry2>,
     pub quantities: Vec<QuantityEntry>,
     pub units: Vec<UnitEntry>,
     pub constants: Vec<ConstantEntry>,
@@ -91,8 +99,14 @@ pub struct Constant {
 pub struct Defs {
     pub dimension_type: Ident,
     pub quantity_type: Ident,
-    pub dimensions: Vec<DimensionEntry2>,
     pub quantities: Vec<Quantity>,
     pub units: Vec<Unit>,
     pub constants: Vec<Constant>,
+    pub dimensions: Vec<Ident>,
+}
+
+impl Defs {
+    pub fn dimensions(&self) -> impl Iterator<Item = &Ident> + '_ {
+        self.dimensions.iter()
+    }
 }

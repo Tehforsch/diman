@@ -55,6 +55,7 @@ pub type UnitExpression = Expr<UnitFactor, Exponent>;
 pub enum QuantityDefinition {
     Dimensions(Dimensions),
     Expression(QuantityExpression),
+    Base,
 }
 
 #[derive(Verify)]
@@ -74,8 +75,6 @@ pub struct QuantityEntry {
     pub rhs: QuantityDefinition,
 }
 
-pub type DimensionEntry2 = Ident;
-
 #[derive(Verify)]
 #[verified(crate::types::ConstantEntry)]
 pub struct ConstantEntry {
@@ -85,7 +84,6 @@ pub struct ConstantEntry {
 }
 
 pub enum Entry {
-    Dimension(DimensionEntry2),
     QuantityType(Ident),
     DimensionType(Ident),
     Quantity(QuantityEntry),
@@ -98,7 +96,6 @@ pub enum Entry {
 pub struct Defs {
     pub dimension_types: Vec<Ident>,
     pub quantity_types: Vec<Ident>,
-    pub dimensions: Vec<DimensionEntry2>,
     pub quantities: Vec<QuantityEntry>,
     pub units: Vec<UnitEntry>,
     pub constants: Vec<ConstantEntry>,

@@ -6,8 +6,8 @@ use ::diman::unit_system;
 unit_system!(
     quantity_type Quantity,
     dimension_type Dimension,
-    def Dimensionless = {},
-    def Length = 2.0 / Dimensionless,
+    dimension Dimensionless = {},
+    dimension Length = 2.0 / Dimensionless,
 );
 
 fn main() {

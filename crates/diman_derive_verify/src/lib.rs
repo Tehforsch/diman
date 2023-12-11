@@ -96,6 +96,9 @@ fn gen_verify_impl(data: &Data, t: &Path) -> TokenStream {
                 .iter()
                 .map(|variant| {
                     let ident = &variant.ident;
+                    if variant.fields.is_empty() {
+                        return quote! { Self::#ident => #t::#ident };
+                    }
                     let fields_match: TokenStream = variant
                         .fields
                         .iter()

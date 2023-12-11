@@ -24,9 +24,8 @@ use self::{
 };
 
 pub mod keywords {
-    syn::custom_keyword!(def);
-    syn::custom_keyword!(unit);
     syn::custom_keyword!(dimension);
+    syn::custom_keyword!(unit);
     syn::custom_keyword!(quantity_type);
     syn::custom_keyword!(dimension_type);
     syn::custom_keyword!(constant);
@@ -128,10 +127,16 @@ impl Parse for QuantityIdent {
 impl Parse for QuantityDefinition {
     fn parse(input: ParseStream) -> Result<Self> {
         let lookahead = input.lookahead1();
-        if lookahead.peek(Brace) {
-            Ok(Self::Dimensions(input.parse()?))
+        if lookahead.peek(AssignmentToken) {
+            let _: AssignmentToken = input.parse()?;
+            let lookahead = input.lookahead1();
+            if lookahead.peek(Brace) {
+                Ok(Self::Dimensions(input.parse()?))
+            } else {
+                Ok(Self::Expression(input.parse()?))
+            }
         } else {
-            Ok(Self::Expression(input.parse()?))
+            Ok(Self::Base)
         }
     }
 }
@@ -200,7 +205,6 @@ impl Parse for Dimensions {
 impl Parse for QuantityEntry {
     fn parse(input: ParseStream) -> Result<Self> {
         let name = input.parse()?;
-        let _: AssignmentToken = input.parse()?;
         let rhs = input.parse()?;
         Ok(Self { name, rhs })
     }
@@ -229,9 +233,6 @@ impl Parse for Entry {
             Ok(Self::DimensionType(input.parse()?))
         } else if input.peek(kw::dimension) {
             let _ = input.parse::<kw::dimension>()?;
-            Ok(Self::Dimension(input.parse()?))
-        } else if input.peek(kw::def) {
-            let _ = input.parse::<kw::def>()?;
             Ok(Self::Quantity(input.parse()?))
         } else if input.peek(kw::unit) {
             let _ = input.parse::<kw::unit>()?;
@@ -305,7 +306,6 @@ impl Parse for Defs {
         let mut quantities = vec![];
         let mut units = vec![];
         let mut constants = vec![];
-        let mut dimensions = vec![];
         let mut quantity_types = vec![];
         let mut dimension_types = vec![];
         for item in input
@@ -316,7 +316,6 @@ impl Parse for Defs {
                 Entry::Quantity(q) => quantities.push(q),
                 Entry::Unit(u) => units.push(u),
                 Entry::Constant(c) => constants.push(c),
-                Entry::Dimension(dim) => dimensions.push(dim),
                 Entry::QuantityType(q) => quantity_types.push(q),
                 Entry::DimensionType(d) => dimension_types.push(d),
             }
@@ -324,7 +323,6 @@ impl Parse for Defs {
         Ok(Self {
             dimension_types,
             quantity_types,
-            dimensions,
             quantities,
             units,
             constants,

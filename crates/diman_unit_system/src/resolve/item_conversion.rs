@@ -3,8 +3,8 @@ use syn::Ident;
 use crate::{
     dimension_math::DimensionsAndFactor,
     types::{
-        Constant, ConstantEntry, Dimensions, Quantity, QuantityDefinition, QuantityEntry,
-        QuantityIdent, Unit, UnitEntry, UnitFactor,
+        Constant, ConstantEntry, DimensionEntry, Dimensions, Quantity, QuantityDefinition,
+        QuantityEntry, QuantityIdent, Unit, UnitEntry, UnitFactor,
     },
 };
 
@@ -36,6 +36,15 @@ impl ItemConversion for QuantityEntry {
                     QuantityIdent::Quantity(ident) => IdentOrFactor::Ident(ident),
                 }))
             }
+            QuantityDefinition::Base => ValueOrExpr::Value(DimensionsAndFactor {
+                dimensions: Dimensions {
+                    fields: vec![DimensionEntry {
+                        ident: self.dimension_entry_name(),
+                        value: 1,
+                    }],
+                },
+                factor: 1.0,
+            }),
         };
         UnresolvedItem {
             name: self.name.clone(),
