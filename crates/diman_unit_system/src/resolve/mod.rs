@@ -248,7 +248,6 @@ impl Resolvable for DimensionEntry {
 
     fn expr(&self) -> crate::expression::Expr<Factor<Self::Dim>, crate::types::IntExponent> {
         match &self.rhs {
-            DimensionDefinition::BaseDimensions(_) => todo!("what"),
             DimensionDefinition::Expression(expr) => expr.clone().map(|e| match e {
                 DimensionIdent::One => Factor::Concrete(BaseDimensions::none()),
                 DimensionIdent::Dimension(ident) => Factor::Other(ident),
@@ -307,7 +306,7 @@ impl Resolvable for UnitEntry {
     fn expr(&self) -> crate::expression::Expr<Factor<Self::Dim>, crate::types::IntExponent> {
         let expr = self.rhs.as_ref().unwrap(); // We filtered out all base units at this point
         expr.clone().map(|e| match e {
-            UnitFactor::UnitOrDimension(ident) => Factor::Other(ident),
+            UnitFactor::Unit(ident) => Factor::Other(ident),
             UnitFactor::Number(num) => Factor::Concrete(DimensionsAndFactor::factor(num)),
         })
     }
@@ -352,7 +351,7 @@ impl Resolvable for ConstantEntry {
 
     fn expr(&self) -> crate::expression::Expr<Factor<Self::Dim>, crate::types::IntExponent> {
         self.rhs.clone().map(|e| match e {
-            UnitFactor::UnitOrDimension(ident) => Factor::Other(ident),
+            UnitFactor::Unit(ident) => Factor::Other(ident),
             UnitFactor::Number(num) => Factor::Concrete(DimensionsAndFactor::factor(num)),
         })
     }

@@ -6,7 +6,7 @@ unit_system!(
     quantity_type Quantity,
     dimension_type Dimension,
     dimension Mass,
-    unit kilograms = Mass,
+    unit kilograms: Mass,
     unit foo: Mass = kilograms * kilograms,
 );
 

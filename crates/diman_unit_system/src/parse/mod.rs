@@ -4,7 +4,7 @@ use syn::{
     braced, bracketed, parenthesized,
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    token::{self, Brace, Bracket, Paren},
+    token::{self, Bracket, Paren},
     Error, Ident, Lit, Result,
 };
 
@@ -104,7 +104,7 @@ impl Parse for UnitFactor {
     fn parse(input: ParseStream) -> Result<Self> {
         let lookahead = input.lookahead1();
         if lookahead.peek(Ident) {
-            Ok(Self::UnitOrDimension(input.parse()?))
+            Ok(Self::Unit(input.parse()?))
         } else if lookahead.peek(Lit) {
             Ok(Self::Number(input.parse()?))
         } else {
@@ -129,12 +129,7 @@ impl Parse for DimensionDefinition {
         let lookahead = input.lookahead1();
         if lookahead.peek(AssignmentToken) {
             let _: AssignmentToken = input.parse()?;
-            let lookahead = input.lookahead1();
-            if lookahead.peek(Brace) {
-                Ok(Self::BaseDimensions(input.parse()?))
-            } else {
-                Ok(Self::Expression(input.parse()?))
-            }
+            Ok(Self::Expression(input.parse()?))
         } else {
             Ok(Self::Base)
         }

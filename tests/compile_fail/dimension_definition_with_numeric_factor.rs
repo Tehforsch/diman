@@ -6,7 +6,7 @@ use ::diman::unit_system;
 unit_system!(
     quantity_type Quantity,
     dimension_type Dimension,
-    dimension Dimensionless = {},
+    dimension Dimensionless = 1,
     dimension Length = 2.0 / Dimensionless,
 );
 

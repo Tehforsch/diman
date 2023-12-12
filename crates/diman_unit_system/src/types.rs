@@ -30,7 +30,7 @@ pub type DimensionExpression = Expr<DimensionIdent, IntExponent>;
 
 #[derive(Clone)]
 pub enum UnitFactor {
-    UnitOrDimension(Ident),
+    Unit(Ident),
     Number(f64),
 }
 
@@ -38,7 +38,6 @@ pub type UnitExpression = Expr<UnitFactor, IntExponent>;
 
 #[derive(Clone)]
 pub enum DimensionDefinition {
-    BaseDimensions(BaseDimensions),
     Expression(DimensionExpression),
     Base,
 }

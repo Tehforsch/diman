@@ -44,7 +44,7 @@ pub type DimensionExpression = Expr<DimensionIdent, Exponent>;
 #[derive(Verify)]
 #[verified(crate::types::UnitFactor)]
 pub enum UnitFactor {
-    UnitOrDimension(Ident),
+    Unit(Ident),
     Number(LitFactor),
 }
 
@@ -53,7 +53,6 @@ pub type UnitExpression = Expr<UnitFactor, Exponent>;
 #[derive(Verify)]
 #[verified(crate::types::DimensionDefinition)]
 pub enum DimensionDefinition {
-    BaseDimensions(BaseDimensions),
     Expression(DimensionExpression),
     Base,
 }
