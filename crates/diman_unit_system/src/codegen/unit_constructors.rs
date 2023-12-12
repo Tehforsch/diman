@@ -9,7 +9,7 @@ use crate::{
 impl Defs {
     pub fn unit_constructors(&self) -> TokenStream {
         self.units.iter().map(|unit| {
-            let dimension = self.get_dimension_expr(&unit.dimension);
+            let dimension = self.get_dimension_expr(&unit.dimensions);
             let quantity_type = &self.quantity_type;
             let unit_name = &unit.name;
             let factor = &unit.factor;

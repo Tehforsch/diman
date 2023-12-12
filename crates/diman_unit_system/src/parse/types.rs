@@ -64,7 +64,7 @@ pub struct UnitEntry {
     pub name: Ident,
     pub symbol: Option<Symbol>,
     pub prefixes: Prefixes,
-    pub rhs: UnitExpression,
+    pub rhs: Option<UnitExpression>,
     pub dimension_annotation: Option<Ident>,
 }
 

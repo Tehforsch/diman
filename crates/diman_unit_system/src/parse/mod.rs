@@ -19,7 +19,7 @@ use self::{
     types::{
         BaseDimensionEntry, BaseDimensions, ConstantEntry, Defs, DimensionDefinition,
         DimensionEntry, DimensionIdent, DimensionInt, Entry, Exponent, LitFactor, Prefix, Prefixes,
-        Symbol, UnitEntry, UnitExpression, UnitFactor,
+        Symbol, UnitEntry, UnitFactor,
     },
 };
 
@@ -166,7 +166,14 @@ impl Parse for UnitEntry {
         } else {
             return Err(lookahead.error());
         }
-        let (rhs, dimension_annotation) = parse_unit_rhs_and_annotation(input)?;
+        let dimension_annotation = parse_annotation(input)?;
+        let lookahead = input.lookahead1();
+        let rhs = if lookahead.peek(AssignmentToken) {
+            let _: AssignmentToken = input.parse()?;
+            Some(input.parse()?)
+        } else {
+            None
+        };
         Ok(Self {
             name,
             symbol,
@@ -177,7 +184,7 @@ impl Parse for UnitEntry {
     }
 }
 
-fn parse_unit_rhs_and_annotation(input: ParseStream) -> Result<(UnitExpression, Option<Ident>)> {
+fn parse_annotation(input: ParseStream) -> Result<Option<Ident>> {
     let lookahead = input.lookahead1();
     let dimension_annotation = if lookahead.peek(TypeAnnotationToken) {
         let _: TypeAnnotationToken = input.parse()?;
@@ -185,9 +192,7 @@ fn parse_unit_rhs_and_annotation(input: ParseStream) -> Result<(UnitExpression, 
     } else {
         None
     };
-    let _: AssignmentToken = input.parse()?;
-    let rhs: UnitExpression = input.parse()?;
-    Ok((rhs, dimension_annotation))
+    Ok(dimension_annotation)
 }
 
 impl Parse for BaseDimensions {
@@ -213,7 +218,9 @@ impl Parse for DimensionEntry {
 impl Parse for ConstantEntry {
     fn parse(input: ParseStream) -> Result<Self> {
         let name = input.parse()?;
-        let (rhs, dimension_annotation) = parse_unit_rhs_and_annotation(input)?;
+        let dimension_annotation = parse_annotation(input)?;
+        let _: AssignmentToken = input.parse()?;
+        let rhs = input.parse()?;
         Ok(Self {
             name,
             rhs,

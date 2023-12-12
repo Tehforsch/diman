@@ -9,7 +9,7 @@ impl Defs {
             .units
             .iter()
             .filter_map(|unit| {
-                let dim = self.get_dimension_expr(&unit.dimension);
+                let dim = self.get_dimension_expr(&unit.dimensions);
                 let factor = unit.factor;
                 let symbol = unit.symbol.as_ref()?;
                 Some(quote! {

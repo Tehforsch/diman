@@ -2,6 +2,7 @@ use syn::*;
 
 use crate::{derive_dimension::to_snakecase, expression::Expr};
 
+#[derive(Clone)]
 pub struct Prefix {
     pub name: String,
 }
@@ -35,20 +36,29 @@ pub enum UnitFactor {
 
 pub type UnitExpression = Expr<UnitFactor, IntExponent>;
 
+#[derive(Clone)]
 pub enum DimensionDefinition {
     BaseDimensions(BaseDimensions),
     Expression(DimensionExpression),
     Base,
 }
 
+#[derive(Clone)]
 pub struct UnitEntry {
     pub name: Ident,
     pub symbol: Option<String>,
     pub prefixes: Vec<Prefix>,
-    pub rhs: UnitExpression,
+    pub rhs: Option<UnitExpression>,
     pub dimension_annotation: Option<Ident>,
 }
 
+impl UnitEntry {
+    pub fn is_base_unit(&self) -> bool {
+        self.rhs.is_none()
+    }
+}
+
+#[derive(Clone)]
 pub struct DimensionEntry {
     pub name: Ident,
     pub rhs: DimensionDefinition,
@@ -64,6 +74,7 @@ impl DimensionEntry {
     }
 }
 
+#[derive(Clone)]
 pub struct ConstantEntry {
     pub name: Ident,
     pub rhs: UnitExpression,
@@ -85,7 +96,7 @@ pub struct Dimension {
 
 pub struct Unit {
     pub name: Ident,
-    pub dimension: BaseDimensions,
+    pub dimensions: BaseDimensions,
     pub factor: f64,
     pub symbol: Option<String>,
 }
