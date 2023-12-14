@@ -18,8 +18,8 @@ use crate::{
 
 use self::{
     error::{
-        Emit, Error, MultipleTypeDefinitionsError, Result, UndefinedAnnotationDimensionError,
-        ViolatedAnnotationError,
+        Emit, MultipleDefinitionsError, MultipleTypeDefinitionsError,
+        UndefinedAnnotationDimensionError, UndefinedError, ViolatedAnnotationError,
     },
     resolver::{Factor, Named, Resolvable, Resolved, Resolver},
 };
@@ -160,13 +160,15 @@ impl Resolved<DimensionsAndFactor> for Unit {
     }
 }
 
-fn filter_multiply_defined_identifiers<R: Resolvable>(items: Vec<R>) -> (Vec<R>, Result<()>) {
+fn filter_multiply_defined_identifiers<R: Resolvable>(
+    items: Vec<R>,
+) -> (Vec<R>, Result<(), MultipleDefinitionsError>) {
     let mut counter: HashMap<_, usize> = items.iter().map(|item| (item.ident(), 0)).collect();
     for item in items.iter() {
         *counter.get_mut(item.ident()).unwrap() += 1;
     }
     let err = if items.iter().any(|item| counter[item.ident()] > 1) {
-        Err(Error::Multiple(
+        Err(MultipleDefinitionsError(
             counter
                 .iter()
                 .filter(|(_, count)| **count > 1)
@@ -202,7 +204,7 @@ fn get_rhs_idents(item: &impl Resolvable) -> Vec<Ident> {
 fn filter_undefined_identifiers<R: Resolvable>(
     items: Vec<R>,
     known: &HashSet<Ident>,
-) -> (Vec<R>, Result<()>) {
+) -> (Vec<R>, Result<(), UndefinedError>) {
     let (defined, undefined): (Vec<_>, Vec<_>) = items.into_iter().partition(|item| {
         get_rhs_idents(item)
             .iter()
@@ -221,7 +223,7 @@ fn filter_undefined_identifiers<R: Resolvable>(
                 }
             }
         }
-        Err(Error::Undefined(undefined_rhs))
+        Err(UndefinedError(undefined_rhs))
     };
     (defined, err)
 }

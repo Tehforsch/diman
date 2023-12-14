@@ -7,7 +7,7 @@ use crate::{
     types::IntExponent,
 };
 
-use super::{error::Error, error::Result};
+use super::error::UnresolvableError;
 
 pub enum Factor<D> {
     Concrete(D),
@@ -57,7 +57,7 @@ impl<R: Resolvable> Resolver<R> {
     pub fn resolve(
         unresolved: Vec<R>,
         given: HashMap<Ident, R::Dim>,
-    ) -> (HashMap<Ident, R::Dim>, Result<()>) {
+    ) -> (HashMap<Ident, R::Dim>, Result<(), UnresolvableError>) {
         let mut resolver = Self {
             unresolved,
             resolved: given,
@@ -66,7 +66,7 @@ impl<R: Resolvable> Resolver<R> {
         (resolver.resolved, result)
     }
 
-    fn run(&mut self) -> Result<()> {
+    fn run(&mut self) -> Result<(), UnresolvableError> {
         // This is a very inefficient topological sort.
         while !self.unresolved.is_empty() {
             let next_resolvable = self
@@ -80,7 +80,7 @@ impl<R: Resolvable> Resolver<R> {
                 let resolved = resolve(next_resolvable, &self.resolved);
                 self.resolved.insert(name, resolved);
             } else {
-                return Err(Error::Unresolvable(
+                return Err(UnresolvableError(
                     self.unresolved
                         .drain(..)
                         .map(|x| x.ident().clone())

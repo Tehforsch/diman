@@ -5,11 +5,9 @@ use syn::Ident;
 
 use crate::types::BaseDimensions;
 
-pub enum Error {
-    Unresolvable(Vec<Ident>),
-    Undefined(Vec<Ident>),
-    Multiple(Vec<Vec<Ident>>),
-}
+pub struct UnresolvableError(pub Vec<Ident>);
+pub struct UndefinedError(pub Vec<Ident>);
+pub struct MultipleDefinitionsError(pub Vec<Vec<Ident>>);
 
 pub struct MultipleTypeDefinitionsError {
     pub type_name: &'static str,
@@ -23,8 +21,6 @@ pub struct ViolatedAnnotationError<'a> {
 }
 
 pub struct UndefinedAnnotationDimensionError<'a>(pub &'a Ident);
-
-pub type Result<T> = std::result::Result<T, Error>;
 
 pub trait Emit {
     fn emit(self);
@@ -103,48 +99,44 @@ impl<'a> Emit for UndefinedAnnotationDimensionError<'a> {
     }
 }
 
-impl Emit for Error {
+impl Emit for UndefinedError {
     fn emit(self) {
-        match self {
-            Error::Unresolvable(idents) => emit_unresolvable(idents),
-            Error::Undefined(idents) => emit_undefined(idents),
-            Error::Multiple(idents) => emit_multiple(idents),
+        for ident in self.0 {
+            ident
+                .span()
+                .unwrap()
+                .error(format!("Undefined identifier \"{}\".", ident))
+                .emit();
         }
     }
 }
 
-fn emit_undefined(idents: Vec<Ident>) {
-    for ident in idents {
-        ident
-            .span()
-            .unwrap()
-            .error(format!("Undefined identifier \"{}\".", ident))
-            .emit();
+impl Emit for UnresolvableError {
+    fn emit(self) {
+        for ident in self.0 {
+            ident
+                .span()
+                .unwrap()
+                .error(format!("Unresolvable definition \"{}\".", ident))
+                .help("Remove recursive definitions.")
+                .emit();
+        }
     }
 }
 
-fn emit_unresolvable(idents: Vec<Ident>) {
-    for ident in idents {
-        ident
-            .span()
-            .unwrap()
-            .error(format!("Unresolvable definition \"{}\".", ident))
-            .help("Remove recursive definitions.")
+impl Emit for MultipleDefinitionsError {
+    fn emit(self) {
+        for idents in self.0 {
+            let name = &idents[0];
+            Diagnostic::spanned(
+                idents
+                    .iter()
+                    .map(|ident| ident.span().unwrap())
+                    .collect::<Vec<_>>(),
+                Level::Error,
+                format!("Identifier \"{}\" defined multiple times.", name),
+            )
             .emit();
-    }
-}
-
-fn emit_multiple(idents: Vec<Vec<Ident>>) {
-    for idents in idents {
-        let name = &idents[0];
-        Diagnostic::spanned(
-            idents
-                .iter()
-                .map(|ident| ident.span().unwrap())
-                .collect::<Vec<_>>(),
-            Level::Error,
-            format!("Identifier \"{}\" defined multiple times.", name),
-        )
-        .emit();
+        }
     }
 }
