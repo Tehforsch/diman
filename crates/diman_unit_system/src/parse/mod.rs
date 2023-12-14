@@ -1,5 +1,3 @@
-pub mod types;
-
 use syn::{
     parenthesized,
     parse::{Parse, ParseStream},
@@ -7,17 +5,18 @@ use syn::{
     Error, Ident, Lit, Result,
 };
 
-use crate::expression::{BinaryOperator, Expr, Factor, Operator};
+use crate::{
+    expression::{BinaryOperator, Expr, Factor, Operator},
+    types::{IntExponent, UnresolvedDefs},
+};
 
-use self::{
-    tokens::{
-        AssignmentToken, DivisionToken, ExponentiationToken, MultiplicationToken,
-        StatementSeparator, TypeAnnotationToken, UnitDefDelimiter, UnitDefSeparator,
-    },
-    types::{
-        ConstantEntry, Defs, DimensionDefinition, DimensionEntry, DimensionIdent, Entry, Exponent,
-        Number, One, Symbol, UnitEntry, UnitFactor,
-    },
+use self::tokens::{
+    AssignmentToken, DivisionToken, ExponentiationToken, MultiplicationToken, StatementSeparator,
+    TypeAnnotationToken, UnitDefDelimiter, UnitDefSeparator,
+};
+
+use super::types::{
+    ConstantEntry, DimensionDefinition, DimensionEntry, DimensionIdent, UnitEntry, UnitFactor,
 };
 
 pub mod keywords {
@@ -42,29 +41,34 @@ pub mod tokens {
     syn::custom_punctuation!(StatementSeparator, ,);
 }
 
+pub struct Number {
+    pub lit: Lit,
+    pub float: f64,
+}
+
+pub struct Int {
+    pub lit: Lit,
+    pub int: i32,
+}
+
+pub struct One;
+
+pub struct Exponent(i32);
+
+#[derive(Clone)]
+pub struct Symbol(pub Lit);
+
+pub enum Entry {
+    QuantityType(Ident),
+    DimensionType(Ident),
+    Dimension(DimensionEntry),
+    Unit(UnitEntry),
+    Constant(ConstantEntry),
+}
+
 impl Parse for Symbol {
     fn parse(input: ParseStream) -> Result<Self> {
         Ok(Self(input.parse()?))
-    }
-}
-
-impl Parse for Exponent {
-    fn parse(input: ParseStream) -> Result<Self> {
-        Ok(Self(input.parse()?))
-    }
-}
-
-impl Parse for UnitFactor {
-    fn parse(input: ParseStream) -> Result<Self> {
-        let lookahead = input.lookahead1();
-        if lookahead.peek(Ident) {
-            Ok(Self::Unit(input.parse()?))
-        } else if lookahead.peek(Lit) {
-            let factor: Number = input.parse()?;
-            Ok(Self::Number(factor.float))
-        } else {
-            Err(lookahead.error())
-        }
     }
 }
 
@@ -96,10 +100,45 @@ impl Parse for Number {
     }
 }
 
+impl Parse for Int {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let lit = input.parse()?;
+        let int = match lit {
+            Lit::Int(ref int) => int.base10_parse::<i32>(),
+            _ => Err(Error::new(
+                lit.span(),
+                "Unexpected literal, expected a numerical value".to_string(),
+            )),
+        }?;
+        Ok(Self { lit, int })
+    }
+}
+
 impl Parse for One {
     fn parse(input: ParseStream) -> Result<Self> {
         let n: Number = input.parse()?;
         n.as_one()
+    }
+}
+
+impl Parse for Exponent {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let int: Int = input.parse()?;
+        Ok(Self(int.int))
+    }
+}
+
+impl Parse for UnitFactor {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let lookahead = input.lookahead1();
+        if lookahead.peek(Ident) {
+            Ok(Self::Unit(input.parse()?))
+        } else if lookahead.peek(Lit) {
+            let factor: Number = input.parse()?;
+            Ok(Self::Number(factor.float))
+        } else {
+            Err(lookahead.error())
+        }
     }
 }
 
@@ -115,12 +154,17 @@ impl Parse for DimensionIdent {
     }
 }
 
+fn parse_int_exponent_expr<T: Parse>(input: ParseStream) -> Result<Expr<T, IntExponent>> {
+    let expr: Expr<T, Exponent> = input.parse()?;
+    Ok(expr.map_exp(|e| e.0))
+}
+
 impl Parse for DimensionDefinition {
     fn parse(input: ParseStream) -> Result<Self> {
         let lookahead = input.lookahead1();
         if lookahead.peek(AssignmentToken) {
             let _: AssignmentToken = input.parse()?;
-            Ok(Self::Expression(input.parse()?))
+            Ok(Self::Expression(parse_int_exponent_expr(input)?))
         } else {
             Ok(Self::Base)
         }
@@ -154,7 +198,7 @@ impl Parse for UnitEntry {
         let lookahead = input.lookahead1();
         let rhs = if lookahead.peek(AssignmentToken) {
             let _: AssignmentToken = input.parse()?;
-            Some(input.parse()?)
+            Some(parse_int_exponent_expr(input)?)
         } else {
             None
         };
@@ -191,7 +235,7 @@ impl Parse for ConstantEntry {
         let name = input.parse()?;
         let dimension_annotation = parse_annotation(input)?;
         let _: AssignmentToken = input.parse()?;
-        let rhs = input.parse()?;
+        let rhs = parse_int_exponent_expr(input)?;
         Ok(Self {
             name,
             rhs,
@@ -279,7 +323,7 @@ impl<T: Parse, E: Parse> Parse for Expr<T, E> {
     }
 }
 
-impl Parse for Defs {
+impl Parse for UnresolvedDefs {
     fn parse(input: ParseStream) -> Result<Self> {
         let mut dimensions = vec![];
         let mut units = vec![];

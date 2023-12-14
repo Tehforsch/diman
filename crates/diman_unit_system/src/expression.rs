@@ -65,6 +65,23 @@ impl<T, E> Expr<T, E> {
         }
     }
 
+    pub fn map_exp<E2, F>(self, f: F) -> Expr<T, E2>
+    where
+        F: Fn(E) -> E2 + Clone,
+    {
+        match self {
+            Expr::Value(val) => Expr::Value(val.map_exp(f)),
+            Expr::Binary(bin) => {
+                let bin = BinaryOperator {
+                    lhs: Box::new(bin.lhs.map_exp(f.clone())),
+                    rhs: bin.rhs.map_exp(f.clone()),
+                    operator: bin.operator,
+                };
+                Expr::Binary(bin)
+            }
+        }
+    }
+
     pub fn iter_vals<'a>(&'a self) -> Box<dyn Iterator<Item = &'a T> + 'a> {
         match self {
             Expr::Value(val) => Box::new(val.iter_vals()),
@@ -82,6 +99,17 @@ impl<T, E> Factor<T, E> {
             Factor::Value(val) => Factor::Value(f(val)),
             Factor::ParenExpr(expr) => Factor::ParenExpr(Box::new(expr.map(f))),
             Factor::Power(val, exponent) => Factor::Power(f(val), exponent),
+        }
+    }
+
+    pub fn map_exp<E2, F>(self, f: F) -> Factor<T, E2>
+    where
+        F: Fn(E) -> E2 + Clone,
+    {
+        match self {
+            Factor::Value(val) => Factor::Value(val),
+            Factor::ParenExpr(expr) => Factor::ParenExpr(Box::new(expr.map_exp(f))),
+            Factor::Power(val, exponent) => Factor::Power(val, f(exponent)),
         }
     }
 

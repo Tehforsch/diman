@@ -8,11 +8,9 @@ mod parse;
 mod resolve;
 mod storage_types;
 mod types;
-mod verify;
 
 use proc_macro2::TokenStream;
 use syn::*;
-use verify::Verify;
 
 // To properly do this doctest, I probably need to document this in diman itself so I can use the
 // dimension. Also, a surrounding module around dimension/unit_system is needed to make the doctest work
@@ -49,15 +47,9 @@ use verify::Verify;
 /// ```
 #[proc_macro]
 pub fn unit_system(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let defs = parse_macro_input!(item as parse::types::Defs);
-    let defs: Result<types::UnresolvedDefs> = defs.verify();
-    match defs {
-        Err(err) => err.to_compile_error().into(),
-        Ok(defs) => {
-            let resolved = defs.resolve();
-            let dimension_impl = resolved.dimension_impl();
-            let impls: TokenStream = resolved.code_gen().into();
-            self::codegen::join([dimension_impl.into(), impls.into()]).into()
-        }
-    }
+    let defs = parse_macro_input!(item as types::UnresolvedDefs);
+    let resolved = defs.resolve();
+    let dimension_impl = resolved.dimension_impl();
+    let impls: TokenStream = resolved.code_gen().into();
+    self::codegen::join([dimension_impl.into(), impls.into()]).into()
 }

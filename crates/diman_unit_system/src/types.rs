@@ -2,12 +2,7 @@ use std::collections::HashMap;
 
 use syn::*;
 
-use crate::{derive_dimension::to_snakecase, expression::Expr};
-
-#[derive(Clone)]
-pub struct Prefix {
-    pub name: String,
-}
+use crate::{derive_dimension::to_snakecase, expression::Expr, parse::Symbol};
 
 #[derive(Clone)]
 pub struct BaseDimensions {
@@ -53,7 +48,7 @@ pub enum DimensionDefinition {
 #[derive(Clone)]
 pub struct UnitEntry {
     pub name: Ident,
-    pub symbol: Option<String>,
+    pub symbol: Option<Symbol>,
     pub rhs: Option<UnitExpression>,
     pub dimension_annotation: Option<Ident>,
 }
@@ -98,7 +93,7 @@ pub struct Unit {
     pub name: Ident,
     pub dimensions: BaseDimensions,
     pub factor: f64,
-    pub symbol: Option<String>,
+    pub symbol: Option<Symbol>,
 }
 
 pub struct Constant {
