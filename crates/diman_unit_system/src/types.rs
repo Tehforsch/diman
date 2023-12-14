@@ -54,7 +54,6 @@ pub enum DimensionDefinition {
 pub struct UnitEntry {
     pub name: Ident,
     pub symbol: Option<String>,
-    pub prefixes: Vec<Prefix>,
     pub rhs: Option<UnitExpression>,
     pub dimension_annotation: Option<Ident>,
 }

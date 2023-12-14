@@ -1,10 +1,9 @@
 pub mod types;
 
 use syn::{
-    bracketed, parenthesized,
+    parenthesized,
     parse::{Parse, ParseStream},
-    punctuated::Punctuated,
-    token::{self, Bracket, Paren},
+    token::{self, Paren},
     Error, Ident, Lit, Result,
 };
 
@@ -17,7 +16,7 @@ use self::{
     },
     types::{
         ConstantEntry, Defs, DimensionDefinition, DimensionEntry, DimensionIdent, DimensionInt,
-        Entry, Exponent, LitFactor, Prefix, Prefixes, Symbol, UnitEntry, UnitFactor,
+        Entry, Exponent, LitFactor, Symbol, UnitEntry, UnitFactor,
     },
 };
 
@@ -68,27 +67,6 @@ impl Parse for Exponent {
     }
 }
 
-impl Parse for Prefix {
-    fn parse(input: ParseStream) -> Result<Self> {
-        let lookahead = input.lookahead1();
-        if lookahead.peek(Ident) {
-            Ok(Self::Ident(input.parse()?))
-        } else if lookahead.peek(Lit) {
-            Ok(Self::Lit(input.parse()?))
-        } else {
-            Err(lookahead.error())
-        }
-    }
-}
-
-impl Parse for Prefixes {
-    fn parse(input: ParseStream) -> Result<Self> {
-        let content;
-        let _: Bracket = bracketed!( content in input );
-        Ok(Prefixes(content.parse_terminated(Prefix::parse)?))
-    }
-}
-
 impl Parse for UnitFactor {
     fn parse(input: ParseStream) -> Result<Self> {
         let lookahead = input.lookahead1();
@@ -130,7 +108,6 @@ impl Parse for UnitEntry {
         let lookahead = input.lookahead1();
         let name;
         let symbol;
-        let mut prefixes = Prefixes(Punctuated::new());
         if lookahead.peek(Ident) {
             name = input.parse()?;
             symbol = None;
@@ -143,7 +120,6 @@ impl Parse for UnitEntry {
             let lookahead = content.lookahead1();
             if lookahead.peek(UnitDefSeparator) {
                 let _: UnitDefSeparator = content.parse()?;
-                prefixes = content.parse()?;
             } else if !content.is_empty() {
                 return Err(lookahead.error());
             }
@@ -161,7 +137,6 @@ impl Parse for UnitEntry {
         Ok(Self {
             name,
             symbol,
-            prefixes,
             rhs,
             dimension_annotation,
         })

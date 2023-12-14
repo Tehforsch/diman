@@ -1,15 +1,7 @@
 use diman_derive_verify::Verify;
-use syn::{punctuated::Punctuated, *};
+use syn::*;
 
-use super::tokens::PrefixSeparator;
 use crate::expression::Expr;
-
-pub enum Prefix {
-    Ident(Ident),
-    Lit(Lit),
-}
-
-pub struct Prefixes(pub Punctuated<Prefix, PrefixSeparator>);
 
 pub struct DimensionInt(pub Lit);
 
@@ -49,7 +41,6 @@ pub enum DimensionDefinition {
 pub struct UnitEntry {
     pub name: Ident,
     pub symbol: Option<Symbol>,
-    pub prefixes: Prefixes,
     pub rhs: Option<UnitExpression>,
     pub dimension_annotation: Option<Ident>,
 }

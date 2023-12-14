@@ -122,32 +122,6 @@ impl Verify for ptype::Exponent {
     }
 }
 
-impl Verify for ptype::Prefix {
-    type Verified = Prefix;
-
-    fn verify(self) -> Result<Self::Verified> {
-        let name = match self {
-            ptype::Prefix::Ident(s) => Ok(s.to_string()),
-            ptype::Prefix::Lit(s) => match s {
-                Lit::Str(s) => Ok(s.value()),
-                _ => Err(Error::new(
-                    s.span(),
-                    "Unexpected literal, expected a str".to_string(),
-                )),
-            },
-        }?;
-        Ok(Prefix { name })
-    }
-}
-
-impl Verify for ptype::Prefixes {
-    type Verified = Vec<Prefix>;
-
-    fn verify(self) -> Result<Self::Verified> {
-        self.0.into_iter().map(|x| x.verify()).collect()
-    }
-}
-
 impl Verify for ptype::DimensionIdent {
     type Verified = DimensionIdent;
 
