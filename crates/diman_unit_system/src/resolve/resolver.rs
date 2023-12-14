@@ -7,18 +7,14 @@ use crate::{
     types::IntExponent,
 };
 
-use super::error::UnresolvableError;
+use super::{error::UnresolvableError, ident_storage::IdentKind};
 
 pub enum Factor<D> {
     Concrete(D),
     Other(Ident),
 }
 
-pub trait Named {
-    fn ident(&self) -> &Ident;
-}
-
-pub trait Resolvable: Named {
+pub trait Resolvable: IdentKind {
     type Dim: MulDiv;
     type Resolved;
 
@@ -26,7 +22,7 @@ pub trait Resolvable: Named {
     fn into_resolved(self, d: Self::Dim) -> Self::Resolved;
 }
 
-pub trait Resolved<Dim: MulDiv>: Named {
+pub trait Resolved<Dim: MulDiv>: IdentKind {
     fn dims(&self) -> Dim;
 }
 

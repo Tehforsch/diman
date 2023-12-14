@@ -1,7 +1,8 @@
 mod error;
+mod ident_storage;
 mod resolver;
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use proc_macro2::Span;
 use syn::Ident;
@@ -18,10 +19,11 @@ use crate::{
 
 use self::{
     error::{
-        Emit, MultipleDefinitionsError, MultipleTypeDefinitionsError,
-        UndefinedAnnotationDimensionError, UndefinedError, ViolatedAnnotationError,
+        Emit, MultipleTypeDefinitionsError, UndefinedAnnotationDimensionError,
+        ViolatedAnnotationError,
     },
-    resolver::{Factor, Named, Resolvable, Resolved, Resolver},
+    ident_storage::{IdentKind, IdentStorage, Kind},
+    resolver::{Factor, Resolvable, Resolved, Resolver},
 };
 
 fn default_dimension_type() -> Ident {
@@ -160,74 +162,6 @@ impl Resolved<DimensionsAndFactor> for Unit {
     }
 }
 
-fn filter_multiply_defined_identifiers<R: Resolvable>(
-    items: Vec<R>,
-) -> (Vec<R>, Result<(), MultipleDefinitionsError>) {
-    let mut counter: HashMap<_, usize> = items.iter().map(|item| (item.ident(), 0)).collect();
-    for item in items.iter() {
-        *counter.get_mut(item.ident()).unwrap() += 1;
-    }
-    let err = if items.iter().any(|item| counter[item.ident()] > 1) {
-        Err(MultipleDefinitionsError(
-            counter
-                .iter()
-                .filter(|(_, count)| **count > 1)
-                .map(|(multiply_defined_name, _)| {
-                    items
-                        .iter()
-                        .map(|item| item.ident().clone())
-                        .filter(|name| &name == multiply_defined_name)
-                        .collect()
-                })
-                .collect(),
-        ))
-    } else {
-        Ok(())
-    };
-    (items, err)
-}
-
-fn get_rhs_idents(item: &impl Resolvable) -> Vec<Ident> {
-    let mut rhs_idents = vec![];
-    let expr = item.expr();
-    for val in expr.iter_vals() {
-        match val {
-            Factor::Concrete(_) => {}
-            Factor::Other(ident) => {
-                rhs_idents.push(ident.clone());
-            }
-        }
-    }
-    rhs_idents
-}
-
-fn filter_undefined_identifiers<R: Resolvable>(
-    items: Vec<R>,
-    known: &HashSet<Ident>,
-) -> (Vec<R>, Result<(), UndefinedError>) {
-    let (defined, undefined): (Vec<_>, Vec<_>) = items.into_iter().partition(|item| {
-        get_rhs_idents(item)
-            .iter()
-            .all(|rhs_ident| known.contains(rhs_ident))
-    });
-
-    let err = if undefined.is_empty() {
-        Ok(())
-    } else {
-        let mut undefined_rhs = vec![];
-        for item in undefined {
-            let rhs_idents = get_rhs_idents(&item);
-            for rhs_ident in rhs_idents {
-                if !known.contains(&rhs_ident) {
-                    undefined_rhs.push(rhs_ident.clone());
-                }
-            }
-        }
-        Err(UndefinedError(undefined_rhs))
-    };
-    (defined, err)
-}
-
 fn convert_vec_to_resolved<R: Resolvable>(
     ts: Vec<R>,
     items: &mut HashMap<Ident, R::Dim>,
@@ -290,12 +224,6 @@ fn resolve(items: Vec<DimensionEntry>) -> (Vec<Dimension>, HashMap<Ident, BaseDi
     )
 }
 
-fn filter<R: Resolvable + Clone>(items: Vec<R>, all_known: &HashSet<Ident>) -> Vec<R> {
-    let items = emit_errors(filter_undefined_identifiers(items, all_known));
-    let items = emit_errors(filter_multiply_defined_identifiers(items));
-    items
-}
-
 impl UnresolvedDefs {
     pub fn resolve(mut self) -> Defs {
         let quantity_type = emit_errors(get_single_ident(
@@ -308,13 +236,10 @@ impl UnresolvedDefs {
             "dimension type",
             default_dimension_type,
         ));
-        let mut known_names = HashSet::default();
-        extend_names(&mut known_names, &self.dimensions);
-        extend_names(&mut known_names, &self.units);
-        extend_names(&mut known_names, &self.constants);
-        self.dimensions = filter(self.dimensions, &known_names);
-        self.units = filter(self.units, &known_names);
-        self.constants = filter(self.constants, &known_names);
+        let mut idents = IdentStorage::default();
+        self.dimensions = idents.remember_valid_and_filter_invalid(self.dimensions);
+        self.units = idents.remember_valid_and_filter_invalid(self.units);
+        self.constants = idents.remember_valid_and_filter_invalid(self.constants);
         let base_dimensions = self
             .dimensions
             .iter()
@@ -335,25 +260,25 @@ impl UnresolvedDefs {
     }
 }
 
-fn extend_names<N: Named>(known_names: &mut HashSet<Ident>, names: &[N]) {
-    known_names.extend(names.iter().map(|n| n.ident().clone()))
-}
-
-macro_rules! impl_named {
-    ($t: ty) => {
-        impl Named for $t {
+macro_rules! impl_ident_kind {
+    ($t: ty, $k: expr) => {
+        impl IdentKind for $t {
             fn ident(&self) -> &Ident {
                 &self.name
+            }
+
+            fn kind(&self) -> Kind {
+                $k
             }
         }
     };
 }
 
-impl_named!(DimensionEntry);
-impl_named!(UnitEntry);
-impl_named!(Unit);
-impl_named!(Dimension);
-impl_named!(ConstantEntry);
+impl_ident_kind!(DimensionEntry, Kind::Dimension);
+impl_ident_kind!(UnitEntry, Kind::Unit);
+impl_ident_kind!(Unit, Kind::Unit);
+impl_ident_kind!(Dimension, Kind::Dimension);
+impl_ident_kind!(ConstantEntry, Kind::Constant);
 
 trait Annotated: Resolvable {
     fn get_annotation(&self) -> Option<&Ident>;
