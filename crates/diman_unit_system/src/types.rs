@@ -41,16 +41,22 @@ pub type UnitExpression = Expr<UnitFactor, IntExponent>;
 
 #[derive(Clone)]
 pub enum DimensionDefinition {
-    Expression(DimensionExpression),
     Base,
+    Expression(DimensionExpression),
+}
+
+#[derive(Clone)]
+pub enum UnitDefinition {
+    Base(Ident),
+    Expression(UnitExpression),
 }
 
 #[derive(Clone)]
 pub struct UnitEntry {
     pub name: Ident,
     pub symbol: Option<Symbol>,
-    pub rhs: Option<UnitExpression>,
     pub dimension_annotation: Option<Ident>,
+    pub definition: UnitDefinition,
 }
 
 #[derive(Clone)]

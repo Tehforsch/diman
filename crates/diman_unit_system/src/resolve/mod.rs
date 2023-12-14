@@ -12,7 +12,8 @@ use crate::{
     expression::{self, Expr},
     types::{
         BaseDimensions, Constant, ConstantEntry, Defs, Dimension, DimensionDefinition,
-        DimensionEntry, DimensionIdent, IntExponent, Unit, UnitEntry, UnitFactor, UnresolvedDefs,
+        DimensionEntry, DimensionIdent, IntExponent, Unit, UnitDefinition, UnitEntry, UnitFactor,
+        UnresolvedDefs,
     },
 };
 
@@ -100,14 +101,14 @@ impl Resolvable for UnitEntry {
     type Resolved = Unit;
 
     fn expr(&self) -> Expr<Factor<Self::Dim>, IntExponent> {
-        match &self.rhs {
-            Some(rhs) => rhs.clone().map(|e| match e {
+        match &self.definition {
+            UnitDefinition::Expression(rhs) => rhs.clone().map(|e| match e {
                 UnitFactor::Unit(ident) => Factor::Other(ident),
                 UnitFactor::Number(num) => Factor::Concrete(DimensionsAndFactor::factor(num)),
             }),
-            None => Expr::Value(expression::Factor::Value(Factor::Other(
-                self.dimension_annotation.clone().unwrap(),
-            ))),
+            UnitDefinition::Base(dimension) => {
+                Expr::Value(expression::Factor::Value(Factor::Other(dimension.clone())))
+            }
         }
     }
 

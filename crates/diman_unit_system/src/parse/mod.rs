@@ -7,7 +7,7 @@ use syn::{
 
 use crate::{
     expression::{BinaryOperator, Expr, Factor, Operator},
-    types::{IntExponent, UnresolvedDefs},
+    types::{IntExponent, UnitDefinition, UnresolvedDefs},
 };
 
 use self::tokens::{
@@ -196,17 +196,17 @@ impl Parse for UnitEntry {
         }
         let dimension_annotation = parse_annotation(input)?;
         let lookahead = input.lookahead1();
-        let rhs = if lookahead.peek(AssignmentToken) {
+        let definition = if lookahead.peek(AssignmentToken) {
             let _: AssignmentToken = input.parse()?;
-            Some(parse_int_exponent_expr(input)?)
+            UnitDefinition::Expression(parse_int_exponent_expr(input)?)
         } else {
-            None
+            UnitDefinition::Base(dimension_annotation.clone().unwrap())
         };
         Ok(Self {
             name,
             symbol,
-            rhs,
             dimension_annotation,
+            definition,
         })
     }
 }
