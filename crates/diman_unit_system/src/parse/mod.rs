@@ -1,7 +1,7 @@
 pub mod types;
 
 use syn::{
-    braced, bracketed, parenthesized,
+    bracketed, parenthesized,
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
     token::{self, Bracket, Paren},
@@ -12,14 +12,12 @@ use crate::expression::{BinaryOperator, Expr, Factor, Operator};
 
 use self::{
     tokens::{
-        AssignmentToken, DimensionEntryAssignment, DimensionEntrySeparator, DivisionToken,
-        ExponentiationToken, MultiplicationToken, StatementSeparator, TypeAnnotationToken,
-        UnitDefDelimiter, UnitDefSeparator,
+        AssignmentToken, DivisionToken, ExponentiationToken, MultiplicationToken,
+        StatementSeparator, TypeAnnotationToken, UnitDefDelimiter, UnitDefSeparator,
     },
     types::{
-        BaseDimensionEntry, BaseDimensions, ConstantEntry, Defs, DimensionDefinition,
-        DimensionEntry, DimensionIdent, DimensionInt, Entry, Exponent, LitFactor, Prefix, Prefixes,
-        Symbol, UnitEntry, UnitFactor,
+        ConstantEntry, Defs, DimensionDefinition, DimensionEntry, DimensionIdent, DimensionInt,
+        Entry, Exponent, LitFactor, Prefix, Prefixes, Symbol, UnitEntry, UnitFactor,
     },
 };
 
@@ -88,15 +86,6 @@ impl Parse for Prefixes {
         let content;
         let _: Bracket = bracketed!( content in input );
         Ok(Prefixes(content.parse_terminated(Prefix::parse)?))
-    }
-}
-
-impl Parse for BaseDimensionEntry {
-    fn parse(input: ParseStream) -> Result<Self> {
-        let ident: Ident = input.parse()?;
-        let _: DimensionEntryAssignment = input.parse()?;
-        let value: DimensionInt = input.parse()?;
-        Ok(Self { ident, value })
     }
 }
 
@@ -188,18 +177,6 @@ fn parse_annotation(input: ParseStream) -> Result<Option<Ident>> {
         None
     };
     Ok(dimension_annotation)
-}
-
-impl Parse for BaseDimensions {
-    fn parse(input: ParseStream) -> Result<Self> {
-        let content;
-        let _: token::Brace = braced!(content in input);
-        let fields: Punctuated<BaseDimensionEntry, DimensionEntrySeparator> =
-            content.parse_terminated(BaseDimensionEntry::parse)?;
-        Ok(Self {
-            fields: fields.into_iter().collect(),
-        })
-    }
 }
 
 impl Parse for DimensionEntry {

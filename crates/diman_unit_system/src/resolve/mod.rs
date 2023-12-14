@@ -11,9 +11,8 @@ use crate::{
     dimension_math::DimensionsAndFactor,
     expression::{self, Expr},
     types::{
-        BaseDimensionEntry, BaseDimensions, Constant, ConstantEntry, Defs, Dimension,
-        DimensionDefinition, DimensionEntry, DimensionIdent, IntExponent, Unit, UnitEntry,
-        UnitFactor, UnresolvedDefs,
+        BaseDimensions, Constant, ConstantEntry, Defs, Dimension, DimensionDefinition,
+        DimensionEntry, DimensionIdent, IntExponent, Unit, UnitEntry, UnitFactor, UnresolvedDefs,
     },
 };
 
@@ -74,14 +73,13 @@ impl Resolvable for DimensionEntry {
                 DimensionIdent::One => Factor::Concrete(BaseDimensions::none()),
                 DimensionIdent::Dimension(ident) => Factor::Other(ident),
             }),
-            DimensionDefinition::Base => Expr::Value(expression::Factor::Value(Factor::Concrete(
-                BaseDimensions {
-                    fields: vec![BaseDimensionEntry {
-                        ident: self.dimension_entry_name(),
-                        value: 1,
-                    }],
-                },
-            ))),
+            DimensionDefinition::Base => {
+                let mut fields = HashMap::default();
+                fields.insert(self.dimension_entry_name(), 1);
+                Expr::Value(expression::Factor::Value(Factor::Concrete(
+                    BaseDimensions { fields },
+                )))
+            }
         }
     }
 
@@ -237,7 +235,10 @@ fn convert_vec_to_resolved<R: Resolvable>(
         .collect()
 }
 
-fn resolve_and_check_annotation<R: Resolvable + Annotated + Clone, G: Resolved<R::Dim>>(
+fn resolve_and_check_annotation<
+    R: Resolvable<Dim = DimensionsAndFactor> + Annotated + Clone,
+    G: Resolved<R::Dim>,
+>(
     items: Vec<R>,
     given: &[G],
     dimensions: &HashMap<Ident, BaseDimensions>,
@@ -251,7 +252,7 @@ fn resolve_and_check_annotation<R: Resolvable + Annotated + Clone, G: Resolved<R
     convert_vec_to_resolved(items, &mut resolved)
 }
 
-fn check_annotations<R: Resolvable + Annotated + Clone>(
+fn check_annotations<R: Resolvable<Dim = DimensionsAndFactor> + Annotated + Clone>(
     items: &[R],
     resolved: &HashMap<Ident, <R as Resolvable>::Dim>,
     dimensions: &HashMap<Ident, BaseDimensions>,
@@ -259,9 +260,13 @@ fn check_annotations<R: Resolvable + Annotated + Clone>(
     for item in items.iter() {
         let annotation = item.get_annotation();
         if let Some(annotation) = annotation {
-            if resolved[item.ident()] != dimensions[annotation] {
+            let lhs_dims = &dimensions[annotation];
+            let rhs_dims = &resolved[item.ident()].dimensions;
+            if lhs_dims != rhs_dims {
                 ViolatedAnnotationError {
-                    annotation: annotation.clone(),
+                    annotation: annotation,
+                    lhs_dims,
+                    rhs_dims,
                 }
                 .emit();
             }

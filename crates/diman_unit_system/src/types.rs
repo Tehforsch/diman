@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use syn::*;
 
 use crate::{derive_dimension::to_snakecase, expression::Expr};
@@ -8,25 +10,15 @@ pub struct Prefix {
 }
 
 #[derive(Clone)]
-pub struct BaseDimensionEntry {
-    pub ident: Ident,
-    pub value: i32,
-}
-
-#[derive(Clone)]
 pub struct BaseDimensions {
-    pub fields: Vec<BaseDimensionEntry>,
+    pub fields: HashMap<Ident, i32>,
 }
 
 impl PartialEq for BaseDimensions {
     fn eq(&self, other: &Self) -> bool {
-        self.fields.iter().all(|entry| {
-            if let Some(corresponding) = other
-                .fields
-                .iter()
-                .find(|entry2| entry.ident == entry2.ident)
-            {
-                entry.value == corresponding.value
+        self.fields.iter().all(|(dimension, value)| {
+            if let Some(corresponding_value) = other.fields.get(dimension) {
+                value == corresponding_value
             } else {
                 false
             }

@@ -20,19 +20,6 @@ pub struct Symbol(pub Lit);
 
 pub struct Exponent(pub Lit);
 
-#[derive(Verify)]
-#[verified(crate::types::BaseDimensionEntry)]
-pub struct BaseDimensionEntry {
-    pub ident: Ident,
-    pub value: DimensionInt,
-}
-
-#[derive(Verify)]
-#[verified(crate::types::BaseDimensions)]
-pub struct BaseDimensions {
-    pub fields: Vec<BaseDimensionEntry>,
-}
-
 pub enum DimensionIdent {
     // This will be verified to only be 1.0 or 1
     One(LitFactor),

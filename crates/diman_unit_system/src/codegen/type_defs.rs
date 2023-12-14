@@ -70,9 +70,7 @@ impl Defs {
         let field_updates: TokenStream = dim
             .fields
             .iter()
-            .map(|field| {
-                let ident = &field.ident;
-                let value = &field.value;
+            .map(|(ident, value)| {
                 quote! { #ident: #value, }
             })
             .collect();

@@ -1,5 +1,9 @@
+use std::collections::HashSet;
+
 use proc_macro::{Diagnostic, Level};
 use syn::Ident;
+
+use crate::types::BaseDimensions;
 
 pub enum Error {
     Unresolvable(Vec<Ident>),
@@ -12,8 +16,10 @@ pub struct MultipleTypeDefinitionsError {
     pub idents: Vec<Ident>,
 }
 
-pub struct ViolatedAnnotationError {
-    pub annotation: Ident,
+pub struct ViolatedAnnotationError<'a> {
+    pub annotation: &'a Ident,
+    pub lhs_dims: &'a BaseDimensions,
+    pub rhs_dims: &'a BaseDimensions,
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -37,12 +43,47 @@ impl Emit for MultipleTypeDefinitionsError {
     }
 }
 
-impl Emit for ViolatedAnnotationError {
+/// This formats the two base dimensions such that all
+/// entries appearing in one will appear in the formatted
+/// string of the other.
+fn format_lhs_rhs_dimensions(lhs: &BaseDimensions, rhs: &BaseDimensions) -> (String, String) {
+    let available_dims: HashSet<_> = lhs.fields.keys().chain(rhs.fields.keys()).collect();
+    // Make sure to sort identifiers alphabetically, to make sure
+    // we get deterministic error messages.
+    let mut available_dims: Vec<_> = available_dims.into_iter().collect();
+    available_dims.sort();
+    let format = |dims: &BaseDimensions| {
+        available_dims
+            .iter()
+            .map(|dim| {
+                let value = *dims.fields.get(dim).unwrap_or(&0);
+                format!("{}^{}", dim, value)
+            })
+            .collect::<Vec<_>>()
+            .join(" ")
+    };
+    (format(lhs), format(rhs))
+}
+
+impl<'a> Emit for ViolatedAnnotationError<'a> {
     fn emit(self) {
+        // In the future, it would be nice to have a proper span for the
+        // second help text that points to the rhs. Unfortunately, joining
+        // spans of the expressions on the rhs is a little more difficult
+        // than it initially seems, so I'll postpone this for now.
+        let (lhs, rhs) = format_lhs_rhs_dimensions(self.lhs_dims, self.rhs_dims);
         self.annotation
             .span()
             .unwrap()
-            .error(format!("Wrong type annotation"))
+            .error(format!("Dimension mismatch in expression."))
+            .help(format!(
+                "The annotation on the left-hand side has dimensions {}",
+                lhs
+            ))
+            .help(format!(
+                "but the expression on the right-hand side has dimensions {}",
+                rhs
+            ))
             .emit();
     }
 }

@@ -1,11 +1,12 @@
-use crate::{
-    expression::MulDiv,
-    types::{BaseDimensionEntry, BaseDimensions},
-};
+use std::collections::HashMap;
+
+use crate::{expression::MulDiv, types::BaseDimensions};
 
 impl BaseDimensions {
     pub fn none() -> Self {
-        Self { fields: vec![] }
+        Self {
+            fields: HashMap::default(),
+        }
     }
 }
 
@@ -14,12 +15,12 @@ impl std::ops::Mul for BaseDimensions {
 
     fn mul(self, rhs: Self) -> Self::Output {
         let mut fields = self.fields;
-        for f2 in rhs.fields {
-            let same_field = fields.iter_mut().find(|f1| f1.ident == f2.ident);
-            if let Some(same_field) = same_field {
-                same_field.value += f2.value;
+        for (name_rhs, val_rhs) in rhs.fields {
+            let same_field = fields.get_mut(&name_rhs);
+            if let Some(val) = same_field {
+                *val += val_rhs;
             } else {
-                fields.push(f2);
+                fields.insert(name_rhs, val_rhs);
             }
         }
         Self { fields }
@@ -28,8 +29,8 @@ impl std::ops::Mul for BaseDimensions {
 
 impl BaseDimensions {
     fn inv(mut self) -> Self {
-        for field in self.fields.iter_mut() {
-            field.value = -field.value;
+        for (_, value) in self.fields.iter_mut() {
+            *value = -*value;
         }
         self
     }
@@ -50,10 +51,7 @@ impl MulDiv for BaseDimensions {
             fields: self
                 .fields
                 .into_iter()
-                .map(|entry| BaseDimensionEntry {
-                    ident: entry.ident,
-                    value: entry.value * pow,
-                })
+                .map(|(ident, value)| (ident, value * pow))
                 .collect(),
         }
     }
@@ -63,12 +61,6 @@ impl MulDiv for BaseDimensions {
 pub struct DimensionsAndFactor {
     pub dimensions: BaseDimensions,
     pub factor: f64,
-}
-
-impl PartialEq<BaseDimensions> for DimensionsAndFactor {
-    fn eq(&self, other: &BaseDimensions) -> bool {
-        self.dimensions == *other
-    }
 }
 
 impl DimensionsAndFactor {
