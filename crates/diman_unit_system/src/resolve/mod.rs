@@ -12,7 +12,7 @@ use crate::{
     expression::{self, Expr},
     types::{
         BaseDimensions, Constant, ConstantEntry, Defs, Dimension, DimensionDefinition,
-        DimensionEntry, DimensionIdent, IntExponent, Unit, UnitDefinition, UnitEntry, UnitFactor,
+        DimensionEntry, DimensionFactor, IntExponent, Unit, UnitDefinition, UnitEntry, UnitFactor,
         UnresolvedDefs,
     },
 };
@@ -74,8 +74,8 @@ impl Resolvable for DimensionEntry {
     fn expr(&self) -> Expr<Factor<Self::Dim>, IntExponent> {
         match &self.rhs {
             DimensionDefinition::Expression(expr) => expr.clone().map(|e| match e {
-                DimensionIdent::One => Factor::Concrete(BaseDimensions::none()),
-                DimensionIdent::Dimension(ident) => Factor::Other(ident),
+                DimensionFactor::One => Factor::Concrete(BaseDimensions::none()),
+                DimensionFactor::Dimension(ident) => Factor::Other(ident),
             }),
             DimensionDefinition::Base => {
                 let mut fields = HashMap::default();

@@ -22,14 +22,14 @@ impl PartialEq for BaseDimensions {
 }
 
 #[derive(Clone)]
-pub enum DimensionIdent {
+pub enum DimensionFactor {
     One,
     Dimension(Ident),
 }
 
 pub type IntExponent = i32;
 
-pub type DimensionExpression = Expr<DimensionIdent, IntExponent>;
+pub type DimensionExpression = Expr<DimensionFactor, IntExponent>;
 
 #[derive(Clone)]
 pub enum UnitFactor {

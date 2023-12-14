@@ -16,7 +16,7 @@ use self::tokens::{
 };
 
 use super::types::{
-    ConstantEntry, DimensionDefinition, DimensionEntry, DimensionIdent, UnitEntry, UnitFactor,
+    ConstantEntry, DimensionDefinition, DimensionEntry, DimensionFactor, UnitEntry, UnitFactor,
 };
 
 pub mod keywords {
@@ -142,7 +142,7 @@ impl Parse for UnitFactor {
     }
 }
 
-impl Parse for DimensionIdent {
+impl Parse for DimensionFactor {
     fn parse(input: ParseStream) -> Result<Self> {
         let lookahead = input.lookahead1();
         if lookahead.peek(Lit) {
