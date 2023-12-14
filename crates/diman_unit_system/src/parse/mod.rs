@@ -15,16 +15,16 @@ use self::{
         StatementSeparator, TypeAnnotationToken, UnitDefDelimiter, UnitDefSeparator,
     },
     types::{
-        ConstantEntry, Defs, DimensionDefinition, DimensionEntry, DimensionIdent, DimensionInt,
-        Entry, Exponent, LitFactor, Symbol, UnitEntry, UnitFactor,
+        ConstantEntry, Defs, DimensionDefinition, DimensionEntry, DimensionIdent, Entry, Exponent,
+        Number, One, Symbol, UnitEntry, UnitFactor,
     },
 };
 
 pub mod keywords {
-    syn::custom_keyword!(dimension);
-    syn::custom_keyword!(unit);
     syn::custom_keyword!(quantity_type);
     syn::custom_keyword!(dimension_type);
+    syn::custom_keyword!(dimension);
+    syn::custom_keyword!(unit);
     syn::custom_keyword!(constant);
 }
 
@@ -36,7 +36,6 @@ pub mod tokens {
     syn::custom_punctuation!(UnitDefSeparator, ,);
     syn::custom_punctuation!(AssignmentToken, =);
     syn::custom_punctuation!(TypeAnnotationToken, :);
-    syn::custom_punctuation!(PrefixSeparator, ,);
     syn::custom_punctuation!(MultiplicationToken, *);
     syn::custom_punctuation!(DivisionToken, /);
     syn::custom_punctuation!(ExponentiationToken, ^);
@@ -44,18 +43,6 @@ pub mod tokens {
 }
 
 impl Parse for Symbol {
-    fn parse(input: ParseStream) -> Result<Self> {
-        Ok(Self(input.parse()?))
-    }
-}
-
-impl Parse for LitFactor {
-    fn parse(input: ParseStream) -> Result<Self> {
-        Ok(Self(input.parse()?))
-    }
-}
-
-impl Parse for DimensionInt {
     fn parse(input: ParseStream) -> Result<Self> {
         Ok(Self(input.parse()?))
     }
@@ -73,10 +60,46 @@ impl Parse for UnitFactor {
         if lookahead.peek(Ident) {
             Ok(Self::Unit(input.parse()?))
         } else if lookahead.peek(Lit) {
-            Ok(Self::Number(input.parse()?))
+            let factor: Number = input.parse()?;
+            Ok(Self::Number(factor.float))
         } else {
             Err(lookahead.error())
         }
+    }
+}
+
+impl Number {
+    fn as_one(&self) -> Result<One> {
+        if self.float == 1.0 {
+            Ok(One)
+        } else {
+            Err(Error::new(
+                self.lit.span(),
+                "Only 1 and 1.0 are valid factors in dimension definitions.".to_string(),
+            ))
+        }
+    }
+}
+
+impl Parse for Number {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let lit = input.parse()?;
+        let float = match lit {
+            Lit::Int(ref int) => int.base10_parse::<i64>().map(|x| x as f64),
+            Lit::Float(ref float) => float.base10_parse::<f64>(),
+            _ => Err(Error::new(
+                lit.span(),
+                "Unexpected literal, expected a numerical value".to_string(),
+            )),
+        }?;
+        Ok(Self { lit, float })
+    }
+}
+
+impl Parse for One {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let n: Number = input.parse()?;
+        n.as_one()
     }
 }
 
@@ -84,7 +107,8 @@ impl Parse for DimensionIdent {
     fn parse(input: ParseStream) -> Result<Self> {
         let lookahead = input.lookahead1();
         if lookahead.peek(Lit) {
-            Ok(Self::One(input.parse()?))
+            let _: One = input.parse()?;
+            Ok(Self::One)
         } else {
             Ok(Self::Dimension(input.parse()?))
         }

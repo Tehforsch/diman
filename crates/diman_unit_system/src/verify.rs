@@ -37,6 +37,7 @@ macro_rules! verify_endpoint {
 
 verify_endpoint!(syn::Type);
 verify_endpoint!(syn::Ident);
+verify_endpoint!(f64);
 
 impl<T: Verify, E: Verify> Verify for Expr<T, E> {
     type Verified = Expr<<T as Verify>::Verified, <E as Verify>::Verified>;
@@ -79,35 +80,6 @@ impl Verify for ptype::Symbol {
     }
 }
 
-impl Verify for ptype::LitFactor {
-    type Verified = f64;
-
-    fn verify(self) -> Result<Self::Verified> {
-        match self.0 {
-            Lit::Float(s) => Ok(s.base10_parse()?),
-            Lit::Int(s) => Ok(s.base10_parse()?),
-            _ => Err(Error::new(
-                self.0.span(),
-                "Unexpected literal, expected a numerical value".to_string(),
-            )),
-        }
-    }
-}
-
-impl Verify for ptype::DimensionInt {
-    type Verified = i32;
-
-    fn verify(self) -> Result<Self::Verified> {
-        match self.0 {
-            Lit::Int(s) => Ok(s.base10_parse()?),
-            _ => Err(Error::new(
-                self.0.span(),
-                "Unexpected literal, expected an integer".to_string(),
-            )),
-        }
-    }
-}
-
 impl Verify for ptype::Exponent {
     type Verified = IntExponent;
 
@@ -119,31 +91,5 @@ impl Verify for ptype::Exponent {
                 "Unexpected literal, expected an integer value".to_string(),
             )),
         }
-    }
-}
-
-impl Verify for ptype::DimensionIdent {
-    type Verified = DimensionIdent;
-
-    fn verify(self) -> Result<Self::Verified> {
-        Ok(match self {
-            ptype::DimensionIdent::One(factor) => {
-                factor_is_one(factor)?;
-                DimensionIdent::One
-            }
-            ptype::DimensionIdent::Dimension(dimension) => DimensionIdent::Dimension(dimension),
-        })
-    }
-}
-
-fn factor_is_one(factor: ptype::LitFactor) -> Result<()> {
-    let val = factor.clone().verify()?;
-    if val == 1.0 {
-        Ok(())
-    } else {
-        Err(Error::new(
-            factor.0.span(),
-            "Only 1 and 1.0 are valid factors in dimension definitions.".to_string(),
-        ))
     }
 }

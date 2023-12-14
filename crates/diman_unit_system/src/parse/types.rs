@@ -3,19 +3,22 @@ use syn::*;
 
 use crate::expression::Expr;
 
-pub struct DimensionInt(pub Lit);
-
-#[derive(Clone)]
-pub struct LitFactor(pub Lit);
-
 pub struct Symbol(pub Lit);
 
 pub struct Exponent(pub Lit);
 
+pub struct Number {
+    pub lit: Lit,
+    pub float: f64,
+}
+
+pub struct One;
+
+#[derive(Verify)]
+#[verified(crate::types::DimensionIdent)]
 pub enum DimensionIdent {
-    // This will be verified to only be 1.0 or 1
-    One(LitFactor),
     Dimension(Ident),
+    One,
 }
 
 pub type DimensionExpression = Expr<DimensionIdent, Exponent>;
@@ -24,7 +27,7 @@ pub type DimensionExpression = Expr<DimensionIdent, Exponent>;
 #[verified(crate::types::UnitFactor)]
 pub enum UnitFactor {
     Unit(Ident),
-    Number(LitFactor),
+    Number(f64),
 }
 
 pub type UnitExpression = Expr<UnitFactor, Exponent>;
