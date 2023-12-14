@@ -7,6 +7,7 @@ use crate::dimension_math::BaseDimensions;
 
 pub struct UnresolvableError(pub Vec<Ident>);
 pub struct UndefinedError(pub Vec<Ident>);
+#[derive(Debug)]
 pub struct MultipleDefinitionsError(pub Vec<Vec<Ident>>);
 
 pub struct MultipleTypeDefinitionsError {
@@ -24,6 +25,12 @@ pub struct UndefinedAnnotationDimensionError<'a>(pub &'a Ident);
 
 pub trait Emit {
     fn emit(self);
+}
+
+pub fn emit_if_err<T, E: Emit>(result: Result<T, E>) {
+    if let Err(err) = result {
+        err.emit();
+    }
 }
 
 impl Emit for MultipleTypeDefinitionsError {

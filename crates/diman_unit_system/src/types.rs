@@ -87,7 +87,7 @@ pub struct Unit {
 
 pub struct Constant {
     pub name: Ident,
-    pub dimension: BaseDimensions,
+    pub dimensions: BaseDimensions,
     pub factor: f64,
 }
 

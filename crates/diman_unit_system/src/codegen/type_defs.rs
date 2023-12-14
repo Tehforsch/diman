@@ -149,7 +149,7 @@ impl Defs {
             .constants
             .iter()
             .map(|constant| {
-                let dimension = self.get_dimension_expr(&constant.dimension);
+                let dimension = self.get_dimension_expr(&constant.dimensions);
                 let quantity_type = &self.quantity_type;
                 let constant_name = &constant.name;
                 let value = constant.factor;

@@ -2,128 +2,222 @@ use std::collections::HashMap;
 
 use proc_macro2::Ident;
 
-use super::{
-    emit_errors,
-    error::{MultipleDefinitionsError, UndefinedError},
-    resolver::{Factor, Resolvable},
+use crate::{
+    dimension_math::{BaseDimensions, DimensionsAndFactor},
+    expression::{self, Expr},
+    parse::Symbol,
+    types::{
+        Constant, ConstantEntry, Dimension, DimensionDefinition, DimensionEntry, DimensionFactor,
+        IntExponent, Unit, UnitDefinition, UnitEntry, UnitFactor,
+    },
 };
 
-/// A type that represents the identifier of a dimension.
-/// Can only be turned into an Ident by retrieving it from
-/// the set of all defined dimensions.
-#[derive(Clone)]
-pub struct DimensionIdent(Ident);
-
-/// A type that represents the identifier of a unit.
-/// Can only be turned into an Ident by retrieving it from
-/// the set of all defined units.
-#[derive(Clone)]
-pub struct UnitIdent(Ident);
-
-/// A type that represents the identifier of a constant.
-/// Can only be turned into an Ident by retrieving it from
-/// the set of all defined constants.
-#[derive(Clone)]
-pub struct ConstantIdent(Ident);
+use super::error::UnresolvableError;
 
 /// The kind of an identifier
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Kind {
     Dimension,
     Unit,
     Constant,
 }
 
-pub trait IdentKind {
-    fn ident(&self) -> &Ident;
-    fn kind(&self) -> Kind;
+#[derive(Clone)]
+pub struct Item {
+    pub ident: Ident,
+    pub kind: Kind,
+    pub annotation: Option<Ident>,
+    pub expr: Expr<Factor<DimensionsAndFactor>, IntExponent>,
+    pub symbol: Option<Symbol>,
+}
+
+pub struct ResolvedItem {
+    pub item: Item,
+    pub dimensions: DimensionsAndFactor,
+}
+
+#[derive(Clone)]
+pub enum Factor<D> {
+    Concrete(D),
+    Other(Ident),
 }
 
 #[derive(Default)]
 pub struct IdentStorage {
-    entries: HashMap<Ident, Kind>,
+    unresolved: HashMap<Ident, Item>,
+    resolved: HashMap<Ident, ResolvedItem>,
 }
 
 impl IdentStorage {
-    pub fn remember_valid_and_filter_invalid<T: Resolvable>(&mut self, items: Vec<T>) -> Vec<T> {
-        let items = emit_errors(self.filter_multiply_defined_identifiers(items));
-        self.entries
-            .extend(items.iter().map(|item| (item.ident().clone(), item.kind())));
-        let (items, undefined) = emit_errors(self.filter_undefined_identifiers(items));
-        // Make sure we remove all undefined identifiers at this point
-        // so we can't ever mistake them for existing identifiers later.
-        for undefined_item in undefined {
-            self.entries.remove(undefined_item.ident());
-        }
-        items
-    }
-
-    fn filter_undefined_identifiers<R: Resolvable>(
-        &self,
-        items: Vec<R>,
-    ) -> ((Vec<R>, Vec<R>), Result<(), UndefinedError>) {
-        let (defined, undefined): (Vec<_>, Vec<_>) = items.into_iter().partition(|item| {
-            get_rhs_idents(item)
-                .iter()
-                .all(|rhs_ident| self.entries.contains_key(rhs_ident))
+    fn is_resolvable(&self, item: &Item) -> bool {
+        let all_factors_concrete_or_given = (&item.expr).iter_vals().all(|val| match val {
+            Factor::Concrete(_) => true,
+            Factor::Other(ident) => self.resolved.contains_key(&ident),
         });
-
-        let err = if undefined.is_empty() {
-            Ok(())
-        } else {
-            let mut undefined_rhs = vec![];
-            for item in undefined.iter() {
-                let rhs_idents = get_rhs_idents(item);
-                for rhs_ident in rhs_idents {
-                    if !self.entries.contains_key(&rhs_ident) {
-                        undefined_rhs.push(rhs_ident.clone());
-                    }
-                }
-            }
-            Err(UndefinedError(undefined_rhs))
-        };
-        ((defined, undefined), err)
+        all_factors_concrete_or_given
     }
 
-    fn filter_multiply_defined_identifiers<R: Resolvable>(
-        &self,
-        items: Vec<R>,
-    ) -> (Vec<R>, Result<(), MultipleDefinitionsError>) {
-        let mut counter: HashMap<_, usize> = items.iter().map(|item| (item.ident(), 0)).collect();
-        for item in items.iter() {
-            *counter.get_mut(item.ident()).unwrap() += 1;
+    fn resolve_dimensions(&self, item: &Item) -> DimensionsAndFactor {
+        item.expr
+            .clone()
+            .map(|val_or_expr| match val_or_expr {
+                Factor::Concrete(factor) => factor,
+                Factor::Other(ident) => self.resolved[&ident].dimensions.clone(),
+            })
+            .eval()
+    }
+
+    pub fn add<I: Into<Item>>(&mut self, items: Vec<I>) {
+        self.unresolved.extend(items.into_iter().map(|x| {
+            let item = x.into();
+            let ident = item.ident.clone();
+            (ident, item)
+        }));
+    }
+
+    pub fn resolve(&mut self) -> Result<(), UnresolvableError> {
+        // This is a very inefficient topological sort.
+        while !self.unresolved.is_empty() {
+            let next_resolvable = self
+                .unresolved
+                .iter()
+                .find(|(_, x)| self.is_resolvable(x))
+                .map(|(ident, _)| ident.clone());
+            if let Some(ident) = next_resolvable {
+                let next_resolvable = self.unresolved.remove(&ident).unwrap();
+                let name = ident.clone();
+                let dimensions = self.resolve_dimensions(&next_resolvable);
+                self.resolved.insert(
+                    name,
+                    ResolvedItem {
+                        dimensions,
+                        item: next_resolvable,
+                    },
+                );
+            } else {
+                return Err(UnresolvableError(
+                    self.unresolved.drain().map(|(ident, _)| ident).collect(),
+                ));
+            }
         }
-        let err = if items.iter().any(|item| counter[item.ident()] > 1) {
-            Err(MultipleDefinitionsError(
-                counter
-                    .iter()
-                    .filter(|(_, count)| **count > 1)
-                    .map(|(multiply_defined_name, _)| {
-                        items
-                            .iter()
-                            .map(|item| item.ident().clone())
-                            .filter(|name| &name == multiply_defined_name)
-                            .collect()
-                    })
-                    .collect(),
-            ))
-        } else {
-            Ok(())
-        };
-        (items, err)
+        Ok(())
+    }
+
+    pub fn get_items<I: FromItem>(&self) -> Vec<I> {
+        self.resolved
+            .values()
+            .filter(|resolved| resolved.item.kind == I::kind())
+            .map(|resolved| {
+                I::from_item_and_dimensions(resolved.item.clone(), resolved.dimensions.clone())
+            })
+            .collect()
     }
 }
 
-fn get_rhs_idents(item: &impl Resolvable) -> Vec<Ident> {
-    let mut rhs_idents = vec![];
-    let expr = item.expr();
-    for val in expr.iter_vals() {
-        match val {
-            Factor::Concrete(_) => {}
-            Factor::Other(ident) => {
-                rhs_idents.push(ident.clone());
-            }
+impl From<DimensionEntry> for Item {
+    fn from(entry: DimensionEntry) -> Self {
+        Item {
+            ident: entry.name.clone(),
+            annotation: None,
+            symbol: None,
+            kind: Kind::Dimension,
+            expr: match &entry.rhs {
+                DimensionDefinition::Expression(expr) => expr.clone().map(|e| match e {
+                    DimensionFactor::One => {
+                        Factor::Concrete(DimensionsAndFactor::dimensions(BaseDimensions::none()))
+                    }
+                    DimensionFactor::Dimension(ident) => Factor::Other(ident),
+                }),
+                DimensionDefinition::Base => {
+                    let mut fields = HashMap::default();
+                    fields.insert(entry.dimension_entry_name(), 1);
+                    Expr::Value(expression::Factor::Value(Factor::Concrete(
+                        DimensionsAndFactor::dimensions(BaseDimensions { fields }),
+                    )))
+                }
+            },
         }
     }
-    rhs_idents
+}
+
+impl From<UnitEntry> for Item {
+    fn from(entry: UnitEntry) -> Self {
+        Item {
+            ident: entry.name.clone(),
+            annotation: None,
+            kind: Kind::Unit,
+            symbol: entry.symbol,
+            expr: match &entry.definition {
+                UnitDefinition::Expression(rhs) => rhs.clone().map(|e| match e {
+                    UnitFactor::Unit(ident) => Factor::Other(ident),
+                    UnitFactor::Number(num) => Factor::Concrete(DimensionsAndFactor::factor(num)),
+                }),
+                UnitDefinition::Base(dimension) => {
+                    Expr::Value(expression::Factor::Value(Factor::Other(dimension.clone())))
+                }
+            },
+        }
+    }
+}
+
+impl From<ConstantEntry> for Item {
+    fn from(entry: ConstantEntry) -> Self {
+        Item {
+            ident: entry.name.clone(),
+            annotation: None,
+            kind: Kind::Constant,
+            symbol: None,
+            expr: entry.rhs.clone().map(|e| match e {
+                UnitFactor::Unit(ident) => Factor::Other(ident),
+                UnitFactor::Number(num) => Factor::Concrete(DimensionsAndFactor::factor(num)),
+            }),
+        }
+    }
+}
+
+pub trait FromItem {
+    fn kind() -> Kind;
+    fn from_item_and_dimensions(item: Item, dimensions: DimensionsAndFactor) -> Self;
+}
+
+impl FromItem for Dimension {
+    fn kind() -> Kind {
+        Kind::Dimension
+    }
+
+    fn from_item_and_dimensions(item: Item, dimensions: DimensionsAndFactor) -> Self {
+        Dimension {
+            dimensions: dimensions.dimensions,
+            name: item.ident,
+        }
+    }
+}
+
+impl FromItem for Unit {
+    fn kind() -> Kind {
+        Kind::Unit
+    }
+
+    fn from_item_and_dimensions(item: Item, dimensions: DimensionsAndFactor) -> Self {
+        Unit {
+            dimensions: dimensions.dimensions,
+            name: item.ident,
+            factor: dimensions.factor,
+            symbol: item.symbol,
+        }
+    }
+}
+
+impl FromItem for Constant {
+    fn kind() -> Kind {
+        Kind::Constant
+    }
+
+    fn from_item_and_dimensions(item: Item, dimensions: DimensionsAndFactor) -> Self {
+        Constant {
+            dimensions: dimensions.dimensions,
+            name: item.ident,
+            factor: dimensions.factor,
+        }
+    }
 }

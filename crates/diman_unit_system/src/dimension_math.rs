@@ -88,6 +88,13 @@ impl DimensionsAndFactor {
             factor,
         }
     }
+
+    pub(crate) fn dimensions(dimensions: BaseDimensions) -> Self {
+        Self {
+            dimensions,
+            factor: 1.0,
+        }
+    }
 }
 
 impl std::ops::Mul for DimensionsAndFactor {
