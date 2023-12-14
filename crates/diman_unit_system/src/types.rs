@@ -4,42 +4,20 @@ use crate::{
     derive_dimension::to_snakecase, dimension_math::BaseDimensions, expression::Expr, parse::Symbol,
 };
 
+pub type IntExponent = i32;
+
 #[derive(Clone)]
 pub enum DimensionFactor {
     One,
     Dimension(Ident),
 }
 
-pub type IntExponent = i32;
-
 pub type DimensionExpression = Expr<DimensionFactor, IntExponent>;
-
-#[derive(Clone)]
-pub enum UnitFactor {
-    Unit(Ident),
-    Number(f64),
-}
-
-pub type UnitExpression = Expr<UnitFactor, IntExponent>;
 
 #[derive(Clone)]
 pub enum DimensionDefinition {
     Base,
     Expression(DimensionExpression),
-}
-
-#[derive(Clone)]
-pub enum UnitDefinition {
-    Base(Ident),
-    Expression(UnitExpression),
-}
-
-#[derive(Clone)]
-pub struct UnitEntry {
-    pub name: Ident,
-    pub symbol: Option<Symbol>,
-    pub dimension_annotation: Option<Ident>,
-    pub definition: UnitDefinition,
 }
 
 #[derive(Clone)]
@@ -56,6 +34,28 @@ impl DimensionEntry {
     pub fn dimension_entry_name(&self) -> Ident {
         to_snakecase(&self.name)
     }
+}
+
+#[derive(Clone)]
+pub enum UnitFactor {
+    Unit(Ident),
+    Number(f64),
+}
+
+pub type UnitExpression = Expr<UnitFactor, IntExponent>;
+
+#[derive(Clone)]
+pub enum UnitDefinition {
+    Base(Ident),
+    Expression(UnitExpression),
+}
+
+#[derive(Clone)]
+pub struct UnitEntry {
+    pub name: Ident,
+    pub symbol: Option<Symbol>,
+    pub dimension_annotation: Option<Ident>,
+    pub definition: UnitDefinition,
 }
 
 #[derive(Clone)]
