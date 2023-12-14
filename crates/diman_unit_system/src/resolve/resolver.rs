@@ -4,7 +4,7 @@ use syn::Ident;
 
 use crate::{
     expression::{Expr, MulDiv},
-    types::IntExponent,
+    types::{BaseDimensions, IntExponent},
 };
 
 use super::{error::Error, error::Result};
@@ -19,7 +19,7 @@ pub trait Named {
 }
 
 pub trait Resolvable: Named {
-    type Dim: MulDiv;
+    type Dim: MulDiv + PartialEq<BaseDimensions>;
     type Resolved;
 
     fn expr(&self) -> Expr<Factor<Self::Dim>, IntExponent>;

@@ -18,6 +18,22 @@ pub struct BaseDimensions {
     pub fields: Vec<BaseDimensionEntry>,
 }
 
+impl PartialEq for BaseDimensions {
+    fn eq(&self, other: &Self) -> bool {
+        self.fields.iter().all(|entry| {
+            if let Some(corresponding) = other
+                .fields
+                .iter()
+                .find(|entry2| entry.ident == entry2.ident)
+            {
+                entry.value == corresponding.value
+            } else {
+                false
+            }
+        })
+    }
+}
+
 #[derive(Clone)]
 pub enum DimensionIdent {
     One,

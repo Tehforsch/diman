@@ -65,6 +65,12 @@ pub struct DimensionsAndFactor {
     pub factor: f64,
 }
 
+impl PartialEq<BaseDimensions> for DimensionsAndFactor {
+    fn eq(&self, other: &BaseDimensions) -> bool {
+        self.dimensions == *other
+    }
+}
+
 impl DimensionsAndFactor {
     pub fn factor(factor: f64) -> Self {
         Self {

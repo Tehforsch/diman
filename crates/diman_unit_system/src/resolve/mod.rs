@@ -18,7 +18,7 @@ use crate::{
 };
 
 use self::{
-    error::{Emit, Error, MultipleTypeDefinitionsError, Result},
+    error::{Emit, Error, MultipleTypeDefinitionsError, Result, ViolatedAnnotationError},
     resolver::{Factor, Named, Resolvable, Resolved, Resolver},
 };
 
@@ -120,24 +120,6 @@ impl Resolvable for UnitEntry {
     }
 }
 
-impl Resolved<DimensionsAndFactor> for Dimension {
-    fn dims(&self) -> DimensionsAndFactor {
-        DimensionsAndFactor {
-            factor: 1.0,
-            dimensions: self.dimensions.clone(),
-        }
-    }
-}
-
-impl Resolved<DimensionsAndFactor> for Unit {
-    fn dims(&self) -> DimensionsAndFactor {
-        DimensionsAndFactor {
-            factor: self.factor,
-            dimensions: self.dimensions.clone(),
-        }
-    }
-}
-
 impl Resolvable for ConstantEntry {
     type Dim = DimensionsAndFactor;
 
@@ -155,6 +137,24 @@ impl Resolvable for ConstantEntry {
             name: self.name,
             dimension: dim_and_factor.dimensions,
             factor: dim_and_factor.factor,
+        }
+    }
+}
+
+impl Resolved<DimensionsAndFactor> for Dimension {
+    fn dims(&self) -> DimensionsAndFactor {
+        DimensionsAndFactor {
+            factor: 1.0,
+            dimensions: self.dimensions.clone(),
+        }
+    }
+}
+
+impl Resolved<DimensionsAndFactor> for Unit {
+    fn dims(&self) -> DimensionsAndFactor {
+        DimensionsAndFactor {
+            factor: self.factor,
+            dimensions: self.dimensions.clone(),
         }
     }
 }
@@ -237,21 +237,44 @@ fn convert_vec_to_resolved<R: Resolvable>(
         .collect()
 }
 
-fn resolve_given<R: Resolvable + Clone, G: Resolved<R::Dim>>(
+fn resolve_and_check_annotation<R: Resolvable + Annotated + Clone, G: Resolved<R::Dim>>(
     items: Vec<R>,
     given: &[G],
+    dimensions: &HashMap<Ident, BaseDimensions>,
 ) -> Vec<R::Resolved> {
     let given = given
         .iter()
         .map(|g| (g.ident().clone(), g.dims()))
         .collect();
     let mut resolved = emit_errors(Resolver::resolve(items.clone(), given));
+    check_annotations(&items, &resolved, dimensions);
     convert_vec_to_resolved(items, &mut resolved)
 }
 
-fn resolve<R: Resolvable + Clone>(items: Vec<R>) -> Vec<R::Resolved> {
-    let mut resolved = emit_errors(Resolver::resolve(items.clone(), HashMap::new()));
-    convert_vec_to_resolved(items, &mut resolved)
+fn check_annotations<R: Resolvable + Annotated + Clone>(
+    items: &[R],
+    resolved: &HashMap<Ident, <R as Resolvable>::Dim>,
+    dimensions: &HashMap<Ident, BaseDimensions>,
+) {
+    for item in items.iter() {
+        let annotation = item.get_annotation();
+        if let Some(annotation) = annotation {
+            if resolved[item.ident()] != dimensions[annotation] {
+                ViolatedAnnotationError {
+                    annotation: annotation.clone(),
+                }
+                .emit();
+            }
+        }
+    }
+}
+
+fn resolve(items: Vec<DimensionEntry>) -> (Vec<Dimension>, HashMap<Ident, BaseDimensions>) {
+    let resolved = emit_errors(Resolver::resolve(items.clone(), HashMap::new()));
+    (
+        convert_vec_to_resolved(items, &mut resolved.clone()),
+        resolved,
+    )
 }
 
 fn filter<R: Resolvable + Clone>(items: Vec<R>, all_known: &HashSet<Ident>) -> Vec<R> {
@@ -285,9 +308,9 @@ impl UnresolvedDefs {
             .filter(|d| d.is_base_dimension())
             .map(|x| to_snakecase(&x.name))
             .collect();
-        let dimensions = resolve(self.dimensions);
-        let units = resolve_given(self.units, &dimensions);
-        let constants = resolve_given(self.constants, &units);
+        let (dimensions, ident_dimension_map) = resolve(self.dimensions);
+        let units = resolve_and_check_annotation(self.units, &dimensions, &ident_dimension_map);
+        let constants = resolve_and_check_annotation(self.constants, &units, &ident_dimension_map);
         Defs {
             dimension_type,
             quantity_type,
@@ -318,3 +341,19 @@ impl_named!(UnitEntry);
 impl_named!(Unit);
 impl_named!(Dimension);
 impl_named!(ConstantEntry);
+
+trait Annotated: Resolvable {
+    fn get_annotation(&self) -> Option<&Ident>;
+}
+
+impl Annotated for UnitEntry {
+    fn get_annotation(&self) -> Option<&Ident> {
+        self.dimension_annotation.as_ref()
+    }
+}
+
+impl Annotated for ConstantEntry {
+    fn get_annotation(&self) -> Option<&Ident> {
+        self.dimension_annotation.as_ref()
+    }
+}

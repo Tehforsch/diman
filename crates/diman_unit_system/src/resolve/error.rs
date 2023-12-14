@@ -12,6 +12,10 @@ pub struct MultipleTypeDefinitionsError {
     pub idents: Vec<Ident>,
 }
 
+pub struct ViolatedAnnotationError {
+    pub annotation: Ident,
+}
+
 pub type Result<T> = std::result::Result<T, Error>;
 
 pub trait Emit {
@@ -30,6 +34,16 @@ impl Emit for MultipleTypeDefinitionsError {
                 ))
                 .emit();
         }
+    }
+}
+
+impl Emit for ViolatedAnnotationError {
+    fn emit(self) {
+        self.annotation
+            .span()
+            .unwrap()
+            .error(format!("Wrong type annotation"))
+            .emit();
     }
 }
 
