@@ -17,7 +17,10 @@ use crate::{
 };
 
 use self::{
-    error::{Emit, Error, MultipleTypeDefinitionsError, Result, ViolatedAnnotationError},
+    error::{
+        Emit, Error, MultipleTypeDefinitionsError, Result, UndefinedAnnotationDimensionError,
+        ViolatedAnnotationError,
+    },
     resolver::{Factor, Named, Resolvable, Resolved, Resolver},
 };
 
@@ -260,15 +263,18 @@ fn check_annotations<R: Resolvable<Dim = DimensionsAndFactor> + Annotated + Clon
     for item in items.iter() {
         let annotation = item.get_annotation();
         if let Some(annotation) = annotation {
-            let lhs_dims = &dimensions[annotation];
             let rhs_dims = &resolved[item.ident()].dimensions;
-            if lhs_dims != rhs_dims {
-                ViolatedAnnotationError {
-                    annotation: annotation,
-                    lhs_dims,
-                    rhs_dims,
+            if let Some(lhs_dims) = &dimensions.get(annotation) {
+                if *lhs_dims != rhs_dims {
+                    ViolatedAnnotationError {
+                        annotation: annotation,
+                        lhs_dims,
+                        rhs_dims,
+                    }
+                    .emit();
                 }
-                .emit();
+            } else {
+                UndefinedAnnotationDimensionError(annotation).emit()
             }
         }
     }

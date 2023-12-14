@@ -1,0 +1,7 @@
+error: Undefined dimension kilograms in annotation.
+  --> tests/compile_fail/dimension_annotation_with_unit_not_allowed.rs:10:15
+   |
+10 |     unit foo: kilograms = kilograms,
+   |               ^^^^^^^^^
+   |
+   = note: Annotations using units and constants are not allowed.

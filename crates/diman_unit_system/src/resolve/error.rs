@@ -22,6 +22,8 @@ pub struct ViolatedAnnotationError<'a> {
     pub rhs_dims: &'a BaseDimensions,
 }
 
+pub struct UndefinedAnnotationDimensionError<'a>(pub &'a Ident);
+
 pub type Result<T> = std::result::Result<T, Error>;
 
 pub trait Emit {
@@ -83,6 +85,19 @@ impl<'a> Emit for ViolatedAnnotationError<'a> {
             .help(format!(
                 "but the expression on the right-hand side has dimensions {}",
                 rhs
+            ))
+            .emit();
+    }
+}
+
+impl<'a> Emit for UndefinedAnnotationDimensionError<'a> {
+    fn emit(self) {
+        self.0
+            .span()
+            .unwrap()
+            .error(format!("Undefined dimension {} in annotation.", self.0))
+            .note(format!(
+                "Annotations using units and constants are not allowed."
             ))
             .emit();
     }
