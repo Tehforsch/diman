@@ -20,7 +20,6 @@ pub trait Named {
 
 pub trait Resolvable: Named {
     type Dim: MulDiv;
-    type Given: Resolved<Self::Dim>;
     type Resolved;
 
     fn expr(&self) -> Expr<Factor<Self::Dim>, IntExponent>;
@@ -55,13 +54,13 @@ pub struct Resolver<R: Resolvable> {
 }
 
 impl<R: Resolvable> Resolver<R> {
-    pub fn resolve(unresolved: Vec<R>, given: &[R::Given]) -> (HashMap<Ident, R::Dim>, Result<()>) {
+    pub fn resolve(
+        unresolved: Vec<R>,
+        given: HashMap<Ident, R::Dim>,
+    ) -> (HashMap<Ident, R::Dim>, Result<()>) {
         let mut resolver = Self {
             unresolved,
-            resolved: given
-                .iter()
-                .map(|g| (g.ident().clone(), g.dims()))
-                .collect(),
+            resolved: given,
         };
         let result = resolver.run();
         (resolver.resolved, result)

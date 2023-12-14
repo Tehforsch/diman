@@ -137,7 +137,7 @@ impl Defs {
         self.dimensions
             .iter()
             .map(|quantity| {
-                let dimension = self.get_dimension_expr(&quantity.dimension);
+                let dimension = self.get_dimension_expr(&quantity.dimensions);
                 let quantity_type = &self.quantity_type;
                 let quantity_name = &quantity.name;
                 let type_ = type_.name();

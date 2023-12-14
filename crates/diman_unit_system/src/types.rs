@@ -51,12 +51,6 @@ pub struct UnitEntry {
     pub dimension_annotation: Option<Ident>,
 }
 
-impl UnitEntry {
-    pub fn is_base_unit(&self) -> bool {
-        self.rhs.is_none()
-    }
-}
-
 #[derive(Clone)]
 pub struct DimensionEntry {
     pub name: Ident,
@@ -90,7 +84,7 @@ pub struct UnresolvedDefs {
 
 pub struct Dimension {
     pub name: Ident,
-    pub dimension: BaseDimensions,
+    pub dimensions: BaseDimensions,
 }
 
 pub struct Unit {
