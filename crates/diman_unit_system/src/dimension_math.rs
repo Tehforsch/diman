@@ -1,7 +1,25 @@
 use std::collections::HashMap;
 
-use crate::{expression::MulDiv, types::BaseDimensions};
+use proc_macro2::Ident;
 
+use crate::expression::MulDiv;
+
+#[derive(Clone)]
+pub struct BaseDimensions {
+    pub fields: HashMap<Ident, i32>,
+}
+
+impl PartialEq for BaseDimensions {
+    fn eq(&self, other: &Self) -> bool {
+        self.fields.iter().all(|(dimension, value)| {
+            if let Some(corresponding_value) = other.fields.get(dimension) {
+                value == corresponding_value
+            } else {
+                false
+            }
+        })
+    }
+}
 impl BaseDimensions {
     pub fn none() -> Self {
         Self {

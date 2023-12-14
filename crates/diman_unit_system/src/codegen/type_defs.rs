@@ -1,7 +1,4 @@
-use crate::{
-    storage_types::StorageType,
-    types::{BaseDimensions, Defs},
-};
+use crate::{dimension_math::BaseDimensions, storage_types::StorageType, types::Defs};
 use proc_macro2::TokenStream;
 use quote::{quote, quote_spanned};
 

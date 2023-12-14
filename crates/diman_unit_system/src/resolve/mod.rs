@@ -8,12 +8,11 @@ use syn::Ident;
 
 use crate::{
     derive_dimension::to_snakecase,
-    dimension_math::DimensionsAndFactor,
+    dimension_math::{BaseDimensions, DimensionsAndFactor},
     expression::{self, Expr},
     types::{
-        BaseDimensions, Constant, ConstantEntry, Defs, Dimension, DimensionDefinition,
-        DimensionEntry, DimensionFactor, IntExponent, Unit, UnitDefinition, UnitEntry, UnitFactor,
-        UnresolvedDefs,
+        Constant, ConstantEntry, Defs, Dimension, DimensionDefinition, DimensionEntry,
+        DimensionFactor, IntExponent, Unit, UnitDefinition, UnitEntry, UnitFactor, UnresolvedDefs,
     },
 };
 

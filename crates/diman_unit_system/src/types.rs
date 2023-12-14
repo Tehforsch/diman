@@ -1,25 +1,8 @@
-use std::collections::HashMap;
-
 use syn::*;
 
-use crate::{derive_dimension::to_snakecase, expression::Expr, parse::Symbol};
-
-#[derive(Clone)]
-pub struct BaseDimensions {
-    pub fields: HashMap<Ident, i32>,
-}
-
-impl PartialEq for BaseDimensions {
-    fn eq(&self, other: &Self) -> bool {
-        self.fields.iter().all(|(dimension, value)| {
-            if let Some(corresponding_value) = other.fields.get(dimension) {
-                value == corresponding_value
-            } else {
-                false
-            }
-        })
-    }
-}
+use crate::{
+    derive_dimension::to_snakecase, dimension_math::BaseDimensions, expression::Expr, parse::Symbol,
+};
 
 #[derive(Clone)]
 pub enum DimensionFactor {

@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use proc_macro::{Diagnostic, Level};
 use syn::Ident;
 
-use crate::types::BaseDimensions;
+use crate::dimension_math::BaseDimensions;
 
 pub struct UnresolvableError(pub Vec<Ident>);
 pub struct UndefinedError(pub Vec<Ident>);
