@@ -162,16 +162,19 @@ impl<'a> Emit for KindNotAllowedError<'a> {
         let name = |kind| match kind {
             Kind::Dimension => "Dimension",
             Kind::Unit => "Unit",
+            Kind::BaseUnit => "Unit",
             Kind::Constant => "Constant",
         };
         let plural = |kind| match kind {
             Kind::Dimension => "Dimensions",
             Kind::Unit => "Units",
+            Kind::BaseUnit => "Units",
             Kind::Constant => "Constants",
         };
         let allowed_rhs_kinds = |kind| match kind {
             Kind::Dimension => "other dimensions",
             Kind::Unit => "other units and constants",
+            Kind::BaseUnit => "other units and constants",
             Kind::Constant => "other constants and units",
         };
         Diagnostic::spanned(

@@ -20,6 +20,7 @@ use super::error::{
 #[derive(Clone, Debug, PartialEq, Copy)]
 pub enum Kind {
     Dimension,
+    BaseUnit,
     Unit,
     Constant,
 }
@@ -30,8 +31,11 @@ impl Kind {
             Kind::Dimension => kind == Kind::Dimension,
             // TODO(major): This needs to be Kind::Unit only once the syntax for
             // base units is there.
-            Kind::Unit => kind == Kind::Unit || kind == Kind::Dimension || kind == Kind::Constant,
-            Kind::Constant => kind == Kind::Constant || kind == Kind::Unit,
+            Kind::Unit => kind == Kind::Unit || kind == Kind::BaseUnit || kind == Kind::Constant,
+            Kind::BaseUnit => kind == Kind::Dimension,
+            Kind::Constant => {
+                kind == Kind::Constant || kind == Kind::Unit || kind == Kind::BaseUnit
+            }
         }
     }
 }
@@ -51,9 +55,12 @@ pub enum ItemType {
 
 impl Item {
     fn kind(&self) -> Kind {
-        match self.type_ {
+        match &self.type_ {
             ItemType::Dimension(_) => Kind::Dimension,
-            ItemType::Unit(_) => Kind::Unit,
+            ItemType::Unit(entry) => match entry.definition {
+                UnitDefinition::Base(_) => Kind::BaseUnit,
+                UnitDefinition::Expression(_) => Kind::Unit,
+            },
             ItemType::Constant(_) => Kind::Constant,
         }
     }
@@ -174,7 +181,7 @@ impl IdentStorage {
     pub fn get_items<I: FromItem>(&self) -> Vec<I> {
         self.resolved
             .values()
-            .filter(|resolved| resolved.item.kind() == I::kind())
+            .filter(|resolved| I::is_correct_kind(resolved.item.kind()))
             .map(|resolved| {
                 I::from_item_and_dimensions(resolved.item.clone(), resolved.dimensions.clone())
             })
@@ -341,13 +348,13 @@ impl From<ConstantEntry> for Item {
 }
 
 pub trait FromItem {
-    fn kind() -> Kind;
     fn from_item_and_dimensions(item: Item, dimensions: DimensionsAndFactor) -> Self;
+    fn is_correct_kind(kind: Kind) -> bool;
 }
 
 impl FromItem for Dimension {
-    fn kind() -> Kind {
-        Kind::Dimension
+    fn is_correct_kind(kind: Kind) -> bool {
+        kind == Kind::Dimension
     }
 
     fn from_item_and_dimensions(item: Item, dimensions: DimensionsAndFactor) -> Self {
@@ -360,8 +367,8 @@ impl FromItem for Dimension {
 }
 
 impl FromItem for Unit {
-    fn kind() -> Kind {
-        Kind::Unit
+    fn is_correct_kind(kind: Kind) -> bool {
+        kind == Kind::Unit || kind == Kind::BaseUnit
     }
 
     fn from_item_and_dimensions(item: Item, dimensions: DimensionsAndFactor) -> Self {
@@ -376,8 +383,8 @@ impl FromItem for Unit {
 }
 
 impl FromItem for Constant {
-    fn kind() -> Kind {
-        Kind::Constant
+    fn is_correct_kind(kind: Kind) -> bool {
+        kind == Kind::Constant
     }
 
     fn from_item_and_dimensions(item: Item, dimensions: DimensionsAndFactor) -> Self {
