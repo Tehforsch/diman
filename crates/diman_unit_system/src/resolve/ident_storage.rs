@@ -319,8 +319,8 @@ impl From<UnitEntry> for Item {
     fn from(entry: UnitEntry) -> Self {
         let expr = match &entry.definition {
             UnitDefinition::Expression(rhs) => rhs.clone().map(|e| match e {
-                UnitFactor::Unit(ident) => Factor::Other(ident),
-                UnitFactor::Number(num) => Factor::Concrete(DimensionsAndFactor::factor(num)),
+                UnitFactor::Other(ident) => Factor::Other(ident),
+                UnitFactor::Concrete(num) => Factor::Concrete(DimensionsAndFactor::factor(num)),
             }),
             UnitDefinition::Base(dimension) => {
                 Expr::Value(expression::Factor::Value(Factor::Other(dimension.clone())))
@@ -336,8 +336,8 @@ impl From<UnitEntry> for Item {
 impl From<ConstantEntry> for Item {
     fn from(entry: ConstantEntry) -> Self {
         let expr = entry.rhs.clone().map(|e| match e {
-            UnitFactor::Unit(ident) => Factor::Other(ident),
-            UnitFactor::Number(num) => Factor::Concrete(DimensionsAndFactor::factor(num)),
+            UnitFactor::Other(ident) => Factor::Other(ident),
+            UnitFactor::Concrete(num) => Factor::Concrete(DimensionsAndFactor::factor(num)),
         });
         Item {
             type_: ItemType::Constant(entry),

@@ -23,6 +23,9 @@ pub enum Definition<Base, C> {
 
 pub type DimensionFactor = Factor<One>;
 pub type DimensionDefinition = Definition<(), One>;
+pub type UnitFactor = Factor<f64>;
+pub type UnitExpression = Expr<UnitFactor, IntExponent>;
+pub type UnitDefinition = Definition<Ident, f64>;
 
 #[derive(Clone)]
 pub struct DimensionEntry {
@@ -38,20 +41,6 @@ impl DimensionEntry {
     pub fn dimension_entry_name(&self) -> Ident {
         to_snakecase(&self.name)
     }
-}
-
-#[derive(Clone)]
-pub enum UnitFactor {
-    Unit(Ident),
-    Number(f64),
-}
-
-pub type UnitExpression = Expr<UnitFactor, IntExponent>;
-
-#[derive(Clone)]
-pub enum UnitDefinition {
-    Base(Ident),
-    Expression(UnitExpression),
 }
 
 #[derive(Clone)]

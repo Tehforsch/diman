@@ -133,10 +133,10 @@ impl Parse for UnitFactor {
     fn parse(input: ParseStream) -> Result<Self> {
         let lookahead = input.lookahead1();
         if lookahead.peek(Ident) {
-            Ok(Self::Unit(input.parse()?))
+            Ok(Self::Other(input.parse()?))
         } else if lookahead.peek(Lit) {
             let factor: Number = input.parse()?;
-            Ok(Self::Number(factor.float))
+            Ok(Self::Concrete(factor.float))
         } else {
             Err(lookahead.error())
         }
