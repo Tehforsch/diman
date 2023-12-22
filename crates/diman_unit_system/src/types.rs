@@ -15,6 +15,15 @@ pub enum Factor<C> {
     Other(Ident),
 }
 
+impl<C1: Clone> Factor<C1> {
+    pub fn map_concrete<C2>(&self, f: impl Fn(C1) -> C2) -> Factor<C2> {
+        match self {
+            Factor::Concrete(c1) => Factor::Concrete(f(c1.clone())),
+            Factor::Other(x) => Factor::Other(x.clone()),
+        }
+    }
+}
+
 #[derive(Clone)]
 pub enum Definition<Base, C> {
     Base(Base),
