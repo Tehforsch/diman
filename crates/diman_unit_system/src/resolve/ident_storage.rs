@@ -7,7 +7,7 @@ use crate::{
     expression::{self, Expr},
     types::{
         Constant, ConstantEntry, Dimension, DimensionDefinition, DimensionEntry, DimensionFactor,
-        IntExponent, Unit, UnitDefinition, UnitEntry, UnitFactor,
+        Factor, IntExponent, Unit, UnitDefinition, UnitEntry, UnitFactor,
     },
 };
 
@@ -108,12 +108,6 @@ impl ItemType {
 pub struct ResolvedItem {
     pub item: Item,
     pub dimensions: DimensionsAndFactor,
-}
-
-#[derive(Clone)]
-pub enum Factor<D> {
-    Concrete(D),
-    Other(Ident),
 }
 
 #[derive(Default)]
@@ -301,12 +295,12 @@ impl From<DimensionEntry> for Item {
     fn from(entry: DimensionEntry) -> Self {
         let expr = match &entry.rhs {
             DimensionDefinition::Expression(expr) => expr.clone().map(|e| match e {
-                DimensionFactor::One => {
+                Factor::Concrete(_) => {
                     Factor::Concrete(DimensionsAndFactor::dimensions(BaseDimensions::none()))
                 }
-                DimensionFactor::Dimension(ident) => Factor::Other(ident),
+                DimensionFactor::Other(ident) => Factor::Other(ident),
             }),
-            DimensionDefinition::Base => {
+            DimensionDefinition::Base(()) => {
                 let mut fields = HashMap::default();
                 fields.insert(entry.dimension_entry_name(), 1);
                 Expr::Value(expression::Factor::Value(Factor::Concrete(

@@ -1,24 +1,28 @@
 use syn::*;
 
 use crate::{
-    derive_dimension::to_snakecase, dimension_math::BaseDimensions, expression::Expr, parse::Symbol,
+    derive_dimension::to_snakecase,
+    dimension_math::BaseDimensions,
+    expression::Expr,
+    parse::{One, Symbol},
 };
 
 pub type IntExponent = i32;
 
 #[derive(Clone)]
-pub enum DimensionFactor {
-    One,
-    Dimension(Ident),
+pub enum Factor<C> {
+    Concrete(C),
+    Other(Ident),
 }
-
-pub type DimensionExpression = Expr<DimensionFactor, IntExponent>;
 
 #[derive(Clone)]
-pub enum DimensionDefinition {
-    Base,
-    Expression(DimensionExpression),
+pub enum Definition<Base, C> {
+    Base(Base),
+    Expression(Expr<Factor<C>, IntExponent>),
 }
+
+pub type DimensionFactor = Factor<One>;
+pub type DimensionDefinition = Definition<(), One>;
 
 #[derive(Clone)]
 pub struct DimensionEntry {
@@ -28,7 +32,7 @@ pub struct DimensionEntry {
 
 impl DimensionEntry {
     pub fn is_base_dimension(&self) -> bool {
-        matches!(self.rhs, DimensionDefinition::Base)
+        matches!(self.rhs, DimensionDefinition::Base(()))
     }
 
     pub fn dimension_entry_name(&self) -> Ident {

@@ -51,6 +51,7 @@ pub struct Int {
     pub int: i32,
 }
 
+#[derive(Clone)]
 pub struct One;
 
 pub struct Exponent(i32);
@@ -146,10 +147,10 @@ impl Parse for DimensionFactor {
     fn parse(input: ParseStream) -> Result<Self> {
         let lookahead = input.lookahead1();
         if lookahead.peek(Lit) {
-            let _: One = input.parse()?;
-            Ok(Self::One)
+            let one: One = input.parse()?;
+            Ok(Self::Concrete(one))
         } else {
-            Ok(Self::Dimension(input.parse()?))
+            Ok(Self::Other(input.parse()?))
         }
     }
 }
@@ -166,7 +167,7 @@ impl Parse for DimensionDefinition {
             let _: AssignmentToken = input.parse()?;
             Ok(Self::Expression(parse_int_exponent_expr(input)?))
         } else {
-            Ok(Self::Base)
+            Ok(Self::Base(()))
         }
     }
 }
