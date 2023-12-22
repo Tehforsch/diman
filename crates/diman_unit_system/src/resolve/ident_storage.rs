@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use proc_macro2::Ident;
 
@@ -89,7 +89,8 @@ pub enum Factor<D> {
 #[derive(Default)]
 pub struct IdentStorage {
     unresolved: Vec<Item>,
-    resolved: HashMap<Ident, ResolvedItem>,
+    // We use BTreeMap here to make sure the generated types are deterministic
+    resolved: BTreeMap<Ident, ResolvedItem>,
 }
 
 impl IdentStorage {
