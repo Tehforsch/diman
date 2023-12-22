@@ -22,20 +22,16 @@ pub enum Definition<Base, C> {
 }
 
 pub type DimensionFactor = Factor<One>;
-pub type DimensionDefinition = Definition<(), One>;
-pub type UnitFactor = Factor<f64>;
-pub type UnitExpression = Expr<UnitFactor, IntExponent>;
-pub type UnitDefinition = Definition<Ident, f64>;
 
 #[derive(Clone)]
 pub struct DimensionEntry {
     pub name: Ident,
-    pub rhs: DimensionDefinition,
+    pub rhs: Definition<(), One>,
 }
 
 impl DimensionEntry {
     pub fn is_base_dimension(&self) -> bool {
-        matches!(self.rhs, DimensionDefinition::Base(()))
+        matches!(self.rhs, Definition::Base(()))
     }
 
     pub fn dimension_entry_name(&self) -> Ident {
@@ -48,13 +44,13 @@ pub struct UnitEntry {
     pub name: Ident,
     pub symbol: Option<Symbol>,
     pub dimension_annotation: Option<Ident>,
-    pub definition: UnitDefinition,
+    pub definition: Definition<Ident, f64>,
 }
 
 #[derive(Clone)]
 pub struct ConstantEntry {
     pub name: Ident,
-    pub rhs: UnitExpression,
+    pub rhs: Expr<Factor<f64>, IntExponent>,
     pub dimension_annotation: Option<Ident>,
 }
 

@@ -6,8 +6,8 @@ use crate::{
     dimension_math::{BaseDimensions, DimensionsAndFactor},
     expression::{self, Expr},
     types::{
-        Constant, ConstantEntry, Dimension, DimensionDefinition, DimensionEntry, DimensionFactor,
-        Factor, IntExponent, Unit, UnitDefinition, UnitEntry, UnitFactor,
+        Constant, ConstantEntry, Definition, Dimension, DimensionEntry, DimensionFactor, Factor,
+        IntExponent, Unit, UnitEntry,
     },
 };
 
@@ -58,8 +58,8 @@ impl Item {
         match &self.type_ {
             ItemType::Dimension(_) => Kind::Dimension,
             ItemType::Unit(entry) => match entry.definition {
-                UnitDefinition::Base(_) => Kind::BaseUnit,
-                UnitDefinition::Expression(_) => Kind::Unit,
+                Definition::Base(_) => Kind::BaseUnit,
+                Definition::Expression(_) => Kind::Unit,
             },
             ItemType::Constant(_) => Kind::Constant,
         }
@@ -294,13 +294,13 @@ impl IdentStorage {
 impl From<DimensionEntry> for Item {
     fn from(entry: DimensionEntry) -> Self {
         let expr = match &entry.rhs {
-            DimensionDefinition::Expression(expr) => expr.clone().map(|e| match e {
+            Definition::Expression(expr) => expr.clone().map(|e| match e {
                 Factor::Concrete(_) => {
                     Factor::Concrete(DimensionsAndFactor::dimensions(BaseDimensions::none()))
                 }
                 DimensionFactor::Other(ident) => Factor::Other(ident),
             }),
-            DimensionDefinition::Base(()) => {
+            Definition::Base(()) => {
                 let mut fields = HashMap::default();
                 fields.insert(entry.dimension_entry_name(), 1);
                 Expr::Value(expression::Factor::Value(Factor::Concrete(
@@ -318,11 +318,11 @@ impl From<DimensionEntry> for Item {
 impl From<UnitEntry> for Item {
     fn from(entry: UnitEntry) -> Self {
         let expr = match &entry.definition {
-            UnitDefinition::Expression(rhs) => rhs.clone().map(|e| match e {
-                UnitFactor::Other(ident) => Factor::Other(ident),
-                UnitFactor::Concrete(num) => Factor::Concrete(DimensionsAndFactor::factor(num)),
+            Definition::Expression(rhs) => rhs.clone().map(|e| match e {
+                Factor::Other(ident) => Factor::Other(ident),
+                Factor::Concrete(num) => Factor::Concrete(DimensionsAndFactor::factor(num)),
             }),
-            UnitDefinition::Base(dimension) => {
+            Definition::Base(dimension) => {
                 Expr::Value(expression::Factor::Value(Factor::Other(dimension.clone())))
             }
         };
@@ -336,8 +336,8 @@ impl From<UnitEntry> for Item {
 impl From<ConstantEntry> for Item {
     fn from(entry: ConstantEntry) -> Self {
         let expr = entry.rhs.clone().map(|e| match e {
-            UnitFactor::Other(ident) => Factor::Other(ident),
-            UnitFactor::Concrete(num) => Factor::Concrete(DimensionsAndFactor::factor(num)),
+            Factor::Other(ident) => Factor::Other(ident),
+            Factor::Concrete(num) => Factor::Concrete(DimensionsAndFactor::factor(num)),
         });
         Item {
             type_: ItemType::Constant(entry),

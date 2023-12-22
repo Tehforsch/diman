@@ -7,7 +7,7 @@ use syn::{
 
 use crate::{
     expression::{BinaryOperator, Expr, Factor, Operator},
-    types::{IntExponent, UnitDefinition, UnresolvedDefs},
+    types::{Definition, IntExponent, UnresolvedDefs},
 };
 
 use self::tokens::{
@@ -15,9 +15,7 @@ use self::tokens::{
     TypeAnnotationToken, UnitDefDelimiter, UnitDefSeparator,
 };
 
-use super::types::{
-    ConstantEntry, DimensionDefinition, DimensionEntry, DimensionFactor, UnitEntry, UnitFactor,
-};
+use super::types::{ConstantEntry, DimensionEntry, DimensionFactor, UnitEntry};
 
 pub mod keywords {
     syn::custom_keyword!(quantity_type);
@@ -129,7 +127,7 @@ impl Parse for Exponent {
     }
 }
 
-impl Parse for UnitFactor {
+impl Parse for crate::types::Factor<f64> {
     fn parse(input: ParseStream) -> Result<Self> {
         let lookahead = input.lookahead1();
         if lookahead.peek(Ident) {
@@ -160,7 +158,7 @@ fn parse_int_exponent_expr<T: Parse>(input: ParseStream) -> Result<Expr<T, IntEx
     Ok(expr.map_exp(|e| e.0))
 }
 
-impl Parse for DimensionDefinition {
+impl Parse for Definition<(), One> {
     fn parse(input: ParseStream) -> Result<Self> {
         let lookahead = input.lookahead1();
         if lookahead.peek(AssignmentToken) {
@@ -199,9 +197,9 @@ impl Parse for UnitEntry {
         let lookahead = input.lookahead1();
         let definition = if lookahead.peek(AssignmentToken) {
             let _: AssignmentToken = input.parse()?;
-            UnitDefinition::Expression(parse_int_exponent_expr(input)?)
+            Definition::Expression(parse_int_exponent_expr(input)?)
         } else {
-            UnitDefinition::Base(dimension_annotation.clone().unwrap())
+            Definition::Base(dimension_annotation.clone().unwrap())
         };
         Ok(Self {
             name,
