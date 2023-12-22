@@ -5,7 +5,6 @@ use proc_macro2::Ident;
 use crate::{
     dimension_math::{BaseDimensions, DimensionsAndFactor},
     expression::{self, Expr},
-    parse::Symbol,
     types::{
         Constant, ConstantEntry, Dimension, DimensionDefinition, DimensionEntry, DimensionFactor,
         IntExponent, Unit, UnitDefinition, UnitEntry, UnitFactor,
@@ -24,11 +23,56 @@ pub enum Kind {
 
 #[derive(Clone)]
 pub struct Item {
-    pub ident: Ident,
-    pub kind: Kind,
-    pub annotation: Option<Ident>,
-    pub expr: Expr<Factor<DimensionsAndFactor>, IntExponent>,
-    pub symbol: Option<Symbol>,
+    expr: Expr<Factor<DimensionsAndFactor>, IntExponent>,
+    type_: ItemType,
+}
+
+#[derive(Clone)]
+pub enum ItemType {
+    Dimension(DimensionEntry),
+    Unit(UnitEntry),
+    Constant(ConstantEntry),
+}
+
+impl Item {
+    fn kind(&self) -> Kind {
+        match self.type_ {
+            ItemType::Dimension(_) => Kind::Dimension,
+            ItemType::Unit(_) => Kind::Unit,
+            ItemType::Constant(_) => Kind::Constant,
+        }
+    }
+
+    fn ident(&self) -> &Ident {
+        match &self.type_ {
+            ItemType::Dimension(dim) => &dim.name,
+            ItemType::Unit(unit) => &unit.name,
+            ItemType::Constant(constant) => &constant.name,
+        }
+    }
+}
+
+impl ItemType {
+    fn unwrap_dimension(self) -> DimensionEntry {
+        match self {
+            Self::Dimension(entry) => entry,
+            _ => panic!("unwrap_dimension called on non-dimension entry"),
+        }
+    }
+
+    fn unwrap_unit(self) -> UnitEntry {
+        match self {
+            Self::Unit(entry) => entry,
+            _ => panic!("unwrap_unit called on non-unit entry"),
+        }
+    }
+
+    fn unwrap_constant(self) -> ConstantEntry {
+        match self {
+            Self::Constant(entry) => entry,
+            _ => panic!("unwrap_constant called on non-constant entry"),
+        }
+    }
 }
 
 pub struct ResolvedItem {
@@ -44,7 +88,7 @@ pub enum Factor<D> {
 
 #[derive(Default)]
 pub struct IdentStorage {
-    unresolved: HashMap<Ident, Item>,
+    unresolved: Vec<Item>,
     resolved: HashMap<Ident, ResolvedItem>,
 }
 
@@ -68,24 +112,21 @@ impl IdentStorage {
     }
 
     pub fn add<I: Into<Item>>(&mut self, items: Vec<I>) {
-        self.unresolved.extend(items.into_iter().map(|x| {
-            let item = x.into();
-            let ident = item.ident.clone();
-            (ident, item)
-        }));
+        self.unresolved.extend(items.into_iter().map(|t| t.into()));
     }
 
     pub fn resolve(&mut self) -> Result<(), UnresolvableError> {
         // This is a very inefficient topological sort.
         while !self.unresolved.is_empty() {
-            let next_resolvable = self
+            let next_resolvable_index = self
                 .unresolved
                 .iter()
+                .enumerate()
                 .find(|(_, x)| self.is_resolvable(x))
-                .map(|(ident, _)| ident.clone());
-            if let Some(ident) = next_resolvable {
-                let next_resolvable = self.unresolved.remove(&ident).unwrap();
-                let name = ident.clone();
+                .map(|(i, _)| i);
+            if let Some(index) = next_resolvable_index {
+                let next_resolvable = self.unresolved.remove(index);
+                let name = next_resolvable.ident().clone();
                 let dimensions = self.resolve_dimensions(&next_resolvable);
                 self.resolved.insert(
                     name,
@@ -96,7 +137,10 @@ impl IdentStorage {
                 );
             } else {
                 return Err(UnresolvableError(
-                    self.unresolved.drain().map(|(ident, _)| ident).collect(),
+                    self.unresolved
+                        .drain(..)
+                        .map(|x| x.ident().clone())
+                        .collect(),
                 ));
             }
         }
@@ -106,7 +150,7 @@ impl IdentStorage {
     pub fn get_items<I: FromItem>(&self) -> Vec<I> {
         self.resolved
             .values()
-            .filter(|resolved| resolved.item.kind == I::kind())
+            .filter(|resolved| resolved.item.kind() == I::kind())
             .map(|resolved| {
                 I::from_item_and_dimensions(resolved.item.clone(), resolved.dimensions.clone())
             })
@@ -116,61 +160,55 @@ impl IdentStorage {
 
 impl From<DimensionEntry> for Item {
     fn from(entry: DimensionEntry) -> Self {
-        Item {
-            ident: entry.name.clone(),
-            annotation: None,
-            symbol: None,
-            kind: Kind::Dimension,
-            expr: match &entry.rhs {
-                DimensionDefinition::Expression(expr) => expr.clone().map(|e| match e {
-                    DimensionFactor::One => {
-                        Factor::Concrete(DimensionsAndFactor::dimensions(BaseDimensions::none()))
-                    }
-                    DimensionFactor::Dimension(ident) => Factor::Other(ident),
-                }),
-                DimensionDefinition::Base => {
-                    let mut fields = HashMap::default();
-                    fields.insert(entry.dimension_entry_name(), 1);
-                    Expr::Value(expression::Factor::Value(Factor::Concrete(
-                        DimensionsAndFactor::dimensions(BaseDimensions { fields }),
-                    )))
+        let expr = match &entry.rhs {
+            DimensionDefinition::Expression(expr) => expr.clone().map(|e| match e {
+                DimensionFactor::One => {
+                    Factor::Concrete(DimensionsAndFactor::dimensions(BaseDimensions::none()))
                 }
-            },
+                DimensionFactor::Dimension(ident) => Factor::Other(ident),
+            }),
+            DimensionDefinition::Base => {
+                let mut fields = HashMap::default();
+                fields.insert(entry.dimension_entry_name(), 1);
+                Expr::Value(expression::Factor::Value(Factor::Concrete(
+                    DimensionsAndFactor::dimensions(BaseDimensions { fields }),
+                )))
+            }
+        };
+        Item {
+            type_: ItemType::Dimension(entry),
+            expr,
         }
     }
 }
 
 impl From<UnitEntry> for Item {
     fn from(entry: UnitEntry) -> Self {
+        let expr = match &entry.definition {
+            UnitDefinition::Expression(rhs) => rhs.clone().map(|e| match e {
+                UnitFactor::Unit(ident) => Factor::Other(ident),
+                UnitFactor::Number(num) => Factor::Concrete(DimensionsAndFactor::factor(num)),
+            }),
+            UnitDefinition::Base(dimension) => {
+                Expr::Value(expression::Factor::Value(Factor::Other(dimension.clone())))
+            }
+        };
         Item {
-            ident: entry.name.clone(),
-            annotation: None,
-            kind: Kind::Unit,
-            symbol: entry.symbol,
-            expr: match &entry.definition {
-                UnitDefinition::Expression(rhs) => rhs.clone().map(|e| match e {
-                    UnitFactor::Unit(ident) => Factor::Other(ident),
-                    UnitFactor::Number(num) => Factor::Concrete(DimensionsAndFactor::factor(num)),
-                }),
-                UnitDefinition::Base(dimension) => {
-                    Expr::Value(expression::Factor::Value(Factor::Other(dimension.clone())))
-                }
-            },
+            type_: ItemType::Unit(entry),
+            expr,
         }
     }
 }
 
 impl From<ConstantEntry> for Item {
     fn from(entry: ConstantEntry) -> Self {
+        let expr = entry.rhs.clone().map(|e| match e {
+            UnitFactor::Unit(ident) => Factor::Other(ident),
+            UnitFactor::Number(num) => Factor::Concrete(DimensionsAndFactor::factor(num)),
+        });
         Item {
-            ident: entry.name.clone(),
-            annotation: None,
-            kind: Kind::Constant,
-            symbol: None,
-            expr: entry.rhs.clone().map(|e| match e {
-                UnitFactor::Unit(ident) => Factor::Other(ident),
-                UnitFactor::Number(num) => Factor::Concrete(DimensionsAndFactor::factor(num)),
-            }),
+            type_: ItemType::Constant(entry),
+            expr,
         }
     }
 }
@@ -186,9 +224,10 @@ impl FromItem for Dimension {
     }
 
     fn from_item_and_dimensions(item: Item, dimensions: DimensionsAndFactor) -> Self {
+        let dimension_entry = item.type_.unwrap_dimension();
         Dimension {
             dimensions: dimensions.dimensions,
-            name: item.ident,
+            name: dimension_entry.name,
         }
     }
 }
@@ -199,11 +238,12 @@ impl FromItem for Unit {
     }
 
     fn from_item_and_dimensions(item: Item, dimensions: DimensionsAndFactor) -> Self {
+        let unit_entry = item.type_.unwrap_unit();
         Unit {
             dimensions: dimensions.dimensions,
-            name: item.ident,
+            name: unit_entry.name,
             factor: dimensions.factor,
-            symbol: item.symbol,
+            symbol: unit_entry.symbol,
         }
     }
 }
@@ -214,9 +254,10 @@ impl FromItem for Constant {
     }
 
     fn from_item_and_dimensions(item: Item, dimensions: DimensionsAndFactor) -> Self {
+        let constant_entry = item.type_.unwrap_constant();
         Constant {
             dimensions: dimensions.dimensions,
-            name: item.ident,
+            name: constant_entry.name,
             factor: dimensions.factor,
         }
     }
