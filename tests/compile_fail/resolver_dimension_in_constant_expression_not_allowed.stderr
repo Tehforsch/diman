@@ -1,0 +1,7 @@
+error: Constant SOLAR_MASS is defined in terms of the dimension Mass.
+ --> tests/compile_fail/resolver_dimension_in_constant_expression_not_allowed.rs:9:14
+  |
+9 |     constant SOLAR_MASS: Mass = 1.988477e30 * Mass,
+  |              ^^^^^^^^^^                       ^^^^
+  |
+  = note: Constants can only be defined in terms of other constants and units.
