@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use proc_macro2::Ident;
 
@@ -11,7 +11,7 @@ use crate::{
     },
 };
 
-use super::error::UnresolvableError;
+use super::error::{UndefinedError, UnresolvableError};
 
 /// The kind of an identifier
 #[derive(Clone, Debug, PartialEq)]
@@ -116,7 +116,7 @@ impl IdentStorage {
     }
 
     pub fn resolve(&mut self) -> Result<(), UnresolvableError> {
-        // This is a very inefficient topological sort.
+        // TODO(minor): This is a very inefficient topological sort.
         while !self.unresolved.is_empty() {
             let next_resolvable_index = self
                 .unresolved
@@ -155,6 +155,34 @@ impl IdentStorage {
                 I::from_item_and_dimensions(resolved.item.clone(), resolved.dimensions.clone())
             })
             .collect()
+    }
+
+    pub(crate) fn filter_undefined(&mut self) -> Result<(), UndefinedError> {
+        // TODO(minor): This code clones quite a lot.
+        let defined_idents: HashSet<_> = self
+            .unresolved
+            .iter()
+            .map(|item| item.ident().clone())
+            .collect();
+        let mut undefined_lhs = vec![];
+        let (defined, undefined): (Vec<_>, Vec<_>) = self.unresolved.drain(..).partition(|item| {
+            item.expr.iter_vals().all(|x| match x {
+                Factor::Concrete(_) => true,
+                Factor::Other(ident) => {
+                    let defined = defined_idents.contains(ident);
+                    if !defined {
+                        undefined_lhs.push(ident.clone());
+                    }
+                    defined
+                }
+            })
+        });
+        self.unresolved = defined;
+        if undefined.is_empty() {
+            Ok(())
+        } else {
+            Err(UndefinedError(undefined_lhs))
+        }
     }
 }
 
