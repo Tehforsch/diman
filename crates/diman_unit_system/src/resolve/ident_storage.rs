@@ -11,7 +11,7 @@ use crate::{
     },
 };
 
-use super::error::{UndefinedError, UnresolvableError};
+use super::error::{MultipleDefinitionsError, UndefinedError, UnresolvableError};
 
 /// The kind of an identifier
 #[derive(Clone, Debug, PartialEq)]
@@ -182,6 +182,33 @@ impl IdentStorage {
             Ok(())
         } else {
             Err(UndefinedError(undefined_lhs))
+        }
+    }
+
+    pub(crate) fn filter_multiply_defined(&mut self) -> Result<(), MultipleDefinitionsError> {
+        let num_definitions: HashMap<_, usize> =
+            self.unresolved
+                .iter()
+                .fold(HashMap::default(), |mut acc, item| {
+                    *acc.entry(item.ident()).or_insert(0) += 1;
+                    acc
+                });
+        let mut v: Vec<Vec<_>> = vec![];
+        for (ident, count) in num_definitions {
+            if count > 1 {
+                v.push(
+                    self.unresolved
+                        .iter()
+                        .filter(|item| item.ident() == ident)
+                        .map(|x| x.ident().clone())
+                        .collect(),
+                );
+            }
+        }
+        if v.is_empty() {
+            Ok(())
+        } else {
+            Err(MultipleDefinitionsError(v))
         }
     }
 }

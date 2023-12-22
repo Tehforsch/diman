@@ -80,6 +80,7 @@ impl UnresolvedDefs {
         idents.add(self.units);
         idents.add(self.constants);
         emit_if_err(idents.filter_undefined());
+        emit_if_err(idents.filter_multiply_defined());
         emit_if_err(idents.resolve());
         let dimensions = idents.get_items();
         let units = idents.get_items();
