@@ -13,7 +13,7 @@ use crate::{
 
 use super::error::{
     Emit, KindNotAllowedError, MultipleDefinitionsError, UndefinedAnnotationDimensionError,
-    UndefinedError, UnresolvableError, ViolatedAnnotationError,
+    UndefinedError, UnresolvableError, ViolatedAnnotationError, WrongTypeInAnnotationError,
 };
 
 /// The kind of an identifier
@@ -245,27 +245,32 @@ impl IdentStorage {
 
     pub(crate) fn check_type_annotations(&self) -> Result<(), ViolatedAnnotationError> {
         for item in self.resolved.values() {
-            if let Some(annotation) = item.item.annotation() {
-                match self.resolved.get(annotation) {
-                    Some(annotation_dimension) => {
-                        if annotation_dimension.dimensions.dimensions != item.dimensions.dimensions
-                        {
+            if let Some(annotation_ident) = item.item.annotation() {
+                match self.resolved.get(annotation_ident) {
+                    Some(annotation) => {
+                        if !matches!(annotation.item.kind(), Kind::Dimension) {
+                            WrongTypeInAnnotationError {
+                                annotation_ident,
+                                annotation_kind: annotation.item.kind(),
+                            }
+                            .emit()
+                        } else if annotation.dimensions.dimensions != item.dimensions.dimensions {
                             ViolatedAnnotationError {
-                                annotation,
-                                annotation_dims: &annotation_dimension.dimensions.dimensions,
+                                annotation: annotation_ident,
+                                annotation_dims: &annotation.dimensions.dimensions,
                                 expr_dims: &item.dimensions.dimensions,
                             }
                             .emit()
                         }
                     }
-                    None => UndefinedAnnotationDimensionError(annotation).emit(),
+                    None => UndefinedAnnotationDimensionError(annotation_ident).emit(),
                 }
             }
         }
         Ok(())
     }
 
-    pub(crate) fn check_types(&self) {
+    pub(crate) fn check_kinds_in_definitions(&self) {
         // TODO(minor): Having to collect into a HashMap here is annoying.
         let kinds: HashMap<_, _> = self
             .unresolved

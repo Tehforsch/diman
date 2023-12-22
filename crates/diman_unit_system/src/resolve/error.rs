@@ -32,6 +32,11 @@ pub struct KindNotAllowedError<'a> {
     pub rhs_ident: &'a Ident,
 }
 
+pub struct WrongTypeInAnnotationError<'a> {
+    pub annotation_ident: &'a Ident,
+    pub annotation_kind: Kind,
+}
+
 pub trait Emit {
     fn emit(self);
 }
@@ -197,5 +202,25 @@ impl<'a> Emit for KindNotAllowedError<'a> {
             allowed_rhs_kinds(self.lhs_kind)
         ))
         .emit();
+    }
+}
+
+impl<'a> Emit for WrongTypeInAnnotationError<'a> {
+    fn emit(self) {
+        let name = match self.annotation_kind {
+            Kind::Dimension => unreachable!(),
+            Kind::BaseUnit => "unit",
+            Kind::Unit => "unit",
+            Kind::Constant => "constant",
+        };
+        self.annotation_ident
+            .span()
+            .unwrap()
+            .error(format!(
+                "Type error in annotation: Expected dimension, found {} '{}'.",
+                name, self.annotation_ident
+            ))
+            .note(format!("Annotations can only be done using dimensions."))
+            .emit();
     }
 }
