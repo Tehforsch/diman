@@ -11,7 +11,10 @@ use crate::{
     },
 };
 
-use super::error::{MultipleDefinitionsError, UndefinedError, UnresolvableError};
+use super::error::{
+    Emit, MultipleDefinitionsError, UndefinedAnnotationDimensionError, UndefinedError,
+    UnresolvableError, ViolatedAnnotationError,
+};
 
 /// The kind of an identifier
 #[derive(Clone, Debug, PartialEq)]
@@ -48,6 +51,14 @@ impl Item {
             ItemType::Dimension(dim) => &dim.name,
             ItemType::Unit(unit) => &unit.name,
             ItemType::Constant(constant) => &constant.name,
+        }
+    }
+
+    fn annotation(&self) -> Option<&Ident> {
+        match &self.type_ {
+            ItemType::Dimension(_) => None,
+            ItemType::Unit(entry) => entry.dimension_annotation.as_ref(),
+            ItemType::Constant(entry) => entry.dimension_annotation.as_ref(),
         }
     }
 }
@@ -211,6 +222,28 @@ impl IdentStorage {
         } else {
             Err(MultipleDefinitionsError(v))
         }
+    }
+
+    pub(crate) fn check_type_annotations(&self) -> Result<(), ViolatedAnnotationError> {
+        for item in self.resolved.values() {
+            if let Some(annotation) = item.item.annotation() {
+                match self.resolved.get(annotation) {
+                    Some(annotation_dimension) => {
+                        if annotation_dimension.dimensions.dimensions != item.dimensions.dimensions
+                        {
+                            ViolatedAnnotationError {
+                                annotation,
+                                annotation_dims: &annotation_dimension.dimensions.dimensions,
+                                expr_dims: &item.dimensions.dimensions,
+                            }
+                            .emit()
+                        }
+                    }
+                    None => UndefinedAnnotationDimensionError(annotation).emit(),
+                }
+            }
+        }
+        Ok(())
     }
 }
 

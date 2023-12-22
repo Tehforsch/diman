@@ -17,8 +17,8 @@ pub struct MultipleTypeDefinitionsError {
 
 pub struct ViolatedAnnotationError<'a> {
     pub annotation: &'a Ident,
-    pub lhs_dims: &'a BaseDimensions,
-    pub rhs_dims: &'a BaseDimensions,
+    pub annotation_dims: &'a BaseDimensions,
+    pub expr_dims: &'a BaseDimensions,
 }
 
 pub struct UndefinedAnnotationDimensionError<'a>(pub &'a Ident);
@@ -76,7 +76,7 @@ impl<'a> Emit for ViolatedAnnotationError<'a> {
         // second help text that points to the rhs. Unfortunately, joining
         // spans of the expressions on the rhs is a little more difficult
         // than it initially seems, so I'll postpone this for now.
-        let (lhs, rhs) = format_lhs_rhs_dimensions(self.lhs_dims, self.rhs_dims);
+        let (lhs, rhs) = format_lhs_rhs_dimensions(self.annotation_dims, self.expr_dims);
         self.annotation
             .span()
             .unwrap()
