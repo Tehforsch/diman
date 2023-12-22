@@ -5,6 +5,8 @@ use syn::Ident;
 
 use crate::dimension_math::BaseDimensions;
 
+use super::ident_storage::Kind;
+
 pub struct UnresolvableError(pub Vec<Ident>);
 pub struct UndefinedError(pub Vec<Ident>);
 #[derive(Debug)]
@@ -22,6 +24,13 @@ pub struct ViolatedAnnotationError<'a> {
 }
 
 pub struct UndefinedAnnotationDimensionError<'a>(pub &'a Ident);
+
+pub struct KindNotAllowedError<'a> {
+    pub lhs_kind: Kind,
+    pub rhs_kind: Kind,
+    pub lhs_ident: &'a Ident,
+    pub rhs_ident: &'a Ident,
+}
 
 pub trait Emit {
     fn emit(self);
@@ -145,5 +154,45 @@ impl Emit for MultipleDefinitionsError {
             )
             .emit();
         }
+    }
+}
+
+impl<'a> Emit for KindNotAllowedError<'a> {
+    fn emit(self) {
+        let name = |kind| match kind {
+            Kind::Dimension => "Dimension",
+            Kind::Unit => "Unit",
+            Kind::Constant => "Constant",
+        };
+        let plural = |kind| match kind {
+            Kind::Dimension => "Dimensions",
+            Kind::Unit => "Units",
+            Kind::Constant => "Constants",
+        };
+        let allowed_rhs_kinds = |kind| match kind {
+            Kind::Dimension => "other dimensions",
+            Kind::Unit => "other units and constants",
+            Kind::Constant => "other constants and units",
+        };
+        Diagnostic::spanned(
+            vec![
+                self.lhs_ident.span().unwrap(),
+                self.rhs_ident.span().unwrap(),
+            ],
+            Level::Error,
+            format!(
+                "{} {} is defined in terms of the {} {}.",
+                name(self.lhs_kind),
+                self.lhs_ident,
+                name(self.rhs_kind).to_lowercase(),
+                self.rhs_ident
+            ),
+        )
+        .note(format!(
+            "{} can only be defined in terms of {}.",
+            plural(self.lhs_kind),
+            allowed_rhs_kinds(self.lhs_kind)
+        ))
+        .emit();
     }
 }

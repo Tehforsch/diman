@@ -12,16 +12,28 @@ use crate::{
 };
 
 use super::error::{
-    Emit, MultipleDefinitionsError, UndefinedAnnotationDimensionError, UndefinedError,
-    UnresolvableError, ViolatedAnnotationError,
+    Emit, KindNotAllowedError, MultipleDefinitionsError, UndefinedAnnotationDimensionError,
+    UndefinedError, UnresolvableError, ViolatedAnnotationError,
 };
 
 /// The kind of an identifier
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Copy)]
 pub enum Kind {
     Dimension,
     Unit,
     Constant,
+}
+
+impl Kind {
+    fn kind_is_allowed_in_definition(&self, kind: Kind) -> bool {
+        match self {
+            Kind::Dimension => kind == Kind::Dimension,
+            // TODO(major): This needs to be Kind::Unit only once the syntax for
+            // base units is there.
+            Kind::Unit => kind == Kind::Unit || kind == Kind::Dimension || kind == Kind::Constant,
+            Kind::Constant => kind == Kind::Constant || kind == Kind::Unit,
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -244,6 +256,32 @@ impl IdentStorage {
             }
         }
         Ok(())
+    }
+
+    pub(crate) fn check_types(&self) {
+        // TODO(minor): Having to collect into a HashMap here is annoying.
+        let kinds: HashMap<_, _> = self
+            .unresolved
+            .iter()
+            .map(|item| (item.ident(), item.kind()))
+            .collect();
+        for lhs in self.unresolved.iter() {
+            let lhs_kind = lhs.kind();
+            for rhs_factor in lhs.expr.iter_vals() {
+                if let Factor::Other(rhs_ident) = rhs_factor {
+                    let rhs_kind = kinds[rhs_ident];
+                    if !lhs_kind.kind_is_allowed_in_definition(rhs_kind) {
+                        KindNotAllowedError {
+                            lhs_ident: lhs.ident(),
+                            rhs_ident: rhs_ident,
+                            lhs_kind,
+                            rhs_kind,
+                        }
+                        .emit();
+                    }
+                }
+            }
+        }
     }
 }
 

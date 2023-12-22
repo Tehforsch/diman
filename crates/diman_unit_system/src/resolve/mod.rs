@@ -81,6 +81,7 @@ impl UnresolvedDefs {
         idents.add(self.constants);
         emit_if_err(idents.filter_undefined());
         emit_if_err(idents.filter_multiply_defined());
+        idents.check_types();
         emit_if_err(idents.resolve());
         emit_if_err(idents.check_type_annotations());
         let dimensions = idents.get_items();
