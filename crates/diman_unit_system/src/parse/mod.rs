@@ -330,7 +330,7 @@ impl Parse for UnresolvedDefs {
         let mut quantity_types = vec![];
         let mut dimension_types = vec![];
         for item in input
-            .parse_terminated::<_, StatementSeparator>(Entry::parse)?
+            .parse_terminated(Entry::parse, StatementSeparator)?
             .into_iter()
         {
             match item {
