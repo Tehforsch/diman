@@ -1,5 +1,5 @@
 use syn::{
-    bracketed, parenthesized,
+    parenthesized,
     parse::{Parse, ParseStream},
     token::{self, Paren},
     Attribute, Error, Ident, Lit, Result,
@@ -166,44 +166,13 @@ impl Parse for Definition<(), One> {
     }
 }
 
-enum UnitAttribute {
-    Alias(Alias),
+trait ParseWithAttributes: Sized {
+    fn parse_with_attributes(input: ParseStream, attributes: Vec<Attribute>) -> Result<Self>;
 }
 
-impl UnitAttribute {
-    fn is_alias(&self) -> bool {
-        matches!(self, Self::Alias(..))
-    }
-
-    fn as_alias(self) -> Alias {
-        match self {
-            Self::Alias(alias) => alias,
-            _ => panic!(),
-        }
-    }
-}
-
-impl Parse for UnitAttribute {
-    fn parse(input: ParseStream) -> Result<Self> {
-        use unit_attribute_keywords as kw;
-        let lookahead = input.lookahead1();
-        if lookahead.peek(kw::alias) {
-            let _ = input.parse::<kw::alias>()?;
-            let name = input.parse()?;
-            if input.peek(tokens::AliasAnnotationToken) {
-                let _: kw::short = input.parse()?;
-            }
-            Ok(UnitAttribute::Alias(Alias { name, short: false }))
-        } else {
-            Err(lookahead.error())
-        }
-    }
-}
-
-impl Parse for UnitEntry {
-    fn parse(input: ParseStream) -> Result<Self> {
-        let mut attributes: Attributes<UnitAttribute> = input.parse()?;
-        let _: keywords::unit = input.parse()?;
+impl ParseWithAttributes for UnitEntry {
+    fn parse_with_attributes(input: ParseStream, mut attributes: Vec<Attribute>) -> Result<Self> {
+        let _ = input.parse::<keywords::unit>()?;
         let name = input.parse()?;
         let dimension_annotation = parse_annotation(input)?;
         let lookahead = input.lookahead1();
@@ -213,11 +182,7 @@ impl Parse for UnitEntry {
         } else {
             Definition::Base(dimension_annotation.clone().unwrap())
         };
-        let aliases = remove_attributes_of_type(
-            &mut attributes,
-            UnitAttribute::is_alias,
-            UnitAttribute::as_alias,
-        );
+        let aliases = remove_attributes_of_type(&mut attributes);
         Ok(Self {
             name,
             aliases,
@@ -227,14 +192,42 @@ impl Parse for UnitEntry {
     }
 }
 
-fn remove_attributes_of_type<T>(
-    attributes: &mut Attributes<UnitAttribute>,
-    is_t: fn(&UnitAttribute) -> bool,
-    as_t: fn(UnitAttribute) -> T,
-) -> Vec<T> {
-    let (ts, others): (Vec<_>, Vec<_>) = attributes.0.drain(..).partition(|a| is_t(a));
-    attributes.0 = others;
-    ts.into_iter().map(|t| as_t(t)).collect()
+trait FromAttribute: Sized {
+    fn is_correct_ident(ident: &Ident) -> bool;
+    fn from_attribute(attribute: &Attribute) -> Option<Self>;
+}
+
+fn remove_attributes_of_type<T: FromAttribute>(attributes: &mut Vec<Attribute>) -> Vec<T> {
+    //TODO(major): Unwrapping the get_ident here needs to be handled properly. There is probably a helpful method on the attribute itself, i.e. .require_??
+    let (ts, others): (Vec<_>, Vec<_>) = attributes
+        .drain(..)
+        .partition(|a| T::is_correct_ident(&get_ident(a).unwrap()));
+    *attributes = others;
+    ts.into_iter()
+        .map(|t| T::from_attribute(&t).unwrap())
+        .collect()
+}
+
+fn get_ident(attribute: &Attribute) -> Result<&Ident> {
+    let path = attribute.meta.path();
+    path.get_ident().ok_or_else(|| {
+        syn::Error::new_spanned(
+            path.segments.first().unwrap(),
+            format!("Expected identifier"),
+        )
+    })
+}
+
+impl FromAttribute for Alias {
+    fn is_correct_ident(ident: &Ident) -> bool {
+        ident.to_string() == "alias"
+    }
+
+    fn from_attribute(attribute: &Attribute) -> Option<Self> {
+        //TODO(major)
+        let name = attribute.parse_args().unwrap();
+        Some(Alias { name, short: false })
+    }
 }
 
 fn parse_annotation(input: ParseStream) -> Result<Option<Ident>> {
@@ -272,35 +265,11 @@ impl Parse for ConstantEntry {
     }
 }
 
-struct Attributes<Attr>(pub Vec<Attr>);
-
-impl<Attr> Parse for Attributes<Attr>
-where
-    Attr: Parse,
-{
-    fn parse(input: ParseStream) -> Result<Self> {
-        let mut attributes = vec![];
-        while input.peek(tokens::AttributeToken) {
-            let _ = input.parse::<tokens::AttributeToken>()?;
-            let content;
-            bracketed! { content in input };
-            let attribute = content.parse()?;
-            attributes.push(attribute);
-        }
-        Ok(Attributes(attributes))
-    }
-}
-
 impl Parse for Entry {
     fn parse(input: ParseStream) -> Result<Self> {
         use keywords as kw;
-        // TODO(minor): This isnt very pretty - basically
-        // we parse any kind of attributes here, just to see
-        // what type of entry we deal with. Attributes are then
-        // parsed again in the individual entry.
-        let fork = input.fork();
-        let _ = fork.call(Attribute::parse_outer)?;
-        let lookahead = fork.lookahead1();
+        let attributes = input.call(Attribute::parse_outer)?;
+        let lookahead = input.lookahead1();
         if lookahead.peek(kw::quantity_type) {
             let _: kw::quantity_type = input.parse()?;
             Ok(Self::QuantityType(input.parse()?))
@@ -310,7 +279,9 @@ impl Parse for Entry {
         } else if lookahead.peek(kw::dimension) {
             Ok(Self::Dimension(input.parse()?))
         } else if lookahead.peek(kw::unit) {
-            Ok(Self::Unit(input.parse()?))
+            Ok(Self::Unit(UnitEntry::parse_with_attributes(
+                input, attributes,
+            )?))
         } else if lookahead.peek(kw::constant) {
             Ok(Self::Constant(input.parse()?))
         } else {
@@ -403,7 +374,10 @@ pub mod tests {
     use proc_macro2::TokenStream;
     use quote::quote;
 
-    use crate::expression::{BinaryOperator, Expr, Factor, Operator};
+    use crate::{
+        expression::{BinaryOperator, Expr, Factor, Operator},
+        parse::Entry,
+    };
 
     use syn::{
         parse::{self, Parse},
@@ -526,5 +500,21 @@ pub mod tests {
                 operator: Div,
             }),
         );
+    }
+
+    #[test]
+    fn parse_unit_entry() {
+        let entry = syn::parse2::<Entry>(quote! {
+            #[alias(foo)]
+            unit bar = meters
+        })
+        .unwrap();
+        if let Entry::Unit(entry) = entry {
+            assert_eq!(entry.name.to_string(), "bar");
+            assert_eq!(entry.aliases.len(), 1);
+            assert_eq!(entry.aliases[0].name, "foo");
+        } else {
+            panic!()
+        }
     }
 }
