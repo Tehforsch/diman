@@ -11,7 +11,7 @@ impl Defs {
             .filter_map(|unit| {
                 let dim = self.get_dimension_expr(&unit.dimensions);
                 let factor = unit.factor;
-                let symbol = &unit.symbol.as_ref()?.0;
+                let symbol = &unit.symbol()?;
                 Some(quote! {
                     (#dim, #symbol, #factor),
                 })

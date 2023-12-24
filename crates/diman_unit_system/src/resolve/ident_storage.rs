@@ -370,7 +370,7 @@ impl FromItem for Unit {
             dimensions: dimensions.dimensions,
             name: unit_entry.name,
             factor: dimensions.factor,
-            symbol: unit_entry.symbol,
+            aliases: unit_entry.aliases,
         }
     }
 }

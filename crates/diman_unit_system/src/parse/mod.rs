@@ -7,7 +7,7 @@ use syn::{
 
 use crate::{
     expression::{BinaryOperator, Expr, Factor, Operator},
-    types::{Definition, IntExponent, UnresolvedDefs},
+    types::{Alias, Definition, IntExponent, UnresolvedDefs},
 };
 
 use self::tokens::{
@@ -26,7 +26,8 @@ pub mod keywords {
 }
 
 pub mod unit_attribute_keywords {
-    syn::custom_keyword!(symbol);
+    syn::custom_keyword!(alias);
+    syn::custom_keyword!(short);
 }
 
 pub mod tokens {
@@ -40,6 +41,7 @@ pub mod tokens {
     syn::custom_punctuation!(ExponentiationToken, ^);
     syn::custom_punctuation!(AttributeToken, #);
     syn::custom_punctuation!(StatementSeparator, ,);
+    syn::custom_punctuation!(AliasAnnotationToken, :);
 }
 
 pub struct Number {
@@ -57,21 +59,12 @@ pub struct One;
 
 pub struct Exponent(i32);
 
-#[derive(Clone)]
-pub struct Symbol(pub Lit);
-
 pub enum Entry {
     QuantityType(Ident),
     DimensionType(Ident),
     Dimension(DimensionEntry),
     Unit(UnitEntry),
     Constant(ConstantEntry),
-}
-
-impl Parse for Symbol {
-    fn parse(input: ParseStream) -> Result<Self> {
-        Ok(Self(input.parse()?))
-    }
 }
 
 impl Number {
@@ -174,16 +167,33 @@ impl Parse for Definition<(), One> {
 }
 
 enum UnitAttribute {
-    Symbol,
+    Alias(Alias),
+}
+
+impl UnitAttribute {
+    fn is_alias(&self) -> bool {
+        matches!(self, Self::Alias(..))
+    }
+
+    fn as_alias(self) -> Alias {
+        match self {
+            Self::Alias(alias) => alias,
+            _ => panic!(),
+        }
+    }
 }
 
 impl Parse for UnitAttribute {
     fn parse(input: ParseStream) -> Result<Self> {
         use unit_attribute_keywords as kw;
         let lookahead = input.lookahead1();
-        if lookahead.peek(kw::symbol) {
-            let _ = input.parse::<kw::symbol>()?;
-            Ok(UnitAttribute::Symbol)
+        if lookahead.peek(kw::alias) {
+            let _ = input.parse::<kw::alias>()?;
+            let name = input.parse()?;
+            if input.peek(tokens::AliasAnnotationToken) {
+                let _: kw::short = input.parse()?;
+            }
+            Ok(UnitAttribute::Alias(Alias { name, short: false }))
         } else {
             Err(lookahead.error())
         }
@@ -192,7 +202,7 @@ impl Parse for UnitAttribute {
 
 impl Parse for UnitEntry {
     fn parse(input: ParseStream) -> Result<Self> {
-        let attributes: Attributes<UnitAttribute> = input.parse()?;
+        let mut attributes: Attributes<UnitAttribute> = input.parse()?;
         let _: keywords::unit = input.parse()?;
         let name = input.parse()?;
         let dimension_annotation = parse_annotation(input)?;
@@ -203,13 +213,28 @@ impl Parse for UnitEntry {
         } else {
             Definition::Base(dimension_annotation.clone().unwrap())
         };
+        let aliases = remove_attributes_of_type(
+            &mut attributes,
+            UnitAttribute::is_alias,
+            UnitAttribute::as_alias,
+        );
         Ok(Self {
             name,
-            symbol: None,
+            aliases,
             dimension_annotation,
             definition,
         })
     }
+}
+
+fn remove_attributes_of_type<T>(
+    attributes: &mut Attributes<UnitAttribute>,
+    is_t: fn(&UnitAttribute) -> bool,
+    as_t: fn(UnitAttribute) -> T,
+) -> Vec<T> {
+    let (ts, others): (Vec<_>, Vec<_>) = attributes.0.drain(..).partition(|a| is_t(a));
+    attributes.0 = others;
+    ts.into_iter().map(|t| as_t(t)).collect()
 }
 
 fn parse_annotation(input: ParseStream) -> Result<Option<Ident>> {

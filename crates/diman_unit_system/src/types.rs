@@ -1,10 +1,7 @@
 use syn::*;
 
 use crate::{
-    derive_dimension::to_snakecase,
-    dimension_math::BaseDimensions,
-    expression::Expr,
-    parse::{One, Symbol},
+    derive_dimension::to_snakecase, dimension_math::BaseDimensions, expression::Expr, parse::One,
 };
 
 pub type IntExponent = i32;
@@ -49,9 +46,15 @@ impl DimensionEntry {
 }
 
 #[derive(Clone)]
+pub struct Alias {
+    pub name: Ident,
+    pub short: bool,
+}
+
+#[derive(Clone)]
 pub struct UnitEntry {
     pub name: Ident,
-    pub symbol: Option<Symbol>,
+    pub aliases: Vec<Alias>,
     pub dimension_annotation: Option<Ident>,
     pub definition: Definition<Ident, f64>,
 }
@@ -80,7 +83,17 @@ pub struct Unit {
     pub name: Ident,
     pub dimensions: BaseDimensions,
     pub factor: f64,
-    pub symbol: Option<Symbol>,
+    pub aliases: Vec<Alias>,
+}
+
+impl Unit {
+    pub fn symbol(&self) -> Option<&Ident> {
+        self.aliases
+            .iter()
+            .filter(|alias| alias.short)
+            .map(|alias| &alias.name)
+            .next()
+    }
 }
 
 pub struct Constant {
