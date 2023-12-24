@@ -25,11 +25,6 @@ pub mod keywords {
     syn::custom_keyword!(constant);
 }
 
-pub mod unit_attribute_keywords {
-    syn::custom_keyword!(alias);
-    syn::custom_keyword!(short);
-}
-
 pub mod tokens {
     syn::custom_punctuation!(DimensionEntryAssignment, :);
     syn::custom_punctuation!(DimensionEntrySeparator, ,);
@@ -220,13 +215,19 @@ fn get_ident(attribute: &Attribute) -> Result<&Ident> {
 
 impl FromAttribute for Alias {
     fn is_correct_ident(ident: &Ident) -> bool {
-        ident.to_string() == "alias"
+        ident.to_string() == "alias" || ident.to_string() == "short"
     }
 
     fn from_attribute(attribute: &Attribute) -> Option<Self> {
-        //TODO(major)
+        //TODO(major): do not unwrap here
+        let type_ = get_ident(attribute).unwrap();
+        let short = if type_.to_string() == "alias" {
+            false
+        } else {
+            true
+        };
         let name = attribute.parse_args().unwrap();
-        Some(Alias { name, short: false })
+        Some(Alias { name, short })
     }
 }
 
@@ -513,6 +514,20 @@ pub mod tests {
             assert_eq!(entry.name.to_string(), "bar");
             assert_eq!(entry.aliases.len(), 1);
             assert_eq!(entry.aliases[0].name, "foo");
+            assert!(!entry.aliases[0].short);
+        } else {
+            panic!()
+        }
+        let entry = syn::parse2::<Entry>(quote! {
+            #[short(b)]
+            unit bar = meters
+        })
+        .unwrap();
+        if let Entry::Unit(entry) = entry {
+            assert_eq!(entry.name.to_string(), "bar");
+            assert_eq!(entry.aliases.len(), 1);
+            assert_eq!(entry.aliases[0].name, "b");
+            assert!(entry.aliases[0].short);
         } else {
             panic!()
         }
