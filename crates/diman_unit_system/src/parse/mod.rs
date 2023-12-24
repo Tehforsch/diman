@@ -1,8 +1,8 @@
 use syn::{
-    parenthesized,
+    bracketed, parenthesized,
     parse::{Parse, ParseStream},
     token::{self, Paren},
-    Error, Ident, Lit, Result,
+    Attribute, Error, Ident, Lit, Result,
 };
 
 use crate::{
@@ -25,6 +25,10 @@ pub mod keywords {
     syn::custom_keyword!(constant);
 }
 
+pub mod unit_attribute_keywords {
+    syn::custom_keyword!(base);
+}
+
 pub mod tokens {
     pub type UnitDefDelimiter = syn::token::Paren;
     syn::custom_punctuation!(DimensionEntryAssignment, :);
@@ -36,6 +40,7 @@ pub mod tokens {
     syn::custom_punctuation!(MultiplicationToken, *);
     syn::custom_punctuation!(DivisionToken, /);
     syn::custom_punctuation!(ExponentiationToken, ^);
+    syn::custom_punctuation!(AttributeToken, #);
     syn::custom_punctuation!(StatementSeparator, ,);
 }
 
@@ -170,8 +175,27 @@ impl Parse for Definition<(), One> {
     }
 }
 
+enum UnitAttribute {
+    Base,
+}
+
+impl Parse for UnitAttribute {
+    fn parse(input: ParseStream) -> Result<Self> {
+        use unit_attribute_keywords as kw;
+        let lookahead = input.lookahead1();
+        if lookahead.peek(kw::base) {
+            let _ = input.parse::<kw::base>()?;
+            Ok(UnitAttribute::Base)
+        } else {
+            Err(lookahead.error())
+        }
+    }
+}
+
 impl Parse for UnitEntry {
     fn parse(input: ParseStream) -> Result<Self> {
+        let attributes: Attributes<UnitAttribute> = input.parse()?;
+        let _: keywords::unit = input.parse()?;
         let lookahead = input.lookahead1();
         let name;
         let symbol;
@@ -223,6 +247,7 @@ fn parse_annotation(input: ParseStream) -> Result<Option<Ident>> {
 
 impl Parse for DimensionEntry {
     fn parse(input: ParseStream) -> Result<Self> {
+        let _: keywords::dimension = input.parse()?;
         let name = input.parse()?;
         let rhs = input.parse()?;
         Ok(Self { name, rhs })
@@ -231,6 +256,7 @@ impl Parse for DimensionEntry {
 
 impl Parse for ConstantEntry {
     fn parse(input: ParseStream) -> Result<Self> {
+        let _: keywords::constant = input.parse()?;
         let name = input.parse()?;
         let dimension_annotation = parse_annotation(input)?;
         let _: AssignmentToken = input.parse()?;
@@ -243,24 +269,46 @@ impl Parse for ConstantEntry {
     }
 }
 
+struct Attributes<Attr>(pub Vec<Attr>);
+
+impl<Attr> Parse for Attributes<Attr>
+where
+    Attr: Parse,
+{
+    fn parse(input: ParseStream) -> Result<Self> {
+        let mut attributes = vec![];
+        while input.peek(tokens::AttributeToken) {
+            let _ = input.parse::<tokens::AttributeToken>()?;
+            let content;
+            bracketed! { content in input };
+            let attribute = content.parse()?;
+            attributes.push(attribute);
+        }
+        Ok(Attributes(attributes))
+    }
+}
+
 impl Parse for Entry {
     fn parse(input: ParseStream) -> Result<Self> {
         use keywords as kw;
-        let lookahead = input.lookahead1();
+        // TODO(minor): This isnt very pretty - basically
+        // we parse any kind of attributes here, just to see
+        // what type of entry we deal with. Attributes are then
+        // parsed again in the individual entry.
+        let fork = input.fork();
+        let _ = fork.call(Attribute::parse_outer)?;
+        let lookahead = fork.lookahead1();
         if lookahead.peek(kw::quantity_type) {
-            let _ = input.parse::<kw::quantity_type>()?;
+            let _: kw::quantity_type = input.parse()?;
             Ok(Self::QuantityType(input.parse()?))
         } else if lookahead.peek(kw::dimension_type) {
-            let _ = input.parse::<kw::dimension_type>()?;
+            let _: kw::dimension_type = input.parse()?;
             Ok(Self::DimensionType(input.parse()?))
         } else if lookahead.peek(kw::dimension) {
-            let _ = input.parse::<kw::dimension>()?;
             Ok(Self::Dimension(input.parse()?))
         } else if lookahead.peek(kw::unit) {
-            let _ = input.parse::<kw::unit>()?;
             Ok(Self::Unit(input.parse()?))
         } else if lookahead.peek(kw::constant) {
-            let _ = input.parse::<kw::constant>()?;
             Ok(Self::Constant(input.parse()?))
         } else {
             Err(lookahead.error())
@@ -327,10 +375,8 @@ impl Parse for UnresolvedDefs {
         let mut constants = vec![];
         let mut quantity_types = vec![];
         let mut dimension_types = vec![];
-        for item in input
-            .parse_terminated(Entry::parse, StatementSeparator)?
-            .into_iter()
-        {
+        let pt = input.parse_terminated(Entry::parse, StatementSeparator);
+        for item in pt?.into_iter() {
             match item {
                 Entry::Dimension(q) => dimensions.push(q),
                 Entry::Unit(u) => units.push(u),

@@ -13,6 +13,7 @@ unit_system!(
     dimension LuminousIntensity,
     dimension Dimensionless = 1,
     unit dimensionless: Dimensionless,
+    #[base]
     unit (meters, "m"): Length,
     unit (kilometers, "km") = 1000.0 * meters,
     unit (seconds, "s"): Time,
