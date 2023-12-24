@@ -246,26 +246,24 @@ impl Parse for ConstantEntry {
 impl Parse for Entry {
     fn parse(input: ParseStream) -> Result<Self> {
         use keywords as kw;
-        if input.peek(kw::quantity_type) {
+        let lookahead = input.lookahead1();
+        if lookahead.peek(kw::quantity_type) {
             let _ = input.parse::<kw::quantity_type>()?;
             Ok(Self::QuantityType(input.parse()?))
-        } else if input.peek(kw::dimension_type) {
+        } else if lookahead.peek(kw::dimension_type) {
             let _ = input.parse::<kw::dimension_type>()?;
             Ok(Self::DimensionType(input.parse()?))
-        } else if input.peek(kw::dimension) {
+        } else if lookahead.peek(kw::dimension) {
             let _ = input.parse::<kw::dimension>()?;
             Ok(Self::Dimension(input.parse()?))
-        } else if input.peek(kw::unit) {
+        } else if lookahead.peek(kw::unit) {
             let _ = input.parse::<kw::unit>()?;
             Ok(Self::Unit(input.parse()?))
-        } else if input.peek(kw::constant) {
+        } else if lookahead.peek(kw::constant) {
             let _ = input.parse::<kw::constant>()?;
             Ok(Self::Constant(input.parse()?))
         } else {
-            Err(Error::new(
-                input.span(),
-                format!("Unexpected token. Expected \"def\", \"unit\" or \"constant\"",),
-            ))
+            Err(lookahead.error())
         }
     }
 }
