@@ -171,12 +171,32 @@ impl ParseWithAttributes for UnitEntry {
         let name = input.parse()?;
         let dimension_annotation = parse_annotation(input)?;
         let lookahead = input.lookahead1();
+        let base_attributes: Vec<BaseAttribute> = remove_attributes_of_type(&mut attributes);
         let definition = if lookahead.peek(AssignmentToken) {
             let _: AssignmentToken = input.parse()?;
-            Definition::Expression(parse_int_exponent_expr(input)?)
+            if base_attributes.is_empty() {
+                Ok(Definition::Expression(parse_int_exponent_expr(input)?))
+            } else {
+                Err(syn::Error::new_spanned(
+                    &base_attributes[0].base_ident,
+                    format!("Unit declared as base unit, but an expression is given."),
+                ))
+            }
         } else {
-            Definition::Base(dimension_annotation.clone().unwrap())
-        };
+            if base_attributes.len() == 1 {
+                Ok(Definition::Base(base_attributes[0].dimension.clone()))
+            } else if base_attributes.len() == 0 {
+                Err(syn::Error::new_spanned(
+                    &name,
+                    format!("Unit declared as base unit, but the base dimension is not specified."),
+                ))
+            } else {
+                Err(syn::Error::new_spanned(
+                    &base_attributes[0].base_ident,
+                    format!("Base dimension is specified multiple times."),
+                ))
+            }
+        }?;
         let aliases = remove_attributes_of_type(&mut attributes);
         Ok(Self {
             name,
@@ -208,7 +228,7 @@ fn get_ident(attribute: &Attribute) -> Result<&Ident> {
     path.get_ident().ok_or_else(|| {
         syn::Error::new_spanned(
             path.segments.first().unwrap(),
-            format!("Expected identifier"),
+            format!("Expected identifier."),
         )
     })
 }
@@ -219,7 +239,7 @@ impl FromAttribute for Alias {
     }
 
     fn from_attribute(attribute: &Attribute) -> Option<Self> {
-        //TODO(major): do not unwrap here
+        //TODO(major): do not unwrap here. In principle, this method should return Result instead of Option. We also need to make sure to check that no attributes are left over at the end
         let type_ = get_ident(attribute).unwrap();
         let short = if type_.to_string() == "alias" {
             false
@@ -228,6 +248,25 @@ impl FromAttribute for Alias {
         };
         let name = attribute.parse_args().unwrap();
         Some(Alias { name, short })
+    }
+}
+
+struct BaseAttribute {
+    base_ident: Ident,
+    dimension: Ident,
+}
+
+impl FromAttribute for BaseAttribute {
+    fn is_correct_ident(ident: &Ident) -> bool {
+        ident.to_string() == "base"
+    }
+
+    fn from_attribute(attribute: &Attribute) -> Option<Self> {
+        let args = attribute.parse_args().unwrap();
+        Some(Self {
+            dimension: args,
+            base_ident: get_ident(attribute).unwrap().clone(),
+        })
     }
 }
 
