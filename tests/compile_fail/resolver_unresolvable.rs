@@ -7,8 +7,8 @@ unit_system!(
     quantity_type Quantity,
     dimension_type Dimension,
     dimension Length,
-    unit (meters, "m") = 0.001 * kilometers,
-    unit (kilometers, "km") = 1000.0 * meters,
+    unit meters = 0.001 * kilometers,
+    unit kilometers = 1000.0 * meters,
 );
 
 fn main() {}

@@ -7,10 +7,10 @@ unit_system!(
     quantity_type Quantity,
     dimension_type Dimension,
     dimension Length,
-    unit (meters, "m"): Length,
-    unit (kilometers, "km") = 1000.0 * meters,
-    unit (millimeters, "mm") = 0.001 * meters,
-    unit (undefined, "u") = undefined,
+    unit meters: Length,
+    unit kilometers = 1000.0 * meters,
+    unit millimeters = 0.001 * meters,
+    unit undefined = undefined,
 );
 
 fn main() {

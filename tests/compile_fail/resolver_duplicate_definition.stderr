@@ -1,7 +1,7 @@
 error: Identifier "meters" defined multiple times.
-  --> tests/compile_fail/resolver_duplicate_definition.rs:10:11
+  --> tests/compile_fail/resolver_duplicate_definition.rs:10:10
    |
-10 |     unit (meters, "m"): Length,
-   |           ^^^^^^
-11 |     unit (meters, "m"): Length,
-   |           ^^^^^^
+10 |     unit meters: Length,
+   |          ^^^^^^
+11 |     unit meters: Length,
+   |          ^^^^^^

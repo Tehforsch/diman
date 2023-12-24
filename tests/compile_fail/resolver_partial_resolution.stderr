@@ -1,7 +1,7 @@
 error: Unresolvable definition "undefined".
-  --> tests/compile_fail/resolver_partial_resolution.rs:13:11
+  --> tests/compile_fail/resolver_partial_resolution.rs:13:10
    |
-13 |     unit (undefined, "u") = undefined,
-   |           ^^^^^^^^^
+13 |     unit undefined = undefined,
+   |          ^^^^^^^^^
    |
    = help: Remove recursive definitions.

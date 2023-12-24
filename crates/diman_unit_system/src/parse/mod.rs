@@ -12,7 +12,7 @@ use crate::{
 
 use self::tokens::{
     AssignmentToken, DivisionToken, ExponentiationToken, MultiplicationToken, StatementSeparator,
-    TypeAnnotationToken, UnitDefDelimiter, UnitDefSeparator,
+    TypeAnnotationToken,
 };
 
 use super::types::{ConstantEntry, DimensionEntry, DimensionFactor, UnitEntry};
@@ -26,15 +26,13 @@ pub mod keywords {
 }
 
 pub mod unit_attribute_keywords {
-    syn::custom_keyword!(base);
+    syn::custom_keyword!(symbol);
 }
 
 pub mod tokens {
-    pub type UnitDefDelimiter = syn::token::Paren;
     syn::custom_punctuation!(DimensionEntryAssignment, :);
     syn::custom_punctuation!(DimensionEntrySeparator, ,);
     syn::custom_punctuation!(DimensionSeparator, ,);
-    syn::custom_punctuation!(UnitDefSeparator, ,);
     syn::custom_punctuation!(AssignmentToken, =);
     syn::custom_punctuation!(TypeAnnotationToken, :);
     syn::custom_punctuation!(MultiplicationToken, *);
@@ -176,16 +174,16 @@ impl Parse for Definition<(), One> {
 }
 
 enum UnitAttribute {
-    Base,
+    Symbol,
 }
 
 impl Parse for UnitAttribute {
     fn parse(input: ParseStream) -> Result<Self> {
         use unit_attribute_keywords as kw;
         let lookahead = input.lookahead1();
-        if lookahead.peek(kw::base) {
-            let _ = input.parse::<kw::base>()?;
-            Ok(UnitAttribute::Base)
+        if lookahead.peek(kw::symbol) {
+            let _ = input.parse::<kw::symbol>()?;
+            Ok(UnitAttribute::Symbol)
         } else {
             Err(lookahead.error())
         }
@@ -196,27 +194,7 @@ impl Parse for UnitEntry {
     fn parse(input: ParseStream) -> Result<Self> {
         let attributes: Attributes<UnitAttribute> = input.parse()?;
         let _: keywords::unit = input.parse()?;
-        let lookahead = input.lookahead1();
-        let name;
-        let symbol;
-        if lookahead.peek(Ident) {
-            name = input.parse()?;
-            symbol = None;
-        } else if lookahead.peek(Paren) {
-            let content;
-            let _: UnitDefDelimiter = parenthesized! { content in input };
-            name = content.parse()?;
-            let _: UnitDefSeparator = content.parse()?;
-            symbol = Some(content.parse()?);
-            let lookahead = content.lookahead1();
-            if lookahead.peek(UnitDefSeparator) {
-                let _: UnitDefSeparator = content.parse()?;
-            } else if !content.is_empty() {
-                return Err(lookahead.error());
-            }
-        } else {
-            return Err(lookahead.error());
-        }
+        let name = input.parse()?;
         let dimension_annotation = parse_annotation(input)?;
         let lookahead = input.lookahead1();
         let definition = if lookahead.peek(AssignmentToken) {
@@ -227,7 +205,7 @@ impl Parse for UnitEntry {
         };
         Ok(Self {
             name,
-            symbol,
+            symbol: None,
             dimension_annotation,
             definition,
         })
