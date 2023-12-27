@@ -26,17 +26,12 @@ pub mod keywords {
 }
 
 pub mod tokens {
-    syn::custom_punctuation!(DimensionEntryAssignment, :);
-    syn::custom_punctuation!(DimensionEntrySeparator, ,);
-    syn::custom_punctuation!(DimensionSeparator, ,);
     syn::custom_punctuation!(AssignmentToken, =);
     syn::custom_punctuation!(TypeAnnotationToken, :);
     syn::custom_punctuation!(MultiplicationToken, *);
     syn::custom_punctuation!(DivisionToken, /);
     syn::custom_punctuation!(ExponentiationToken, ^);
-    syn::custom_punctuation!(AttributeToken, #);
     syn::custom_punctuation!(StatementSeparator, ,);
-    syn::custom_punctuation!(AliasAnnotationToken, :);
 }
 
 pub struct Number {
