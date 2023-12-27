@@ -3,10 +3,10 @@
 
 use ::diman::unit_system;
 unit_system!(
-    quantity_type Quantity,
-    dimension_type Dimension,
-    dimension Mass,
-    constant SOLAR_MASS: Mass = 1.988477e30 * Mass,
+    quantity_type Quantity;
+    dimension_type Dimension;
+    dimension Mass;
+    constant SOLAR_MASS: Mass = 1.988477e30 * Mass;
 );
 
 fn main() {

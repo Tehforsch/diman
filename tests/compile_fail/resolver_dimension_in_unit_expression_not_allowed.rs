@@ -3,10 +3,10 @@
 
 use ::diman::unit_system;
 unit_system!(
-    quantity_type Quantity,
-    dimension_type Dimension,
-    dimension Mass,
-    unit kilograms = 5.0 * Mass,
+    quantity_type Quantity;
+    dimension_type Dimension;
+    dimension Mass;
+    unit kilograms = 5.0 * Mass;
 );
 
 fn main() {

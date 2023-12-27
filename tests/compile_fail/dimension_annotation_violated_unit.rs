@@ -3,13 +3,13 @@
 
 use ::diman::unit_system;
 unit_system!(
-    quantity_type Quantity,
-    dimension_type Dimension,
-    dimension Mass,
-    dimension Length,
+    quantity_type Quantity;
+    dimension_type Dimension;
+    dimension Mass;
+    dimension Length;
     #[base(Mass)]
-    unit kilograms: Mass,
-    unit foo: Length = kilograms * kilograms,
+    unit kilograms: Mass;
+    unit foo: Length = kilograms * kilograms;
 );
 
 fn main() {

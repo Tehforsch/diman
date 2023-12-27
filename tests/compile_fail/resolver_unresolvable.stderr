@@ -1,7 +1,7 @@
 error: Unresolvable definition "meters".
   --> tests/compile_fail/resolver_unresolvable.rs:10:10
    |
-10 |     unit meters = 0.001 * kilometers,
+10 |     unit meters = 0.001 * kilometers;
    |          ^^^^^^
    |
    = help: Remove recursive definitions.
@@ -9,7 +9,7 @@ error: Unresolvable definition "meters".
 error: Unresolvable definition "kilometers".
   --> tests/compile_fail/resolver_unresolvable.rs:11:10
    |
-11 |     unit kilometers = 1000.0 * meters,
+11 |     unit kilometers = 1000.0 * meters;
    |          ^^^^^^^^^^
    |
    = help: Remove recursive definitions.

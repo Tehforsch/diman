@@ -31,7 +31,7 @@ pub mod tokens {
     syn::custom_punctuation!(MultiplicationToken, *);
     syn::custom_punctuation!(DivisionToken, /);
     syn::custom_punctuation!(ExponentiationToken, ^);
-    syn::custom_punctuation!(StatementSeparator, ,);
+    syn::custom_punctuation!(StatementSeparator, ;);
 }
 
 pub struct Number {
