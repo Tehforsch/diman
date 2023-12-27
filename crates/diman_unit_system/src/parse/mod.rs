@@ -235,19 +235,19 @@ fn get_ident(attribute: &Attribute) -> Result<&Ident> {
 
 impl FromAttribute for Alias {
     fn is_correct_ident(ident: &Ident) -> bool {
-        ident.to_string() == "alias" || ident.to_string() == "short"
+        ident.to_string() == "alias" || ident.to_string() == "symbol"
     }
 
     fn from_attribute(attribute: &Attribute) -> Option<Self> {
         //TODO(major): do not unwrap here. In principle, this method should return Result instead of Option. We also need to make sure to check that no attributes are left over at the end
         let type_ = get_ident(attribute).unwrap();
-        let short = if type_.to_string() == "alias" {
+        let symbol = if type_.to_string() == "alias" {
             false
         } else {
             true
         };
         let name = attribute.parse_args().unwrap();
-        Some(Alias { name, short })
+        Some(Alias { name, symbol })
     }
 }
 
@@ -553,12 +553,12 @@ pub mod tests {
             assert_eq!(entry.name.to_string(), "bar");
             assert_eq!(entry.aliases.len(), 1);
             assert_eq!(entry.aliases[0].name, "foo");
-            assert!(!entry.aliases[0].short);
+            assert!(!entry.aliases[0].symbol);
         } else {
             panic!()
         }
         let entry = syn::parse2::<Entry>(quote! {
-            #[short(b)]
+            #[symbol(b)]
             unit bar = meters
         })
         .unwrap();
@@ -566,7 +566,7 @@ pub mod tests {
             assert_eq!(entry.name.to_string(), "bar");
             assert_eq!(entry.aliases.len(), 1);
             assert_eq!(entry.aliases[0].name, "b");
-            assert!(entry.aliases[0].short);
+            assert!(entry.aliases[0].symbol);
         } else {
             panic!()
         }

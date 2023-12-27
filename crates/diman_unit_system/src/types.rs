@@ -48,7 +48,7 @@ impl DimensionEntry {
 #[derive(Clone)]
 pub struct Alias {
     pub name: Ident,
-    pub short: bool,
+    pub symbol: bool,
 }
 
 #[derive(Clone)]
@@ -90,7 +90,7 @@ impl Unit {
     pub fn symbol(&self) -> Option<&Ident> {
         self.aliases
             .iter()
-            .filter(|alias| alias.short)
+            .filter(|alias| alias.symbol)
             .map(|alias| &alias.name)
             .next()
     }
