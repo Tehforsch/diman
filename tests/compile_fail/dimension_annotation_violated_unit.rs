@@ -7,6 +7,7 @@ unit_system!(
     dimension_type Dimension,
     dimension Mass,
     dimension Length,
+    #[base(Mass)]
     unit kilograms: Mass,
     unit foo: Length = kilograms * kilograms,
 );

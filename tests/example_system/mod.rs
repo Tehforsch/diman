@@ -8,14 +8,18 @@ unit_system!(
     dimension Mass,
     dimension Temperature,
     dimension Dimensionless = 1,
+    #[base(Dimensionless)]
     unit dimensionless: Dimensionless,
+    #[base(Length)]
     unit meters: Length,
     unit kilometers = 1000.0 * meters,
+    #[base(Time)]
     unit seconds: Time,
     dimension Velocity = Length / Time,
     unit meters_per_second = meters / seconds,
     dimension Energy = Mass * Velocity * Velocity,
-    unit joules: Energy,
+    unit joules = kilograms * meters_per_second^2,
+    #[base(Mass)]
     unit kilograms: Mass,
     unit grams = 1e-3 * kilograms,
     dimension Area = Length^2,
@@ -23,6 +27,7 @@ unit_system!(
     dimension Volume = Length^3,
     unit cubic_meters = meters^3,
     dimension Force = Energy / Length,
+    #[base(Temperature)]
     unit kelvins: Temperature,
     dimension InverseTemperature = 1 / Temperature,
     unit newtons = joules / meters,

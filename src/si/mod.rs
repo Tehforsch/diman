@@ -12,9 +12,12 @@ unit_system!(
     dimension AmountOfSubstance,
     dimension LuminousIntensity,
     dimension Dimensionless = 1,
+    #[base(Dimensionless)]
     unit dimensionless: Dimensionless,
+    #[base(Length)]
     unit meters: Length,
     unit kilometers = 1000.0 * meters,
+    #[base(Time)]
     unit seconds: Time,
     unit hours: Time = 3600 * seconds,
     dimension Velocity = Length / Time,
@@ -23,6 +26,7 @@ unit_system!(
     unit square_meters = meters^2,
     dimension Volume = Length^3,
     unit cubic_meters = meters^3,
+    #[base(Mass)]
     unit kilograms: Mass,
     unit grams = 1e-3 * kilograms,
     dimension MassDensity = Mass / Volume,
@@ -35,6 +39,7 @@ unit_system!(
     unit newtons = kilograms * meters / (seconds^2),
     dimension Pressure = Force / Area,
     unit pascals: Pressure = newtons / square_meters,
+    #[base(Temperature)]
     unit kelvin: Temperature,
     dimension Energy = Force * Length,
     unit joules = newtons * meters,

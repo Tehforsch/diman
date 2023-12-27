@@ -1,7 +1,7 @@
 error: Type error in annotation: Expected dimension, found unit 'kilograms'.
-  --> tests/compile_fail/dimension_annotation_with_unit_not_allowed.rs:10:15
+  --> tests/compile_fail/dimension_annotation_with_unit_not_allowed.rs:11:15
    |
-10 |     unit foo: kilograms = kilograms,
+11 |     unit foo: kilograms = kilograms,
    |               ^^^^^^^^^
    |
    = note: Annotations can only be done using dimensions.

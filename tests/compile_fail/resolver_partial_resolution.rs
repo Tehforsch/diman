@@ -7,7 +7,8 @@ unit_system!(
     quantity_type Quantity,
     dimension_type Dimension,
     dimension Length,
-    unit meters: Length,
+    #[base(Length)]
+    unit meters,
     unit kilometers = 1000.0 * meters,
     unit millimeters = 0.001 * meters,
     unit undefined = undefined,

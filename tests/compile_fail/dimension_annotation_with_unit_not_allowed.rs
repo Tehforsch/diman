@@ -6,7 +6,8 @@ unit_system!(
     quantity_type Quantity,
     dimension_type Dimension,
     dimension Mass,
-    unit kilograms: Mass,
+    #[base(Mass)]
+    unit kilograms,
     unit foo: kilograms = kilograms,
 );
 
