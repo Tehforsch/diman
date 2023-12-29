@@ -79,6 +79,7 @@ pub struct Dimension {
     pub dimensions: BaseDimensions,
 }
 
+#[derive(Clone)]
 pub struct Unit {
     pub name: Ident,
     pub dimensions: BaseDimensions,
@@ -93,6 +94,15 @@ impl Unit {
             .filter(|alias| alias.symbol)
             .map(|alias| &alias.name)
             .next()
+    }
+
+    fn clone_with_alias(&self, alias: Alias) -> Unit {
+        Self {
+            name: alias.name,
+            dimensions: self.dimensions.clone(),
+            factor: self.factor,
+            aliases: vec![],
+        }
     }
 }
 
@@ -114,5 +124,29 @@ pub struct Defs {
 impl Defs {
     pub fn base_dimensions(&self) -> impl Iterator<Item = &Ident> + '_ {
         self.base_dimensions.iter()
+    }
+
+    pub fn expand_aliases(self) -> Self {
+        let units = self
+            .units
+            .into_iter()
+            .flat_map(move |mut unit| {
+                let mut aliases = vec![];
+                std::mem::swap(&mut unit.aliases, &mut aliases);
+                let cloned = unit.clone();
+                aliases
+                    .into_iter()
+                    .map(move |alias| unit.clone_with_alias(alias))
+                    .chain(std::iter::once(cloned))
+            })
+            .collect();
+        Self {
+            dimension_type: self.dimension_type,
+            quantity_type: self.quantity_type,
+            dimensions: self.dimensions,
+            units,
+            constants: self.constants,
+            base_dimensions: self.base_dimensions,
+        }
     }
 }
