@@ -117,12 +117,16 @@ impl UnitTemplate {
         let (name, symbol, factor) = match prefix {
             Some(prefix) => {
                 let name = Ident::new(&format!("{}{}", prefix.name(), name), name.span());
-                let symbol = self.symbol.as_ref().map(|symbol| {
-                    Symbol(Ident::new(
-                        &format!("{}{}", prefix.short(), symbol.0),
-                        self.name.span(),
-                    ))
-                });
+                let symbol = self
+                    .symbol
+                    .as_ref()
+                    .filter(|_| alias.is_none()) // Prevent generating lots of non-unique symbols by only setting the symbol for the non-aliased units
+                    .map(|symbol| {
+                        Symbol(Ident::new(
+                            &format!("{}{}", prefix.short(), symbol.0),
+                            self.name.span(),
+                        ))
+                    });
                 let factor = self.factor * prefix.factor();
                 (name, symbol, factor)
             }
