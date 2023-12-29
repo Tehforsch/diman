@@ -102,3 +102,5 @@ impl From<MetricPrefixes> for Vec<Prefix> {
         .collect()
     }
 }
+
+pub struct ExplicitPrefixes(pub Vec<Prefix>);

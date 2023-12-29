@@ -7,7 +7,7 @@ use syn::{
 
 use crate::{
     parse::tokens,
-    prefixes::{MetricPrefixes, Prefix},
+    prefixes::{ExplicitPrefixes, MetricPrefixes, Prefix},
     types::{Alias, BaseAttribute, Symbol},
 };
 
@@ -16,6 +16,7 @@ pub mod attribute_keywords {
     syn::custom_keyword!(alias);
     syn::custom_keyword!(symbol);
     syn::custom_keyword!(metric_prefixes);
+    syn::custom_keyword!(prefix);
 }
 
 pub mod prefix_attribute_keywords {
@@ -28,6 +29,7 @@ pub enum AttributeName {
     Alias,
     Symbol,
     MetricPrefixes,
+    Prefix,
 }
 
 pub struct Attribute<'a> {
@@ -74,6 +76,9 @@ impl<'a> Attributes<'a> {
             } else if lookahead.peek(attr_kw::metric_prefixes) {
                 let _: attr_kw::metric_prefixes = content.parse()?;
                 AttributeName::MetricPrefixes
+            } else if lookahead.peek(attr_kw::prefix) {
+                let _: attr_kw::prefix = content.parse()?;
+                AttributeName::Prefix
             } else {
                 return Err(lookahead.error());
             };
@@ -204,5 +209,20 @@ impl FromAttribute for MetricPrefixes {
             vec![]
         };
         Ok(Self { skip })
+    }
+}
+
+impl FromAttribute for ExplicitPrefixes {
+    fn correct_type() -> AttributeName {
+        AttributeName::Prefix
+    }
+
+    fn from_attribute(attr: &Attribute) -> Result<Self> {
+        let inner = attr.inner_or_err()?;
+        let prefixes = inner
+            .parse_terminated(Prefix::parse, Token![,])?
+            .into_iter()
+            .collect();
+        Ok(Self(prefixes))
     }
 }

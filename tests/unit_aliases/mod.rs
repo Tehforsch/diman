@@ -8,6 +8,9 @@ unit_system!(
     #[alias(metres)]
     #[metric_prefixes]
     unit meters: Length;
+
+    #[prefix(kilo)]
+    unit foo: Length = 0.25 * meters;
 );
 
 macro_rules! gen_tests_for_float {
@@ -31,6 +34,12 @@ macro_rules! gen_tests_for_float {
                 assert_eq!(x.in_metres(), 1.0);
                 assert_eq!(x.in_centimeters(), 100.0);
                 assert_eq!(x.in_centimetres(), 100.0);
+            }
+
+            #[test]
+            fn explicit_prefix() {
+                assert_eq!(Length::foo(100.0), Length::meters(25.0));
+                assert_eq!(Length::kilofoo(100.0), Length::kilometers(25.0));
             }
         }
     };

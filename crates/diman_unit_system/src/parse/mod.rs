@@ -10,7 +10,7 @@ use syn::{
 use crate::{
     expression::{BinaryOperator, Expr, Factor, Operator},
     parse::attributes::Attributes,
-    prefixes::MetricPrefixes,
+    prefixes::{ExplicitPrefixes, MetricPrefixes},
     types::{Alias, BaseAttribute, Definition, IntExponent, UnresolvedDefs},
 };
 
@@ -238,10 +238,16 @@ impl ParseWithAttributes for UnitEntry {
             .collect();
         let symbol = attributes.remove_unique_of_type()?;
         let metric_prefixes: Option<MetricPrefixes> = attributes.remove_unique_of_type()?;
-        let prefixes = match metric_prefixes {
+        let explicit_prefixes: Vec<ExplicitPrefixes> = attributes.remove_all_of_type()?;
+        let mut prefixes = match metric_prefixes {
             Some(metric) => metric.into(),
             None => vec![],
         };
+        prefixes.extend(
+            explicit_prefixes
+                .into_iter()
+                .flat_map(|prefixes| prefixes.0.into_iter()),
+        );
         attributes.check_none_left_over()?;
         Ok(Self {
             name,
