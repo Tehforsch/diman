@@ -107,8 +107,8 @@ unit_system!(
     #[base(Time)]
     unit second: Time;
 
-    #[base(Mass)]
     #[alias(kilograms)]
+    #[base(Mass)]
     unit kilogram: Mass;
 
     #[metric_prefixes(skip: kilo)]
