@@ -10,6 +10,7 @@ use syn::{
 use crate::{
     expression::{BinaryOperator, Expr, Factor, Operator},
     parse::attributes::Attributes,
+    prefixes::MetricPrefixes,
     types::{BaseAttribute, Definition, IntExponent, UnresolvedDefs},
 };
 
@@ -231,12 +232,19 @@ impl ParseWithAttributes for UnitEntry {
             }
         }?;
         let aliases = attributes.remove_all_of_type()?;
+        let metric_prefixes: Vec<MetricPrefixes> = attributes.remove_all_of_type()?;
+        let prefixes = if metric_prefixes.is_empty() {
+            vec![]
+        } else {
+            MetricPrefixes.into()
+        };
         attributes.check_none_left_over()?;
         Ok(Self {
             name,
             aliases,
             dimension_annotation,
             definition,
+            prefixes,
         })
     }
 }

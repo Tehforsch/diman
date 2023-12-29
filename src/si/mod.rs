@@ -18,6 +18,7 @@ unit_system!(
     unit meters: Length;
     unit kilometers = 1000.0 * meters;
     #[base(Time)]
+    #[metric_prefixes]
     unit seconds: Time;
     unit hours: Time = 3600 * seconds;
     dimension Velocity = Length / Time;

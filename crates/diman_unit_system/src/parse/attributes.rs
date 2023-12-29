@@ -7,6 +7,7 @@ use syn::{
 
 use crate::{
     parse::tokens,
+    prefixes::MetricPrefixes,
     types::{Alias, BaseAttribute},
 };
 
@@ -14,12 +15,14 @@ pub mod attribute_keywords {
     syn::custom_keyword!(base);
     syn::custom_keyword!(alias);
     syn::custom_keyword!(symbol);
+    syn::custom_keyword!(metric_prefixes);
 }
 
 pub enum AttributeName {
     Base,
     Alias,
     Symbol,
+    MetricPrefixes,
 }
 
 pub struct Attribute<'a> {
@@ -58,6 +61,9 @@ impl<'a> Attributes<'a> {
             } else if lookahead.peek(attr_kw::symbol) {
                 let _: attr_kw::symbol = content.parse()?;
                 AttributeName::Symbol
+            } else if lookahead.peek(attr_kw::metric_prefixes) {
+                let _: attr_kw::metric_prefixes = content.parse()?;
+                AttributeName::MetricPrefixes
             } else {
                 return Err(lookahead.error());
             };
@@ -125,5 +131,15 @@ impl FromAttribute for BaseAttribute {
             dimension,
             attribute_span: attribute.span,
         })
+    }
+}
+
+impl FromAttribute for MetricPrefixes {
+    fn is_correct_type(name: &AttributeName) -> bool {
+        matches!(name, AttributeName::MetricPrefixes)
+    }
+
+    fn from_attribute(_: &Attribute) -> Result<Self> {
+        Ok(Self)
     }
 }

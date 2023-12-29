@@ -3,6 +3,7 @@ use syn::*;
 
 use crate::{
     derive_dimension::to_snakecase, dimension_math::BaseDimensions, expression::Expr, parse::One,
+    prefixes::Prefix,
 };
 
 pub type IntExponent = i32;
@@ -61,6 +62,7 @@ pub struct Alias {
 pub struct UnitEntry {
     pub name: Ident,
     pub aliases: Vec<Alias>,
+    pub prefixes: Vec<Prefix>,
     pub dimension_annotation: Option<Ident>,
     pub definition: Definition<Ident, f64>,
 }

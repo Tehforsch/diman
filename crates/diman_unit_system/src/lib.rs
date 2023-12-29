@@ -5,6 +5,7 @@ mod derive_dimension;
 mod dimension_math;
 mod expression;
 mod parse;
+mod prefixes;
 mod resolve;
 mod storage_types;
 mod types;
