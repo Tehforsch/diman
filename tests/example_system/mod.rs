@@ -11,8 +11,9 @@ unit_system!(
     #[base(Dimensionless)]
     unit dimensionless: Dimensionless;
     #[base(Length)]
+    #[symbol(m)]
+    #[metric_prefixes]
     unit meters: Length;
-    unit kilometers = 1000.0 * meters;
     #[base(Time)]
     unit seconds: Time;
     dimension Velocity = Length / Time;

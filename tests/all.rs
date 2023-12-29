@@ -11,7 +11,7 @@ mod type_aliases;
 
 mod dimension_defs;
 
-mod unit_aliases;
+pub mod unit_aliases;
 
 #[cfg(feature = "f64")]
 mod gas;

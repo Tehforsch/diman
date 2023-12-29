@@ -24,7 +24,7 @@ impl Defs {
             ..
         } = self;
 
-        let units = self.units_array();
+        let units = self.units_array(self.units.iter());
 
         quote! {
             use std::marker::PhantomData;
@@ -105,7 +105,7 @@ impl Defs {
             quantity_type,
             ..
         } = self;
-        let units = self.units_array();
+        let units = self.units_array(self.units.iter());
         let serialize_method = &float_type.serialize_method;
         let float_type = &float_type.name;
         quote! {
@@ -231,7 +231,7 @@ impl Defs {
             quantity_type,
             ..
         } = self;
-        let units = self.units_array();
+        let units = self.units_array(self.units.iter());
         quote! {
             impl<'de, const D: #dimension_type> serde::Deserialize<'de> for #quantity_type<#vector_type, D> {
                 fn deserialize<DE>(deserializer: DE) -> Result<#quantity_type<#vector_type, D>, DE::Error>
