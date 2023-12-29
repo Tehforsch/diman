@@ -8,7 +8,7 @@ use syn::{
 use crate::{
     parse::tokens,
     prefixes::MetricPrefixes,
-    types::{Alias, BaseAttribute},
+    types::{Alias, BaseAttribute, Symbol},
 };
 
 pub mod attribute_keywords {
@@ -18,6 +18,7 @@ pub mod attribute_keywords {
     syn::custom_keyword!(metric_prefixes);
 }
 
+#[derive(PartialEq, Debug)]
 pub enum AttributeName {
     Base,
     Alias,
@@ -32,7 +33,12 @@ pub struct Attribute<'a> {
 }
 
 pub trait FromAttribute: Sized {
-    fn is_correct_type(name: &AttributeName) -> bool;
+    fn is_correct_type(name: &AttributeName) -> bool {
+        Self::correct_type() == *name
+    }
+
+    fn correct_type() -> AttributeName;
+
     fn from_attribute(attribute: &Attribute) -> Result<Self>;
 }
 
@@ -86,6 +92,22 @@ impl<'a> Attributes<'a> {
         ts.into_iter().map(|t| T::from_attribute(&t)).collect()
     }
 
+    pub fn remove_unique_of_type<T: FromAttribute>(&mut self) -> Result<Option<T>> {
+        let (mut ts, others): (Vec<_>, Vec<_>) =
+            self.0.drain(..).partition(|a| T::is_correct_type(&a.name));
+        self.0 = others;
+        if ts.is_empty() {
+            Ok(None)
+        } else if ts.len() == 1 {
+            Ok(Some(T::from_attribute(&ts.remove(0))?))
+        } else {
+            Err(Error::new(
+                ts.remove(1).span,
+                format!("Multiple attributes of type {:?}.", T::correct_type()),
+            ))
+        }
+    }
+
     #[must_use]
     pub fn check_none_left_over(mut self) -> Result<()> {
         if self.0.is_empty() {
@@ -108,21 +130,32 @@ impl<'a> Attribute<'a> {
 }
 
 impl FromAttribute for Alias {
-    fn is_correct_type(name: &AttributeName) -> bool {
-        matches!(name, AttributeName::Alias | AttributeName::Symbol)
+    fn correct_type() -> AttributeName {
+        AttributeName::Alias
     }
 
     fn from_attribute(attribute: &Attribute) -> Result<Self> {
-        let symbol = matches!(attribute.name, AttributeName::Symbol);
         let inner = attribute.inner_or_err()?;
         let name = inner.parse()?;
-        Ok(Alias { name, symbol })
+        Ok(Alias { name })
+    }
+}
+
+impl FromAttribute for Symbol {
+    fn correct_type() -> AttributeName {
+        AttributeName::Symbol
+    }
+
+    fn from_attribute(attribute: &Attribute) -> Result<Self> {
+        let inner = attribute.inner_or_err()?;
+        let name = inner.parse()?;
+        Ok(Symbol(name))
     }
 }
 
 impl FromAttribute for BaseAttribute {
-    fn is_correct_type(name: &AttributeName) -> bool {
-        matches!(name, AttributeName::Base)
+    fn correct_type() -> AttributeName {
+        AttributeName::Base
     }
 
     fn from_attribute(attribute: &Attribute) -> Result<Self> {
@@ -135,8 +168,8 @@ impl FromAttribute for BaseAttribute {
 }
 
 impl FromAttribute for MetricPrefixes {
-    fn is_correct_type(name: &AttributeName) -> bool {
-        matches!(name, AttributeName::MetricPrefixes)
+    fn correct_type() -> AttributeName {
+        AttributeName::MetricPrefixes
     }
 
     fn from_attribute(_: &Attribute) -> Result<Self> {

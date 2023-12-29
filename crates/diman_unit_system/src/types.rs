@@ -55,12 +55,15 @@ pub struct BaseAttribute {
 #[derive(Clone)]
 pub struct Alias {
     pub name: Ident,
-    pub symbol: bool,
 }
+
+#[derive(Clone)]
+pub struct Symbol(pub Ident);
 
 #[derive(Clone)]
 pub struct UnitEntry {
     pub name: Ident,
+    pub symbol: Option<Symbol>,
     pub aliases: Vec<Alias>,
     pub prefixes: Vec<Prefix>,
     pub dimension_annotation: Option<Ident>,
@@ -88,29 +91,64 @@ pub struct Dimension {
 }
 
 #[derive(Clone)]
+pub struct UnitTemplate {
+    pub name: Ident,
+    pub dimensions: BaseDimensions,
+    pub factor: f64,
+    pub symbol: Option<Symbol>,
+    pub aliases: Vec<Alias>,
+    pub prefixes: Vec<Prefix>,
+}
+
+#[derive(Clone)]
 pub struct Unit {
     pub name: Ident,
     pub dimensions: BaseDimensions,
     pub factor: f64,
-    pub aliases: Vec<Alias>,
+    pub symbol: Option<Symbol>,
 }
 
-impl Unit {
-    pub fn symbol(&self) -> Option<&Ident> {
-        self.aliases
-            .iter()
-            .filter(|alias| alias.symbol)
-            .map(|alias| &alias.name)
-            .next()
+impl UnitTemplate {
+    fn expand_prefix_and_alias(&self, prefix: Option<&Prefix>, alias: Option<&Alias>) -> Unit {
+        let name = match alias {
+            None => &self.name,
+            Some(alias) => &alias.name,
+        };
+        let (name, symbol, factor) = match prefix {
+            Some(prefix) => {
+                let name = Ident::new(&format!("{}{}", prefix.name(), name), name.span());
+                let symbol = self.symbol.as_ref().map(|symbol| {
+                    Symbol(Ident::new(
+                        &format!("{}{}", prefix.short(), symbol.0),
+                        self.name.span(),
+                    ))
+                });
+                let factor = self.factor * prefix.factor();
+                (name, symbol, factor)
+            }
+            None => (name.clone(), self.symbol.clone(), self.factor),
+        };
+        Unit {
+            name,
+            dimensions: self.dimensions.clone(),
+            factor,
+            symbol,
+        }
     }
 
-    fn clone_with_alias(&self, alias: Alias) -> Unit {
-        Self {
-            name: alias.name,
-            dimensions: self.dimensions.clone(),
-            factor: self.factor,
-            aliases: vec![],
-        }
+    fn expand(mut self) -> Vec<Unit> {
+        let mut prefixes: Vec<_> = self.prefixes.drain(..).map(|prefix| Some(prefix)).collect();
+        prefixes.push(None);
+        let mut aliases: Vec<_> = self.aliases.drain(..).map(|alias| Some(alias)).collect();
+        aliases.push(None);
+        prefixes
+            .iter()
+            .flat_map(|prefix| {
+                aliases
+                    .iter()
+                    .map(|alias| self.expand_prefix_and_alias(prefix.as_ref(), alias.as_ref()))
+            })
+            .collect()
     }
 }
 
@@ -120,35 +158,32 @@ pub struct Constant {
     pub factor: f64,
 }
 
-pub struct Defs {
+pub struct GenericDefs<U> {
     pub dimension_type: Ident,
     pub quantity_type: Ident,
     pub dimensions: Vec<Dimension>,
-    pub units: Vec<Unit>,
+    pub units: Vec<U>,
     pub constants: Vec<Constant>,
     pub base_dimensions: Vec<Ident>,
 }
+
+pub type TemplateDefs = GenericDefs<UnitTemplate>;
+pub type Defs = GenericDefs<Unit>;
 
 impl Defs {
     pub fn base_dimensions(&self) -> impl Iterator<Item = &Ident> + '_ {
         self.base_dimensions.iter()
     }
+}
 
-    pub fn expand_aliases(self) -> Self {
+impl TemplateDefs {
+    pub fn expand_templates(self) -> Defs {
         let units = self
             .units
             .into_iter()
-            .flat_map(move |mut unit| {
-                let mut aliases = vec![];
-                std::mem::swap(&mut unit.aliases, &mut aliases);
-                let cloned = unit.clone();
-                aliases
-                    .into_iter()
-                    .map(move |alias| unit.clone_with_alias(alias))
-                    .chain(std::iter::once(cloned))
-            })
+            .flat_map(|template| template.expand())
             .collect();
-        Self {
+        Defs {
             dimension_type: self.dimension_type,
             quantity_type: self.quantity_type,
             dimensions: self.dimensions,

@@ -232,6 +232,7 @@ impl ParseWithAttributes for UnitEntry {
             }
         }?;
         let aliases = attributes.remove_all_of_type()?;
+        let symbol = attributes.remove_unique_of_type()?;
         let metric_prefixes: Vec<MetricPrefixes> = attributes.remove_all_of_type()?;
         let prefixes = if metric_prefixes.is_empty() {
             vec![]
@@ -245,6 +246,7 @@ impl ParseWithAttributes for UnitEntry {
             dimension_annotation,
             definition,
             prefixes,
+            symbol,
         })
     }
 }
@@ -497,7 +499,6 @@ pub mod tests {
             assert_eq!(entry.name.to_string(), "bar");
             assert_eq!(entry.aliases.len(), 1);
             assert_eq!(entry.aliases[0].name, "foo");
-            assert!(!entry.aliases[0].symbol);
         } else {
             panic!()
         }
@@ -508,9 +509,9 @@ pub mod tests {
         .unwrap();
         if let Entry::Unit(entry) = entry {
             assert_eq!(entry.name.to_string(), "bar");
-            assert_eq!(entry.aliases.len(), 1);
-            assert_eq!(entry.aliases[0].name, "b");
-            assert!(entry.aliases[0].symbol);
+            assert_eq!(entry.aliases.len(), 0);
+            assert!(entry.symbol.is_some());
+            assert_eq!(entry.symbol.unwrap().0, "b");
         } else {
             panic!()
         }

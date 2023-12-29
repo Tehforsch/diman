@@ -6,8 +6,8 @@ use crate::{
     dimension_math::{BaseDimensions, DimensionsAndFactor},
     expression::{self, Expr},
     types::{
-        Constant, ConstantEntry, Definition, Dimension, DimensionEntry, Factor, IntExponent, Unit,
-        UnitEntry,
+        Constant, ConstantEntry, Definition, Dimension, DimensionEntry, Factor, IntExponent,
+        UnitEntry, UnitTemplate,
     },
 };
 
@@ -359,18 +359,20 @@ impl FromItem for Dimension {
     }
 }
 
-impl FromItem for Unit {
+impl FromItem for UnitTemplate {
     fn is_correct_kind(kind: Kind) -> bool {
         kind == Kind::Unit || kind == Kind::BaseUnit
     }
 
     fn from_item_and_dimensions(item: Item, dimensions: DimensionsAndFactor) -> Self {
         let unit_entry = item.type_.unwrap_unit();
-        Unit {
+        UnitTemplate {
             dimensions: dimensions.dimensions,
             name: unit_entry.name,
             factor: dimensions.factor,
             aliases: unit_entry.aliases,
+            symbol: unit_entry.symbol,
+            prefixes: unit_entry.prefixes,
         }
     }
 }

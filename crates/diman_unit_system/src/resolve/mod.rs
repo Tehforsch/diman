@@ -8,7 +8,7 @@ use syn::Ident;
 
 use crate::{
     derive_dimension::to_snakecase,
-    types::{Defs, UnresolvedDefs},
+    types::{TemplateDefs, UnresolvedDefs},
 };
 
 use self::{
@@ -58,7 +58,7 @@ fn emit_errors<T, E: Emit>((input, result): (T, Result<(), E>)) -> T {
 }
 
 impl UnresolvedDefs {
-    pub fn resolve(self) -> Defs {
+    pub fn resolve(self) -> TemplateDefs {
         let quantity_type = emit_errors(get_single_ident(
             self.quantity_types,
             "quantity type",
@@ -87,7 +87,7 @@ impl UnresolvedDefs {
         let dimensions = idents.get_items();
         let units = idents.get_items();
         let constants = idents.get_items();
-        Defs {
+        TemplateDefs {
             dimension_type,
             quantity_type,
             dimensions,

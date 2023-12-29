@@ -1,6 +1,6 @@
 macro_rules! make_prefix_enum {
     ($enum_name: ident, $(($variant_name: ident, $name: literal, $short: literal, $factor: literal)),*) => {
-        #[derive(Clone)]
+        #[derive(Clone, Copy)]
         pub enum $enum_name {
             $(
                 $variant_name,
@@ -8,7 +8,7 @@ macro_rules! make_prefix_enum {
         }
 
         impl $enum_name {
-            fn name(self) -> &'static str {
+            pub fn name(self) -> &'static str {
                 match self {
                     $(
                         Self::$variant_name => $name,
@@ -16,7 +16,7 @@ macro_rules! make_prefix_enum {
                 }
             }
 
-            fn short(self) -> &'static str {
+            pub fn short(self) -> &'static str {
                 match self {
                     $(
                         Self::$variant_name => $short,
@@ -24,7 +24,7 @@ macro_rules! make_prefix_enum {
                 }
             }
 
-            fn factor(self) -> f64 {
+            pub fn factor(self) -> f64 {
                 match self {
                     $(
                         Self::$variant_name => $factor,
