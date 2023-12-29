@@ -6,6 +6,7 @@ unit_system!(
     dimension Length;
     #[base(Length)]
     #[alias(metres)]
+    #[metric_prefixes]
     unit meters: Length;
 );
 
@@ -20,6 +21,16 @@ macro_rules! gen_tests_for_float {
                 let x = Length::meters(100.0);
                 assert_eq!(x.in_meters(), 100.0);
                 assert_eq!(x.in_metres(), 100.0);
+            }
+
+            #[test]
+            fn prefixed_aliases() {
+                assert_eq!(Length::centimeters(100.0), Length::centimetres(100.0));
+                let x = Length::centimeters(100.0);
+                assert_eq!(x.in_meters(), 1.0);
+                assert_eq!(x.in_metres(), 1.0);
+                assert_eq!(x.in_centimeters(), 100.0);
+                assert_eq!(x.in_centimetres(), 100.0);
             }
         }
     };
