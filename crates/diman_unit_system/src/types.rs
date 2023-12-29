@@ -1,3 +1,4 @@
+use proc_macro2::Span;
 use syn::*;
 
 use crate::{
@@ -43,6 +44,11 @@ impl DimensionEntry {
     pub fn dimension_entry_name(&self) -> Ident {
         to_snakecase(&self.name)
     }
+}
+
+pub struct BaseAttribute {
+    pub attribute_span: Span,
+    pub dimension: Ident,
 }
 
 #[derive(Clone)]

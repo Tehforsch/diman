@@ -1,19 +1,23 @@
-use proc_macro2::Span;
+mod attributes;
+
 use syn::{
-    bracketed, parenthesized,
-    parse::{Parse, ParseBuffer, ParseStream},
+    parenthesized,
+    parse::{Parse, ParseStream},
     token::{self, Paren},
     Error, Ident, Lit, Result,
 };
 
 use crate::{
     expression::{BinaryOperator, Expr, Factor, Operator},
-    types::{Alias, Definition, IntExponent, UnresolvedDefs},
+    types::{BaseAttribute, Definition, IntExponent, UnresolvedDefs},
 };
 
-use self::tokens::{
-    AssignmentToken, DivisionToken, ExponentiationToken, MultiplicationToken, StatementSeparator,
-    TypeAnnotationToken,
+use self::{
+    attributes::{remove_attributes_of_type, Attribute, ParseWithAttributes},
+    tokens::{
+        AssignmentToken, DivisionToken, ExponentiationToken, MultiplicationToken,
+        StatementSeparator, TypeAnnotationToken,
+    },
 };
 
 use super::types::{ConstantEntry, DimensionEntry, DimensionFactor, UnitEntry};
@@ -24,12 +28,6 @@ pub mod keywords {
     syn::custom_keyword!(dimension);
     syn::custom_keyword!(unit);
     syn::custom_keyword!(constant);
-}
-
-pub mod attribute_keywords {
-    syn::custom_keyword!(base);
-    syn::custom_keyword!(alias);
-    syn::custom_keyword!(symbol);
 }
 
 pub mod tokens {
@@ -164,8 +162,39 @@ impl Parse for Definition<(), One> {
     }
 }
 
-trait ParseWithAttributes: Sized {
-    fn parse_with_attributes(input: ParseStream, attributes: Vec<Attribute>) -> Result<Self>;
+fn parse_annotation(input: ParseStream) -> Result<Option<Ident>> {
+    let lookahead = input.lookahead1();
+    let dimension_annotation = if lookahead.peek(TypeAnnotationToken) {
+        let _: TypeAnnotationToken = input.parse()?;
+        Some(input.parse()?)
+    } else {
+        None
+    };
+    Ok(dimension_annotation)
+}
+
+impl Parse for DimensionEntry {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let _: keywords::dimension = input.parse()?;
+        let name = input.parse()?;
+        let rhs = input.parse()?;
+        Ok(Self { name, rhs })
+    }
+}
+
+impl Parse for ConstantEntry {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let _: keywords::constant = input.parse()?;
+        let name = input.parse()?;
+        let dimension_annotation = parse_annotation(input)?;
+        let _: AssignmentToken = input.parse()?;
+        let rhs = parse_int_exponent_expr(input)?;
+        Ok(Self {
+            name,
+            rhs,
+            dimension_annotation,
+        })
+    }
 }
 
 impl ParseWithAttributes for UnitEntry {
@@ -206,139 +235,6 @@ impl ParseWithAttributes for UnitEntry {
             aliases,
             dimension_annotation,
             definition,
-        })
-    }
-}
-
-enum AttributeName {
-    Base,
-    Alias,
-    Symbol,
-}
-
-struct Attribute<'a> {
-    name: AttributeName,
-    span: Span,
-    inner: Option<ParseBuffer<'a>>,
-}
-
-impl<'a> Attribute<'a> {
-    fn parse_all(input: ParseStream<'a>) -> Result<Vec<Self>> {
-        use attribute_keywords as attr_kw;
-        let mut attributes = vec![];
-        while input.peek(tokens::AttributeToken) {
-            let _: tokens::AttributeToken = input.parse()?;
-            let content;
-            let _ = bracketed!(content in input);
-            let span = content.span().clone();
-            let lookahead = content.lookahead1();
-            let name = if lookahead.peek(attr_kw::base) {
-                let _: attr_kw::base = content.parse()?;
-                AttributeName::Base
-            } else if lookahead.peek(attr_kw::alias) {
-                let _: attr_kw::alias = content.parse()?;
-                AttributeName::Alias
-            } else if lookahead.peek(attr_kw::symbol) {
-                let _: attr_kw::symbol = content.parse()?;
-                AttributeName::Symbol
-            } else {
-                return Err(lookahead.error());
-            };
-            let inner = if content.peek(syn::token::Paren) {
-                let inner;
-                let _ = parenthesized!(inner in content);
-                Some(inner)
-            } else {
-                None
-            };
-            attributes.push(Attribute { span, name, inner });
-        }
-        Ok(attributes)
-    }
-
-    fn inner_or_err(&self) -> Result<&ParseBuffer> {
-        self.inner
-            .as_ref()
-            .ok_or_else(|| Error::new(self.span, format!("Attribute expects arguments.")))
-    }
-}
-
-trait FromAttribute: Sized {
-    fn is_correct_type(name: &AttributeName) -> bool;
-    fn from_attribute(attribute: &Attribute) -> Result<Self>;
-}
-
-fn remove_attributes_of_type<T: FromAttribute>(attributes: &mut Vec<Attribute>) -> Result<Vec<T>> {
-    let (ts, others): (Vec<_>, Vec<_>) = attributes
-        .drain(..)
-        .partition(|a| T::is_correct_type(&a.name));
-    *attributes = others;
-    ts.into_iter().map(|t| T::from_attribute(&t)).collect()
-}
-
-impl FromAttribute for Alias {
-    fn is_correct_type(name: &AttributeName) -> bool {
-        matches!(name, AttributeName::Alias | AttributeName::Symbol)
-    }
-
-    fn from_attribute(attribute: &Attribute) -> Result<Self> {
-        let symbol = matches!(attribute.name, AttributeName::Symbol);
-        let inner = attribute.inner_or_err()?;
-        let name = inner.parse()?;
-        Ok(Alias { name, symbol })
-    }
-}
-
-struct BaseAttribute {
-    attribute_span: Span,
-    dimension: Ident,
-}
-
-impl FromAttribute for BaseAttribute {
-    fn is_correct_type(name: &AttributeName) -> bool {
-        matches!(name, AttributeName::Base)
-    }
-
-    fn from_attribute(attribute: &Attribute) -> Result<Self> {
-        let dimension = attribute.inner_or_err()?.parse()?;
-        Ok(Self {
-            dimension,
-            attribute_span: attribute.span,
-        })
-    }
-}
-
-fn parse_annotation(input: ParseStream) -> Result<Option<Ident>> {
-    let lookahead = input.lookahead1();
-    let dimension_annotation = if lookahead.peek(TypeAnnotationToken) {
-        let _: TypeAnnotationToken = input.parse()?;
-        Some(input.parse()?)
-    } else {
-        None
-    };
-    Ok(dimension_annotation)
-}
-
-impl Parse for DimensionEntry {
-    fn parse(input: ParseStream) -> Result<Self> {
-        let _: keywords::dimension = input.parse()?;
-        let name = input.parse()?;
-        let rhs = input.parse()?;
-        Ok(Self { name, rhs })
-    }
-}
-
-impl Parse for ConstantEntry {
-    fn parse(input: ParseStream) -> Result<Self> {
-        let _: keywords::constant = input.parse()?;
-        let name = input.parse()?;
-        let dimension_annotation = parse_annotation(input)?;
-        let _: AssignmentToken = input.parse()?;
-        let rhs = parse_int_exponent_expr(input)?;
-        Ok(Self {
-            name,
-            rhs,
-            dimension_annotation,
         })
     }
 }
