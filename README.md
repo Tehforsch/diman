@@ -54,24 +54,20 @@ Diman aims to make it as easy as possible to add compile-time unit safety to Rus
 ```rust ignore
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs, adt_const_params)]
-// use diman::unit_system;
-// 
-// unit_system!(
-//     Quantity,
-//     Dimension {
-//         Length,
-//         Time,
-//         Mass,
-//         Temperature,
-//         Current,
-//         AmountOfSubstance,
-//         LuminousIntensity,
-//     },
-//     [
-//         def Length = { length: 1 },
-//         unit meters = Length,
-//     ]
-// );
+use diman::unit_system;
+
+unit_system!(
+    quantity_type Quantity;
+    dimension_type Dimension;
+
+    dimension Length;
+    dimension Time;
+    dimension Mass;
+    dimension Temperature;
+    dimension Current;
+    dimension AmountOfSubstance;
+    dimension LuminousIntensity;
+);
 ```
 Addition and subtraction of two quantities is only allowed for quantities with the same `Dimension` type. During multiplication of two quantities, all the entries of the two dimension are added.
 
@@ -81,26 +77,27 @@ The `unit_system!` macro also allows defining derived quantities and units:
 ```rust ignore
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs, adt_const_params)]
-use diman::unit_system;
-
+use diman_unit_system::unit_system;
 unit_system!(
-    Quantity,
-    Dimension { 
-        Length,
-        Time
-    },
-    [
-        def Length = { length: 1 },
-        def Time = { time: 1 },
-        def Velocity = Length / Time,
-        unit (meters, "m") = Length,
-        unit (kilometers, "km") = 1000.0 * meters,
-        unit (seconds, "s") = 1.0 * Time,
-        unit hours = 3600 * seconds,
-        unit meters_per_second = meters / seconds,
-        unit kilometers_per_hour = kilometers / hours,
-        constant MY_FAVORITE_VELOCITY = 1000 * meters_per_second,
-    ]
+    quantity_type Quantity;
+    dimension_type Dimension;
+
+    dimension Length;
+    dimension Time;
+
+    dimension Velocity = Length / Time;
+
+    #[prefix(kilo, milli)]
+    #[symbol(m)]
+    #[base(Length)]
+    unit meters;
+
+    #[base(Time)]
+    unit seconds;
+
+    unit hours: Time = 3600 * seconds;
+    unit meters_per_second: Velocity = meters / seconds;
+    constant MY_FAVORITE_VELOCITY = 1000 * meters_per_second;
 );
 
 use f64::{Length, Time, Velocity, MY_FAVORITE_VELOCITY};
@@ -108,7 +105,7 @@ use f64::{Length, Time, Velocity, MY_FAVORITE_VELOCITY};
 fn fast_enough(x: Length, t: Time) {
     let vel = x / t;
     if vel > MY_FAVORITE_VELOCITY {
-        println!("{} is definitely fast enough!", vel.in_kilometers_per_hour());
+        println!("{} is definitely fast enough!", vel.in_meters_per_second());
     }
 }
 
