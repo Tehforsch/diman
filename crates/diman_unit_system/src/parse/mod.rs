@@ -11,7 +11,7 @@ use crate::{
     expression::{BinaryOperator, Expr, Factor, Operator},
     parse::attributes::Attributes,
     prefixes::MetricPrefixes,
-    types::{BaseAttribute, Definition, IntExponent, UnresolvedDefs},
+    types::{Alias, BaseAttribute, Definition, IntExponent, UnresolvedDefs},
 };
 
 use self::{
@@ -231,7 +231,11 @@ impl ParseWithAttributes for UnitEntry {
                 ))
             }
         }?;
-        let aliases = attributes.remove_all_of_type()?;
+        let aliases: Vec<Vec<Alias>> = attributes.remove_all_of_type()?;
+        let aliases = aliases
+            .into_iter()
+            .flat_map(|aliases| aliases.into_iter())
+            .collect();
         let symbol = attributes.remove_unique_of_type()?;
         let metric_prefixes: Option<MetricPrefixes> = attributes.remove_unique_of_type()?;
         let prefixes = match metric_prefixes {

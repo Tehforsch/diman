@@ -125,6 +125,14 @@ impl<'a> Attributes<'a> {
     }
 }
 
+impl Parse for Alias {
+    fn parse(input: ParseStream) -> Result<Self> {
+        Ok(Alias {
+            name: input.parse()?,
+        })
+    }
+}
+
 impl<'a> Attribute<'a> {
     fn inner_or_err(&self) -> Result<&ParseBuffer> {
         self.inner
@@ -133,15 +141,18 @@ impl<'a> Attribute<'a> {
     }
 }
 
-impl FromAttribute for Alias {
+impl FromAttribute for Vec<Alias> {
     fn correct_type() -> AttributeName {
         AttributeName::Alias
     }
 
     fn from_attribute(attribute: &Attribute) -> Result<Self> {
         let inner = attribute.inner_or_err()?;
-        let name = inner.parse()?;
-        Ok(Alias { name })
+        let aliases = inner
+            .parse_terminated(Alias::parse, Token![,])?
+            .into_iter()
+            .collect();
+        Ok(aliases)
     }
 }
 
