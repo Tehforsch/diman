@@ -54,8 +54,7 @@ mod debug_storage_type;
 mod type_aliases;
 
 #[cfg(feature = "si")]
-/// Defines the proper dimensions for the SI system. The unit definitions
-/// are primarily used for the doctests now and not complete in any sense.
+/// Defines the dimensions and units for the SI system.
 pub mod si;
 
 pub use debug_storage_type::DebugStorageType;
