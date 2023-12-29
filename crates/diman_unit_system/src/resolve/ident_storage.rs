@@ -17,7 +17,7 @@ use super::error::{
 };
 
 /// The kind of an identifier
-#[derive(Clone, Debug, PartialEq, Copy)]
+#[derive(Clone, PartialEq, Copy)]
 pub enum Kind {
     Dimension,
     BaseUnit,

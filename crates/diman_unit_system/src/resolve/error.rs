@@ -9,7 +9,6 @@ use super::ident_storage::Kind;
 
 pub struct UnresolvableError(pub Vec<Ident>);
 pub struct UndefinedError(pub Vec<Ident>);
-#[derive(Debug)]
 pub struct MultipleDefinitionsError(pub Vec<Vec<Ident>>);
 
 pub struct MultipleTypeDefinitionsError {

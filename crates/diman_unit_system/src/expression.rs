@@ -1,14 +1,14 @@
 use crate::types::IntExponent;
 
-#[derive(Clone, Debug)]
-#[cfg_attr(test, derive(PartialEq))]
+#[derive(Clone)]
+#[cfg_attr(test, derive(PartialEq, Debug))]
 pub enum Operator {
     Mul,
     Div,
 }
 
-#[derive(Clone, Debug)]
-#[cfg_attr(test, derive(PartialEq))]
+#[derive(Clone)]
+#[cfg_attr(test, derive(PartialEq, Debug))]
 pub enum Expr<T, E> {
     Value(Factor<T, E>),
     Binary(BinaryOperator<T, E>),
@@ -25,16 +25,16 @@ impl<T, E> Expr<T, E> {
     }
 }
 
-#[derive(Clone, Debug)]
-#[cfg_attr(test, derive(PartialEq))]
+#[derive(Clone)]
+#[cfg_attr(test, derive(PartialEq, Debug))]
 pub struct BinaryOperator<T, E> {
     pub lhs: Box<Expr<T, E>>,
     pub rhs: Factor<T, E>,
     pub operator: Operator,
 }
 
-#[derive(Clone, Debug)]
-#[cfg_attr(test, derive(PartialEq))]
+#[derive(Clone)]
+#[cfg_attr(test, derive(PartialEq, Debug))]
 pub enum Factor<T, E> {
     Value(T),
     Power(T, E),
