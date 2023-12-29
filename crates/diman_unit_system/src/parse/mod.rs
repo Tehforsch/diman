@@ -1,8 +1,9 @@
+use proc_macro2::Span;
 use syn::{
-    parenthesized,
-    parse::{Parse, ParseStream},
+    bracketed, parenthesized,
+    parse::{Parse, ParseBuffer, ParseStream},
     token::{self, Paren},
-    Attribute, Error, Ident, Lit, Result,
+    Error, Ident, Lit, Result,
 };
 
 use crate::{
@@ -25,6 +26,12 @@ pub mod keywords {
     syn::custom_keyword!(constant);
 }
 
+pub mod attribute_keywords {
+    syn::custom_keyword!(base);
+    syn::custom_keyword!(alias);
+    syn::custom_keyword!(symbol);
+}
+
 pub mod tokens {
     syn::custom_punctuation!(AssignmentToken, =);
     syn::custom_punctuation!(TypeAnnotationToken, :);
@@ -32,6 +39,7 @@ pub mod tokens {
     syn::custom_punctuation!(DivisionToken, /);
     syn::custom_punctuation!(ExponentiationToken, ^);
     syn::custom_punctuation!(StatementSeparator, ;);
+    syn::custom_punctuation!(AttributeToken, #);
 }
 
 pub struct Number {
@@ -166,14 +174,14 @@ impl ParseWithAttributes for UnitEntry {
         let name = input.parse()?;
         let dimension_annotation = parse_annotation(input)?;
         let lookahead = input.lookahead1();
-        let base_attributes: Vec<BaseAttribute> = remove_attributes_of_type(&mut attributes);
+        let base_attributes: Vec<BaseAttribute> = remove_attributes_of_type(&mut attributes)?;
         let definition = if lookahead.peek(AssignmentToken) {
             let _: AssignmentToken = input.parse()?;
             if base_attributes.is_empty() {
                 Ok(Definition::Expression(parse_int_exponent_expr(input)?))
             } else {
-                Err(syn::Error::new_spanned(
-                    &base_attributes[0].base_ident,
+                Err(syn::Error::new(
+                    base_attributes[0].attribute_span,
                     format!("Unit declared as base unit, but an expression is given."),
                 ))
             }
@@ -186,13 +194,13 @@ impl ParseWithAttributes for UnitEntry {
                     format!("Unit declared as base unit, but the base dimension is not specified."),
                 ))
             } else {
-                Err(syn::Error::new_spanned(
-                    &base_attributes[0].base_ident,
+                Err(syn::Error::new(
+                    base_attributes[0].attribute_span,
                     format!("Base dimension is specified multiple times."),
                 ))
             }
         }?;
-        let aliases = remove_attributes_of_type(&mut attributes);
+        let aliases = remove_attributes_of_type(&mut attributes)?;
         Ok(Self {
             name,
             aliases,
@@ -202,65 +210,100 @@ impl ParseWithAttributes for UnitEntry {
     }
 }
 
-trait FromAttribute: Sized {
-    fn is_correct_ident(ident: &Ident) -> bool;
-    fn from_attribute(attribute: &Attribute) -> Option<Self>;
+enum AttributeName {
+    Base,
+    Alias,
+    Symbol,
 }
 
-fn remove_attributes_of_type<T: FromAttribute>(attributes: &mut Vec<Attribute>) -> Vec<T> {
-    //TODO(major): Unwrapping the get_ident here needs to be handled properly. There is probably a helpful method on the attribute itself, i.e. .require_??
+struct Attribute<'a> {
+    name: AttributeName,
+    span: Span,
+    inner: Option<ParseBuffer<'a>>,
+}
+
+impl<'a> Attribute<'a> {
+    fn parse_all(input: ParseStream<'a>) -> Result<Vec<Self>> {
+        use attribute_keywords as attr_kw;
+        let mut attributes = vec![];
+        while input.peek(tokens::AttributeToken) {
+            let _: tokens::AttributeToken = input.parse()?;
+            let content;
+            let _ = bracketed!(content in input);
+            let span = content.span().clone();
+            let lookahead = content.lookahead1();
+            let name = if lookahead.peek(attr_kw::base) {
+                let _: attr_kw::base = content.parse()?;
+                AttributeName::Base
+            } else if lookahead.peek(attr_kw::alias) {
+                let _: attr_kw::alias = content.parse()?;
+                AttributeName::Alias
+            } else if lookahead.peek(attr_kw::symbol) {
+                let _: attr_kw::symbol = content.parse()?;
+                AttributeName::Symbol
+            } else {
+                return Err(lookahead.error());
+            };
+            let inner = if content.peek(syn::token::Paren) {
+                let inner;
+                let _ = parenthesized!(inner in content);
+                Some(inner)
+            } else {
+                None
+            };
+            attributes.push(Attribute { span, name, inner });
+        }
+        Ok(attributes)
+    }
+
+    fn inner_or_err(&self) -> Result<&ParseBuffer> {
+        self.inner
+            .as_ref()
+            .ok_or_else(|| Error::new(self.span, format!("Attribute expects arguments.")))
+    }
+}
+
+trait FromAttribute: Sized {
+    fn is_correct_type(name: &AttributeName) -> bool;
+    fn from_attribute(attribute: &Attribute) -> Result<Self>;
+}
+
+fn remove_attributes_of_type<T: FromAttribute>(attributes: &mut Vec<Attribute>) -> Result<Vec<T>> {
     let (ts, others): (Vec<_>, Vec<_>) = attributes
         .drain(..)
-        .partition(|a| T::is_correct_ident(&get_ident(a).unwrap()));
+        .partition(|a| T::is_correct_type(&a.name));
     *attributes = others;
-    ts.into_iter()
-        .map(|t| T::from_attribute(&t).unwrap())
-        .collect()
-}
-
-fn get_ident(attribute: &Attribute) -> Result<&Ident> {
-    let path = attribute.meta.path();
-    path.get_ident().ok_or_else(|| {
-        syn::Error::new_spanned(
-            path.segments.first().unwrap(),
-            format!("Expected identifier."),
-        )
-    })
+    ts.into_iter().map(|t| T::from_attribute(&t)).collect()
 }
 
 impl FromAttribute for Alias {
-    fn is_correct_ident(ident: &Ident) -> bool {
-        ident.to_string() == "alias" || ident.to_string() == "symbol"
+    fn is_correct_type(name: &AttributeName) -> bool {
+        matches!(name, AttributeName::Alias | AttributeName::Symbol)
     }
 
-    fn from_attribute(attribute: &Attribute) -> Option<Self> {
-        //TODO(major): do not unwrap here. In principle, this method should return Result instead of Option. We also need to make sure to check that no attributes are left over at the end
-        let type_ = get_ident(attribute).unwrap();
-        let symbol = if type_.to_string() == "alias" {
-            false
-        } else {
-            true
-        };
-        let name = attribute.parse_args().unwrap();
-        Some(Alias { name, symbol })
+    fn from_attribute(attribute: &Attribute) -> Result<Self> {
+        let symbol = matches!(attribute.name, AttributeName::Symbol);
+        let inner = attribute.inner_or_err()?;
+        let name = inner.parse()?;
+        Ok(Alias { name, symbol })
     }
 }
 
 struct BaseAttribute {
-    base_ident: Ident,
+    attribute_span: Span,
     dimension: Ident,
 }
 
 impl FromAttribute for BaseAttribute {
-    fn is_correct_ident(ident: &Ident) -> bool {
-        ident.to_string() == "base"
+    fn is_correct_type(name: &AttributeName) -> bool {
+        matches!(name, AttributeName::Base)
     }
 
-    fn from_attribute(attribute: &Attribute) -> Option<Self> {
-        let args = attribute.parse_args().unwrap();
-        Some(Self {
-            dimension: args,
-            base_ident: get_ident(attribute).unwrap().clone(),
+    fn from_attribute(attribute: &Attribute) -> Result<Self> {
+        let dimension = attribute.inner_or_err()?.parse()?;
+        Ok(Self {
+            dimension,
+            attribute_span: attribute.span,
         })
     }
 }
@@ -303,7 +346,7 @@ impl Parse for ConstantEntry {
 impl Parse for Entry {
     fn parse(input: ParseStream) -> Result<Self> {
         use keywords as kw;
-        let attributes = input.call(Attribute::parse_outer)?;
+        let attributes = Attribute::parse_all(input)?;
         let lookahead = input.lookahead1();
         if lookahead.peek(kw::quantity_type) {
             let _: kw::quantity_type = input.parse()?;
