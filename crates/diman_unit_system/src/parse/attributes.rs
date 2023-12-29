@@ -1,13 +1,13 @@
 use proc_macro2::Span;
 use syn::{
     bracketed, parenthesized,
-    parse::{ParseBuffer, ParseStream},
-    Error, Result,
+    parse::{Parse, ParseBuffer, ParseStream},
+    Error, Result, Token,
 };
 
 use crate::{
     parse::tokens,
-    prefixes::MetricPrefixes,
+    prefixes::{MetricPrefixes, Prefix},
     types::{Alias, BaseAttribute, Symbol},
 };
 
@@ -16,6 +16,10 @@ pub mod attribute_keywords {
     syn::custom_keyword!(alias);
     syn::custom_keyword!(symbol);
     syn::custom_keyword!(metric_prefixes);
+}
+
+pub mod prefix_attribute_keywords {
+    syn::custom_keyword!(skip);
 }
 
 #[derive(PartialEq, Debug)]
@@ -172,7 +176,22 @@ impl FromAttribute for MetricPrefixes {
         AttributeName::MetricPrefixes
     }
 
-    fn from_attribute(_: &Attribute) -> Result<Self> {
-        Ok(Self)
+    fn from_attribute(attr: &Attribute) -> Result<Self> {
+        let skip = if let Some(inner) = &attr.inner {
+            let lookahead = inner.lookahead1();
+            if lookahead.peek(prefix_attribute_keywords::skip) {
+                let _: prefix_attribute_keywords::skip = inner.parse()?;
+                let _: Token![:] = inner.parse()?;
+                inner
+                    .parse_terminated(Prefix::parse, Token![,])?
+                    .into_iter()
+                    .collect()
+            } else {
+                vec![]
+            }
+        } else {
+            vec![]
+        };
+        Ok(Self { skip })
     }
 }

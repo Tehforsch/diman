@@ -233,11 +233,10 @@ impl ParseWithAttributes for UnitEntry {
         }?;
         let aliases = attributes.remove_all_of_type()?;
         let symbol = attributes.remove_unique_of_type()?;
-        let metric_prefixes: Vec<MetricPrefixes> = attributes.remove_all_of_type()?;
-        let prefixes = if metric_prefixes.is_empty() {
-            vec![]
-        } else {
-            MetricPrefixes.into()
+        let metric_prefixes: Option<MetricPrefixes> = attributes.remove_unique_of_type()?;
+        let prefixes = match metric_prefixes {
+            Some(metric) => metric.into(),
+            None => vec![],
         };
         attributes.check_none_left_over()?;
         Ok(Self {
