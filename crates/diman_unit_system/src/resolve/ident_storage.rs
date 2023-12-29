@@ -273,15 +273,20 @@ impl IdentStorage {
             let lhs_kind = lhs.kind();
             for rhs_factor in lhs.expr.iter_vals() {
                 if let Factor::Other(rhs_ident) = rhs_factor {
-                    let rhs_kind = kinds[rhs_ident];
-                    if !lhs_kind.kind_is_allowed_in_definition(rhs_kind) {
-                        KindNotAllowedError {
-                            lhs_ident: lhs.ident(),
-                            rhs_ident: rhs_ident,
-                            lhs_kind,
-                            rhs_kind,
+                    let rhs_kind = kinds.get(rhs_ident);
+                    // If we cannot not find the rhs_ident, it means that
+                    // it was previously filtered out due to be undefined / multiply defined.
+                    // In that case, we'll skip this check for this identifier.
+                    if let Some(rhs_kind) = rhs_kind {
+                        if !lhs_kind.kind_is_allowed_in_definition(*rhs_kind) {
+                            KindNotAllowedError {
+                                lhs_ident: lhs.ident(),
+                                rhs_ident: rhs_ident,
+                                lhs_kind,
+                                rhs_kind: *rhs_kind,
+                            }
+                            .emit();
                         }
-                        .emit();
                     }
                 }
             }

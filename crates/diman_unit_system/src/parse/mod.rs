@@ -285,6 +285,8 @@ impl Parse for Operator {
         } else if lookahead.peek(DivisionToken) {
             let _: DivisionToken = input.parse()?;
             Ok(Self::Div)
+        } else if lookahead.peek(Ident) {
+            Ok(Self::Mul)
         } else {
             Err(lookahead.error())
         }
