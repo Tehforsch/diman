@@ -14,14 +14,12 @@ pub mod attribute_keywords {
     syn::custom_keyword!(base);
     syn::custom_keyword!(alias);
     syn::custom_keyword!(symbol);
-    syn::custom_keyword!(metric_prefixes);
 }
 
 pub enum AttributeName {
     Base,
     Alias,
     Symbol,
-    MetricPrefixes,
 }
 
 pub struct Attribute<'a> {
@@ -36,11 +34,13 @@ pub trait FromAttribute: Sized {
 }
 
 pub trait ParseWithAttributes: Sized {
-    fn parse_with_attributes(input: ParseStream, attributes: Vec<Attribute>) -> Result<Self>;
+    fn parse_with_attributes(input: ParseStream, attributes: Attributes) -> Result<Self>;
 }
 
-impl<'a> Attribute<'a> {
-    pub fn parse_all(input: ParseStream<'a>) -> Result<Vec<Self>> {
+pub struct Attributes<'a>(pub Vec<Attribute<'a>>);
+
+impl<'a> Attributes<'a> {
+    pub fn parse_all(input: ParseStream<'a>) -> Result<Self> {
         use attribute_keywords as attr_kw;
         let mut attributes = vec![];
         while input.peek(tokens::AttributeToken) {
@@ -58,9 +58,6 @@ impl<'a> Attribute<'a> {
             } else if lookahead.peek(attr_kw::symbol) {
                 let _: attr_kw::symbol = content.parse()?;
                 AttributeName::Symbol
-            } else if lookahead.peek(attr_kw::metric_prefixes) {
-                let _: attr_kw::metric_prefixes = content.parse()?;
-                AttributeName::MetricPrefixes
             } else {
                 return Err(lookahead.error());
             };
@@ -73,24 +70,35 @@ impl<'a> Attribute<'a> {
             };
             attributes.push(Attribute { span, name, inner });
         }
-        Ok(attributes)
+        Ok(Self(attributes))
     }
 
+    pub fn remove_all_of_type<T: FromAttribute>(&mut self) -> Result<Vec<T>> {
+        let (ts, others): (Vec<_>, Vec<_>) =
+            self.0.drain(..).partition(|a| T::is_correct_type(&a.name));
+        self.0 = others;
+        ts.into_iter().map(|t| T::from_attribute(&t)).collect()
+    }
+
+    #[must_use]
+    pub fn check_none_left_over(mut self) -> Result<()> {
+        if self.0.is_empty() {
+            Ok(())
+        } else {
+            Err(Error::new(
+                self.0.remove(0).span,
+                format!("Unused attribute."),
+            ))
+        }
+    }
+}
+
+impl<'a> Attribute<'a> {
     fn inner_or_err(&self) -> Result<&ParseBuffer> {
         self.inner
             .as_ref()
             .ok_or_else(|| Error::new(self.span, format!("Attribute expects arguments.")))
     }
-}
-
-pub fn remove_attributes_of_type<T: FromAttribute>(
-    attributes: &mut Vec<Attribute>,
-) -> Result<Vec<T>> {
-    let (ts, others): (Vec<_>, Vec<_>) = attributes
-        .drain(..)
-        .partition(|a| T::is_correct_type(&a.name));
-    *attributes = others;
-    ts.into_iter().map(|t| T::from_attribute(&t)).collect()
 }
 
 impl FromAttribute for Alias {

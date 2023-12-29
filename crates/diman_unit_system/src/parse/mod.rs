@@ -9,11 +9,12 @@ use syn::{
 
 use crate::{
     expression::{BinaryOperator, Expr, Factor, Operator},
+    parse::attributes::Attributes,
     types::{BaseAttribute, Definition, IntExponent, UnresolvedDefs},
 };
 
 use self::{
-    attributes::{remove_attributes_of_type, Attribute, ParseWithAttributes},
+    attributes::ParseWithAttributes,
     tokens::{
         AssignmentToken, DivisionToken, ExponentiationToken, MultiplicationToken,
         StatementSeparator, TypeAnnotationToken,
@@ -198,12 +199,12 @@ impl Parse for ConstantEntry {
 }
 
 impl ParseWithAttributes for UnitEntry {
-    fn parse_with_attributes(input: ParseStream, mut attributes: Vec<Attribute>) -> Result<Self> {
+    fn parse_with_attributes(input: ParseStream, mut attributes: Attributes) -> Result<Self> {
         let _ = input.parse::<keywords::unit>()?;
         let name = input.parse()?;
         let dimension_annotation = parse_annotation(input)?;
         let lookahead = input.lookahead1();
-        let base_attributes: Vec<BaseAttribute> = remove_attributes_of_type(&mut attributes)?;
+        let base_attributes: Vec<BaseAttribute> = attributes.remove_all_of_type()?;
         let definition = if lookahead.peek(AssignmentToken) {
             let _: AssignmentToken = input.parse()?;
             if base_attributes.is_empty() {
@@ -229,7 +230,8 @@ impl ParseWithAttributes for UnitEntry {
                 ))
             }
         }?;
-        let aliases = remove_attributes_of_type(&mut attributes)?;
+        let aliases = attributes.remove_all_of_type()?;
+        attributes.check_none_left_over()?;
         Ok(Self {
             name,
             aliases,
@@ -242,7 +244,7 @@ impl ParseWithAttributes for UnitEntry {
 impl Parse for Entry {
     fn parse(input: ParseStream) -> Result<Self> {
         use keywords as kw;
-        let attributes = Attribute::parse_all(input)?;
+        let attributes = Attributes::parse_all(input)?;
         let lookahead = input.lookahead1();
         if lookahead.peek(kw::quantity_type) {
             let _: kw::quantity_type = input.parse()?;
