@@ -11,6 +11,7 @@ pub struct VectorType {
     pub num_dims: usize,
 }
 
+#[derive(Clone)]
 pub struct FloatType {
     pub name: Type,
     pub module_name: TokenStream,
@@ -22,9 +23,15 @@ pub struct FloatType {
     pub serialize_method: TokenStream,
 }
 
-pub trait StorageType {
+pub trait StorageType
+where
+    Self: Sized,
+{
     fn name(&self) -> &Type;
-    fn base_storage(&self) -> &Type;
+    fn base_storage(&self) -> &FloatType;
+    fn name_and_base_storage(self) -> (Type, FloatType) {
+        (self.name().clone(), self.base_storage().clone())
+    }
 }
 
 impl StorageType for VectorType {
@@ -32,8 +39,8 @@ impl StorageType for VectorType {
         &self.name
     }
 
-    fn base_storage(&self) -> &Type {
-        &self.float_type.name
+    fn base_storage(&self) -> &FloatType {
+        &self.float_type
     }
 }
 
@@ -42,8 +49,8 @@ impl StorageType for FloatType {
         &self.name
     }
 
-    fn base_storage(&self) -> &Type {
-        &self.name
+    fn base_storage(&self) -> &FloatType {
+        &self
     }
 }
 
@@ -53,6 +60,18 @@ impl Defs {
             .into_iter()
             .map(|x| x.name)
             .chain(self.vector_types().into_iter().map(|x| x.name))
+            .collect()
+    }
+
+    pub fn storage_types_with_base_names(&self) -> Vec<(Type, FloatType)> {
+        self.float_types()
+            .into_iter()
+            .map(move |x| x.name_and_base_storage())
+            .chain(
+                self.vector_types()
+                    .into_iter()
+                    .map(move |x| x.name_and_base_storage()),
+            )
             .collect()
     }
 

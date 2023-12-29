@@ -153,7 +153,7 @@ impl Defs {
                 let quantity_type = &self.quantity_type;
                 let constant_name = &constant.name;
                 let value = constant.factor;
-                let float_type = type_.base_storage();
+                let float_type = &type_.base_storage().name;
                 let type_ = type_.name();
                 quote! {
                     pub const #constant_name: #quantity_type::<#type_, { #dimension }> = #quantity_type::<#type_, { #dimension }>(#value as #float_type);
