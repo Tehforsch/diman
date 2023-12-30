@@ -1,10 +1,6 @@
-use crate::{
-    storage_types::StorageType,
-    types::{Defs, Dimensions},
-};
+use crate::{dimension_math::BaseDimensions, storage_types::StorageType, types::Defs};
 use proc_macro2::TokenStream;
 use quote::{quote, quote_spanned};
-use syn::spanned::Spanned;
 
 impl Defs {
     pub(crate) fn type_definition(&self) -> TokenStream {
@@ -66,14 +62,12 @@ impl Defs {
         }
     }
 
-    pub fn get_dimension_expr(&self, dim: &Dimensions) -> TokenStream {
+    pub fn get_dimension_expr(&self, dim: &BaseDimensions) -> TokenStream {
         let dimension_type = &self.dimension_type;
         let field_updates: TokenStream = dim
             .fields
             .iter()
-            .map(|field| {
-                let ident = &field.ident;
-                let value = &field.value;
+            .map(|(ident, value)| {
                 quote! { #ident: #value, }
             })
             .collect();
@@ -135,10 +129,10 @@ impl Defs {
     }
 
     pub fn quantity_definitions_for_storage_type<T: StorageType>(&self, type_: &T) -> TokenStream {
-        self.quantities
+        self.dimensions
             .iter()
             .map(|quantity| {
-                let dimension = self.get_dimension_expr(&quantity.dimension);
+                let dimension = self.get_dimension_expr(&quantity.dimensions);
                 let quantity_type = &self.quantity_type;
                 let quantity_name = &quantity.name;
                 let type_ = type_.name();
@@ -155,13 +149,20 @@ impl Defs {
             .constants
             .iter()
             .map(|constant| {
-                let dimension = self.get_dimension_expr(&constant.dimension);
+                let dimension = self.get_dimension_expr(&constant.dimensions);
                 let quantity_type = &self.quantity_type;
                 let constant_name = &constant.name;
                 let value = constant.factor;
-                let float_type = type_.base_storage();
+                let float_type = &type_.base_storage().name;
                 let type_ = type_.name();
+                // TODO(minor): The allow(clippy::approx_constant)
+                // exists to allow definitions of, for example, PI in
+                // unit_system calls.  A better solution would
+                // probably be to define PI (and possibly some other
+                // mathematical constants) for use in the unit_system
+                // macro, but this is an easy fix for now.
                 quote! {
+                    #[allow(clippy::approx_constant)]
                     pub const #constant_name: #quantity_type::<#type_, { #dimension }> = #quantity_type::<#type_, { #dimension }>(#value as #float_type);
                 }
             })

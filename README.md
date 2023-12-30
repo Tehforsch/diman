@@ -50,55 +50,55 @@ If you cannot use unstable Rust for your project or require a stable library, co
 * Random quantities can be generated via [`rand`](https://crates.io/crates/rand) (behind the `rand` feature gate, see the official documentation for more info).
 
 ## Design
-Diman aims to make it as easy as possible to add compile-time unit safety to Rust code. Physical quantities are represented by the `Quantity<S, D>` struct, where `S` is the underlying storage type (`f32`, `f64`, ...) and `D` is the  dimension of the quantity. For example, in order to represent the [SI system of units](https://www.nist.gov/pml/owm/metric-si/si-units), the dimension type would look as follows:
-```rust
-#![feature(adt_const_params)]
-use diman::dimension;
+Diman aims to make it as easy as possible to add compile-time unit safety to Rust code. Physical quantities are represented by the `Quantity<S, D>` struct, where `S` is the underlying storage type (`f32`, `f64`, ...) and `D` is the  dimension of the quantity. For example, in order to represent the [SI system of units](https://www.nist.gov/pml/owm/metric-si/si-units), the quantity type would be defined using the `unit_system!` macro as follows:
+```rust ignore
+#![allow(incomplete_features)]
+#![feature(generic_const_exprs, adt_const_params)]
+use diman::unit_system;
 
-#[dimension]
-pub struct Dimension {
-    pub length: i32,
-    pub time: i32,
-    pub mass: i32,
-    pub temperature: i32,
-    pub current: i32,
-    pub amount_of_substance: i32,
-    pub luminous_intensity: i32,
-}
+unit_system!(
+    quantity_type Quantity;
+    dimension_type Dimension;
+
+    dimension Length;
+    dimension Time;
+    dimension Mass;
+    dimension Temperature;
+    dimension Current;
+    dimension AmountOfSubstance;
+    dimension LuminousIntensity;
+);
 ```
-Addition and subtraction of two quantities is only allowed when the `D` type is the same. During multiplication of two quantities, all the entries of the two dimension are added. This functionality is implemented automatically by the `#[diman]` macro. 
-Note: This macro is currently not a derive macro for the Mul/Div traits because the dimension multiplication and division are required to be const. While this is possible, it would require using yet another unstable feature [`const_trait_impl`](https://github.com/rust-lang/rust/issues/67792).
+Addition and subtraction of two quantities is only allowed for quantities with the same `Dimension` type. During multiplication of two quantities, all the entries of the two dimension are added.
 
-Using the above `Dimension` type, we can define our own quantity type and a corresponding set of physical quantities and dimensions using the `unit_system` macro:
+The `unit_system!` macro also allows defining derived quantities and units:
 
 
 ```rust ignore
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs, adt_const_params)]
-use diman::unit_system;
-use diman::dimension;
-
-#[dimension]
-pub struct Dimension {
-    pub length: i32,
-    pub time: i32,
-}
-
+use diman_unit_system::unit_system;
 unit_system!(
-    Quantity,
-    Dimension,
-    [
-        def Length = { length: 1 },
-        def Time = { time: 1 },
-        def Velocity = Length / Time,
-        unit (meters, "m") = Length,
-        unit (kilometers, "km") = 1000.0 * meters,
-        unit (seconds, "s") = 1.0 * Time,
-        unit hours = 3600 * seconds,
-        unit meters_per_second = meters / seconds,
-        unit kilometers_per_hour = kilometers / hours,
-        constant MY_FAVORITE_VELOCITY = 1000 * meters_per_second,
-    ]
+    quantity_type Quantity;
+    dimension_type Dimension;
+
+    dimension Length;
+    dimension Time;
+
+    dimension Velocity = Length / Time;
+
+    #[prefix(kilo, milli)]
+    #[symbol(m)]
+    #[base(Length)]
+    unit meters;
+
+    #[base(Time)]
+    unit seconds;
+
+    unit hours: Time = 3600 * seconds;
+    unit meters_per_second: Velocity = meters / seconds;
+    unit kilometers_per_hour: Velocity = kilometers / hours;
+    constant MY_FAVORITE_VELOCITY = 1000 * kilometers_per_hour;
 );
 
 use f64::{Length, Time, Velocity, MY_FAVORITE_VELOCITY};
@@ -106,7 +106,7 @@ use f64::{Length, Time, Velocity, MY_FAVORITE_VELOCITY};
 fn fast_enough(x: Length, t: Time) {
     let vel = x / t;
     if vel > MY_FAVORITE_VELOCITY {
-        println!("{} is definitely fast enough!", vel.in_kilometers_per_hour());
+        println!("{} m/s is definitely fast enough!", vel.in_meters_per_second());
     }
 }
 

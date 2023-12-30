@@ -24,22 +24,6 @@ macro_rules! gen_tests_for_vector_2 {
                 assert_is_close(multiplied.y(), Length::meters(10.0));
             }
 
-            // #[test]
-            // fn mul_assign_vec2() {
-            //     let mut vec = VecLength::meters(1.0, 2.0);
-            //     vec *= 3.0;
-            //     assert_is_close(vec.x(), Length::meters(3.0));
-            //     assert_is_close(vec.y(), Length::meters(6.0));
-            // }
-
-            // #[test]
-            // fn div_assign_vec3() {
-            //     let mut vec = Vec2Length::meters(1.0, 2.0);
-            //     vec /= 2.0;
-            //     assert_is_close(vec.x(), Length::meters(0.5));
-            //     assert_is_close(vec.y(), Length::meters(1.0));
-            // }
-
             #[test]
             fn mul_quantity_vec2() {
                 let multiplied = VecVelocity::meters_per_second(1.0, 2.0) * Time::seconds(5.0);

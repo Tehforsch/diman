@@ -3,7 +3,7 @@ use quote::quote;
 
 use crate::{storage_types::FloatType, types::Defs};
 
-use super::utils::join;
+use super::join;
 
 impl Defs {
     fn dimensionless_float_method(

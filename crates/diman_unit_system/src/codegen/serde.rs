@@ -6,7 +6,7 @@ use crate::{
     types::Defs,
 };
 
-use super::utils::join;
+use super::join;
 
 impl Defs {
     pub fn serde_impl(&self) -> TokenStream {
@@ -24,7 +24,7 @@ impl Defs {
             ..
         } = self;
 
-        let units = self.units_array();
+        let units = self.units_array(self.units.iter());
 
         quote! {
             use std::marker::PhantomData;
@@ -105,7 +105,7 @@ impl Defs {
             quantity_type,
             ..
         } = self;
-        let units = self.units_array();
+        let units = self.units_array(self.units.iter());
         let serialize_method = &float_type.serialize_method;
         let float_type = &float_type.name;
         quote! {
@@ -206,7 +206,7 @@ impl Defs {
                             .map(|(_, name, _)| name)
                             .next()
                             .unwrap_or_else(|| {
-                                panic!("Attempt to deserialize quantity with unnamed unit.")
+                                panic!("Attempt to serialize quantity with dimension: {D:?}. Make sure that the unit with conversion factor 1 for this dimension is named.")
                             });
                         serializer.serialize_str(&format!("{} {}", self.0.to_string(), unit_name))
                     }
@@ -231,7 +231,7 @@ impl Defs {
             quantity_type,
             ..
         } = self;
-        let units = self.units_array();
+        let units = self.units_array(self.units.iter());
         quote! {
             impl<'de, const D: #dimension_type> serde::Deserialize<'de> for #quantity_type<#vector_type, D> {
                 fn deserialize<DE>(deserializer: DE) -> Result<#quantity_type<#vector_type, D>, DE::Error>
@@ -308,7 +308,7 @@ impl Defs {
                             .map(|(_, name, _)| name)
                             .next()
                             .unwrap_or_else(|| {
-                                panic!("Attempt to deserialize quantity with unnamed unit.")
+                                panic!("Attempt to serialize quantity with dimension: {D:?}. Make sure that the unit with conversion factor 1 for this dimension is named.")
                             });
                         serializer.serialize_str(&format!("{} {}", vec_to_string(self.0), unit_name))
                     }

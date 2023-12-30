@@ -1,0 +1,8 @@
+error: Dimension mismatch in expression.
+  --> tests/compile_fail/dimension_annotation_violated_unit.rs:12:15
+   |
+12 |     unit foo: Length = kilograms * kilograms;
+   |               ^^^^^^
+   |
+   = help: The annotation on the left-hand side has dimensions length^1 mass^0
+   = help: but the expression on the right-hand side has dimensions length^0 mass^2

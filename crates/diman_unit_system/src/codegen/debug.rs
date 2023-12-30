@@ -1,17 +1,15 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::types::Defs;
+use crate::types::{Defs, Unit};
 
 impl Defs {
-    pub fn units_array(&self) -> TokenStream {
-        let units: TokenStream = self
-            .units
-            .iter()
+    pub fn units_array<'a>(&self, units: impl Iterator<Item = &'a Unit>) -> TokenStream {
+        let units: TokenStream = units
             .filter_map(|unit| {
-                let dim = self.get_dimension_expr(&unit.dimension);
+                let dim = self.get_dimension_expr(&unit.dimensions);
                 let factor = unit.factor;
-                let symbol = unit.symbol.as_ref()?;
+                let symbol = &unit.symbol.as_ref()?.0.to_string();
                 Some(quote! {
                     (#dim, #symbol, #factor),
                 })
@@ -26,7 +24,7 @@ impl Defs {
             dimension_type,
             ..
         } = &self;
-        let units = self.units_array();
+        let units = self.units_array(self.units.iter().filter(|unit| unit.factor == 1.0));
         quote! {
             impl<const D: #dimension_type, S: diman::DebugStorageType + std::fmt::Display> std::fmt::Debug for #quantity_type<S, D> {
                 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

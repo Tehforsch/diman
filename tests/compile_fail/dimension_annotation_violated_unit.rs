@@ -1,13 +1,16 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs, adt_const_params)]
 
-use diman::unit_system;
-
+use ::diman::unit_system;
 unit_system!(
     quantity_type Quantity;
     dimension_type Dimension;
+    dimension Mass;
     dimension Length;
-    unit kilometers = 1000.0 * meters;
+    #[base(Mass)]
+    unit kilograms: Mass;
+    unit foo: Length = kilograms * kilograms;
 );
 
-fn main() {}
+fn main() {
+}

@@ -6,8 +6,8 @@ use diman::unit_system;
 unit_system!(
     quantity_type Quantity;
     dimension_type Dimension;
-    dimension Length;
-    unit kilometers = 1000.0 * meters;
+    #[prefix(kilo)]
+    unit foo = undefined;
 );
 
 fn main() {}

@@ -1,14 +1,14 @@
 use crate::types::IntExponent;
 
-#[derive(Clone, Debug)]
-#[cfg_attr(test, derive(PartialEq))]
+#[derive(Clone)]
+#[cfg_attr(test, derive(PartialEq, Debug))]
 pub enum Operator {
     Mul,
     Div,
 }
 
-#[derive(Clone, Debug)]
-#[cfg_attr(test, derive(PartialEq))]
+#[derive(Clone)]
+#[cfg_attr(test, derive(PartialEq, Debug))]
 pub enum Expr<T, E> {
     Value(Factor<T, E>),
     Binary(BinaryOperator<T, E>),
@@ -25,16 +25,16 @@ impl<T, E> Expr<T, E> {
     }
 }
 
-#[derive(Clone, Debug)]
-#[cfg_attr(test, derive(PartialEq))]
+#[derive(Clone)]
+#[cfg_attr(test, derive(PartialEq, Debug))]
 pub struct BinaryOperator<T, E> {
     pub lhs: Box<Expr<T, E>>,
     pub rhs: Factor<T, E>,
     pub operator: Operator,
 }
 
-#[derive(Clone, Debug)]
-#[cfg_attr(test, derive(PartialEq))]
+#[derive(Clone)]
+#[cfg_attr(test, derive(PartialEq, Debug))]
 pub enum Factor<T, E> {
     Value(T),
     Power(T, E),
@@ -65,6 +65,23 @@ impl<T, E> Expr<T, E> {
         }
     }
 
+    pub fn map_exp<E2, F>(self, f: F) -> Expr<T, E2>
+    where
+        F: Fn(E) -> E2 + Clone,
+    {
+        match self {
+            Expr::Value(val) => Expr::Value(val.map_exp(f)),
+            Expr::Binary(bin) => {
+                let bin = BinaryOperator {
+                    lhs: Box::new(bin.lhs.map_exp(f.clone())),
+                    rhs: bin.rhs.map_exp(f.clone()),
+                    operator: bin.operator,
+                };
+                Expr::Binary(bin)
+            }
+        }
+    }
+
     pub fn iter_vals<'a>(&'a self) -> Box<dyn Iterator<Item = &'a T> + 'a> {
         match self {
             Expr::Value(val) => Box::new(val.iter_vals()),
@@ -82,6 +99,17 @@ impl<T, E> Factor<T, E> {
             Factor::Value(val) => Factor::Value(f(val)),
             Factor::ParenExpr(expr) => Factor::ParenExpr(Box::new(expr.map(f))),
             Factor::Power(val, exponent) => Factor::Power(f(val), exponent),
+        }
+    }
+
+    pub fn map_exp<E2, F>(self, f: F) -> Factor<T, E2>
+    where
+        F: Fn(E) -> E2 + Clone,
+    {
+        match self {
+            Factor::Value(val) => Factor::Value(val),
+            Factor::ParenExpr(expr) => Factor::ParenExpr(Box::new(expr.map_exp(f))),
+            Factor::Power(val, exponent) => Factor::Power(val, f(exponent)),
         }
     }
 
@@ -122,10 +150,10 @@ impl<T: MulDiv, I: Into<IntExponent> + Clone> Factor<T, I> {
 
 #[cfg(test)]
 mod tests {
-    use crate::parse::expression::tests::MyInt;
+    use crate::parse::tests::MyInt;
     use quote::quote;
 
-    use super::{super::parse::expression::tests::parse_expr, MulDiv};
+    use super::{super::parse::tests::parse_expr, MulDiv};
 
     impl std::ops::Mul for MyInt {
         type Output = MyInt;

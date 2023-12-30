@@ -9,7 +9,9 @@ mod float;
 
 mod type_aliases;
 
-mod quantity_defs;
+mod dimension_defs;
+
+pub mod unit_aliases;
 
 #[cfg(feature = "f64")]
 mod gas;
@@ -54,7 +56,13 @@ fn compile_fail_type_mismatch() {
 }
 
 #[test]
-fn compile_fail_quantity_def_numeric_factor() {
+fn compile_fail_dimension_def_numeric_factor() {
     let t = trybuild::TestCases::new();
-    t.compile_fail("tests/compile_fail/quantity_definition_with_numeric_factor.rs");
+    t.compile_fail("tests/compile_fail/dimension_definition_with_numeric_factor.rs");
+}
+
+#[test]
+fn compile_fail_dimension_annotation() {
+    let t = trybuild::TestCases::new();
+    t.compile_fail("tests/compile_fail/dimension_annotation*.rs");
 }

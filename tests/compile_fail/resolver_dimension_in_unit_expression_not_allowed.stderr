@@ -1,0 +1,7 @@
+error: Unit kilograms is defined in terms of the dimension Mass.
+ --> tests/compile_fail/resolver_dimension_in_unit_expression_not_allowed.rs:9:10
+  |
+9 |     unit kilograms = 5.0 * Mass;
+  |          ^^^^^^^^^         ^^^^
+  |
+  = note: Units can only be defined in terms of other units and constants.

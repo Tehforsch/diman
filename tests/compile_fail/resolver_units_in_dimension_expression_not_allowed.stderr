@@ -1,0 +1,7 @@
+error: Dimension Mass2 is defined in terms of the unit kilograms.
+  --> tests/compile_fail/resolver_units_in_dimension_expression_not_allowed.rs:11:15
+   |
+11 |     dimension Mass2 = kilograms;
+   |               ^^^^^   ^^^^^^^^^
+   |
+   = note: Dimensions can only be defined in terms of other dimensions.

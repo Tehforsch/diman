@@ -1,17 +1,100 @@
-use crate::{
-    expression::MulDiv,
-    types::{DimensionEntry, Dimensions},
-};
+use std::collections::HashMap;
+
+use proc_macro2::Ident;
+
+use crate::expression::MulDiv;
+
+#[derive(Clone)]
+pub struct BaseDimensions {
+    pub fields: HashMap<Ident, i32>,
+}
+
+impl PartialEq for BaseDimensions {
+    fn eq(&self, other: &Self) -> bool {
+        self.fields.iter().all(|(dimension, value)| {
+            if let Some(corresponding_value) = other.fields.get(dimension) {
+                value == corresponding_value
+            } else {
+                false
+            }
+        })
+    }
+}
+impl BaseDimensions {
+    pub fn none() -> Self {
+        Self {
+            fields: HashMap::default(),
+        }
+    }
+}
+
+impl std::ops::Mul for BaseDimensions {
+    type Output = Self;
+
+    #[allow(clippy::suspicious_arithmetic_impl)]
+    fn mul(self, rhs: Self) -> Self::Output {
+        let mut fields = self.fields;
+        for (name_rhs, val_rhs) in rhs.fields {
+            let same_field = fields.get_mut(&name_rhs);
+            if let Some(val) = same_field {
+                *val += val_rhs;
+            } else {
+                fields.insert(name_rhs, val_rhs);
+            }
+        }
+        Self { fields }
+    }
+}
+
+impl BaseDimensions {
+    fn inv(mut self) -> Self {
+        for (_, value) in self.fields.iter_mut() {
+            *value = -*value;
+        }
+        self
+    }
+}
+
+impl std::ops::Div for BaseDimensions {
+    type Output = Self;
+
+    #[allow(clippy::suspicious_arithmetic_impl)]
+    fn div(self, rhs: Self) -> Self::Output {
+        self * rhs.inv()
+    }
+}
+
+impl MulDiv for BaseDimensions {
+    fn powi(self, pow: i32) -> Self {
+        BaseDimensions {
+            fields: self
+                .fields
+                .into_iter()
+                .map(|(ident, value)| (ident, value * pow))
+                .collect(),
+        }
+    }
+}
 
 #[derive(Clone)]
 pub struct DimensionsAndFactor {
-    pub dimensions: Dimensions,
+    pub dimensions: BaseDimensions,
     pub factor: f64,
 }
 
-impl Dimensions {
-    pub fn none() -> Self {
-        Self { fields: vec![] }
+impl DimensionsAndFactor {
+    pub fn factor(factor: f64) -> Self {
+        Self {
+            dimensions: BaseDimensions::none(),
+            factor,
+        }
+    }
+
+    pub(crate) fn dimensions(dimensions: BaseDimensions) -> Self {
+        Self {
+            dimensions,
+            factor: 1.0,
+        }
     }
 }
 
@@ -19,17 +102,8 @@ impl std::ops::Mul for DimensionsAndFactor {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        let mut fields = self.dimensions.fields;
-        for f2 in rhs.dimensions.fields {
-            let same_field = fields.iter_mut().find(|f1| f1.ident == f2.ident);
-            if let Some(same_field) = same_field {
-                same_field.value += f2.value;
-            } else {
-                fields.push(f2);
-            }
-        }
         Self {
-            dimensions: Dimensions { fields },
+            dimensions: self.dimensions * rhs.dimensions,
             factor: self.factor * rhs.factor,
         }
     }
@@ -38,10 +112,11 @@ impl std::ops::Mul for DimensionsAndFactor {
 impl std::ops::Div for DimensionsAndFactor {
     type Output = Self;
 
-    // :D
-    #[allow(clippy::suspicious_arithmetic_impl)]
     fn div(self, rhs: Self) -> Self::Output {
-        self * rhs.inv()
+        Self {
+            dimensions: self.dimensions / rhs.dimensions,
+            factor: self.factor / rhs.factor,
+        }
     }
 }
 
@@ -49,27 +124,7 @@ impl MulDiv for DimensionsAndFactor {
     fn powi(self, pow: i32) -> Self {
         Self {
             factor: self.factor.powi(pow),
-            dimensions: Dimensions {
-                fields: self
-                    .dimensions
-                    .fields
-                    .into_iter()
-                    .map(|entry| DimensionEntry {
-                        ident: entry.ident,
-                        value: entry.value * pow,
-                    })
-                    .collect(),
-            },
+            dimensions: self.dimensions.powi(pow),
         }
-    }
-}
-
-impl DimensionsAndFactor {
-    fn inv(mut self) -> Self {
-        for field in self.dimensions.fields.iter_mut() {
-            field.value = -field.value;
-        }
-        self.factor = 1.0 / self.factor;
-        self
     }
 }
