@@ -14,7 +14,7 @@ let v2 = get_velocity(Length::meters(10.0), Time::seconds(1.0));
 assert_eq!(v1, v2);
 ```
 
-Let's try to assign add quantities with incompatible units:
+Let's try to assign add quantities with incompatible dimensions:
 ```rust compile_fail
 use diman::si::f64::{Length, Time};
 
@@ -40,8 +40,8 @@ If you cannot use unstable Rust for your project or require a stable library, co
 
 ## Features
 * Invalid operations between physical quantities (adding length and time, for example) turn into compile errors.
-* Newly created quantities are automatically converted to an underlying base representation. This means that the used types are quantities (such as `Length`) instead of concrete units (such as `meters`) which makes for more meaningful code.
-* Systems of units and quantities can be user defined via the `unit_system!` macro. This gives the user complete freedom over the choice of quantities and makes them part of the user's library, so that arbitrary new methods can be implemented on them.
+* Newly created quantities are automatically converted to an underlying base representation. This means that the used types are dimensions (such as `Length`) instead of concrete units (such as `meters`) which makes for more meaningful code.
+* Systems of dimensions and units can be user defined via the `unit_system!` macro. This gives the user complete freedom over the choice of dimensions and makes them part of the user's library, so that arbitrary new methods can be implemented on them.
 * `f32` and `f64` float storage types (behind the `f32` and `f64` feature gate respectively).
 * Vector storage types via [`glam`](https://crates.io/crates/glam/) (behind the `glam-vec2`, `glam-vec3`, `glam-dvec2` and `glam-dvec3` features).
 * Serialization and Deserialization via [`serde`](https://crates.io/crates/serde) (behind the `serde` feature gate, see the official documentation for more info).
@@ -69,10 +69,10 @@ unit_system!(
     dimension LuminousIntensity;
 );
 ```
-Addition and subtraction of two quantities is only allowed for quantities with the same `Dimension` type. During multiplication of two quantities, all the entries of the two dimension are added.
+The first two statements imply that the macro should define a `Quantity` type, which is user-facing, and a `Dimension` type, which is used only internally and will surface in compiler error messages.
+The macro will automatically implement all the required traits and methods for the `Quantity` type, such that addition and subtraction of two quantities is only allowed for quantities with the same `Dimension` type. During multiplication of two quantities, all the entries of the two dimensions are added. See below for a more comprehensive list of the implemented methods on `Quantity`.
 
-The `unit_system!` macro also allows defining derived quantities and units:
-
+The `unit_system!` macro also allows defining derived dimensions and units:
 
 ```rust ignore
 #![allow(incomplete_features)]
@@ -113,8 +113,11 @@ fn fast_enough(x: Length, t: Time) {
 fast_enough(Length::kilometers(100.0), Time::hours(0.3));
 ```
 
-This will define the `Quantity` type and implement all the required traits and methods.
-Here, `def` defines Quantities, which are concrete types, `unit` defines units, which are methods on the corresponding quantities and `constant` defines constants. The macro also accepts more complex definitions such as `def EnergyRatePerVolume = (Energy / Time) / Volume`.
+Here, `dimension` defines Quantities, which are concrete types, `unit` defines units, which are methods on the corresponding quantities and `constant` defines constants.
+Dimensions without a right hand side are base dimensions (such as length, time, mass, temperature, ... in the SI system of units), whereas dimensions with a right hand side are derived dimensions.
+The same thing holds for units - every unit is either a base unit for a given base dimension (denoted by the `#[base(...)]` attribute), or derived from base units and other derived units. Base units have the special property that the internal representation of the quantity will be in terms of the base unit (for example, a stored value `1.0` for a quantity with a `Length` dimension corresponds to `meter` in the above definitions).
+Other than this, there are no differences between base dimensions and dimensions or base units and units and they can be treated equally in user code.
+The macro also accepts more complex expressions such as `dimension Energy = Mass (Length / Time)^2`.
 The definitions do not have to be in any specific order.
 
 ## The Quantity type
@@ -138,6 +141,25 @@ assert_eq!(vol, Volume::cubic_meters(27.0))
 ```
 This includes `squared`, `cubed`, `sqrt`, `cbrt` as well as `powi`.
 
+## Prefixes
+Unit prefixes can automatically be generated with the `#[prefix(...)]` attribute for unit statements.
+For example
+```rust
+#[prefix(kilo, milli)]
+#[symbol(m)]
+unit meters;
+```
+will automatically generate the unit `meters` with symbol `m`, as well as `kilometers` and `millimeters` with symbols `km` and `mm` corresponding to `1e3 m` and `1e-3 m`.
+For simplicity, the attribute `#[metric_prefixes]` is provided, which will generate all metric prefixes from `atto-` to `exa-` automatically.
+
+## Aliases
+Unit aliases can automatically be generated with the `#[alias(...)]` macro. For example
+```rust
+#[alias(metres)]
+unit meters;
+```
+will automatically generate a unit `metres` that has exactly the same definition as `meters`. This works with prefixes as expected (i.e. an alias is generated for every prefixed unit).
+
 ## Quantity products and quotients
 Sometimes, intermediate types in computations are quantities that don't really have a nice name and are also
 not needed too many times. Having to add a definition to the unit system for this case can be cumbersome.
@@ -151,5 +173,45 @@ fn foo(l: Length, t: Time, vol: Volume) -> Product<(Length, Time, Volume)> {
 
 fn bar(l: Length, t: Time) -> Quotient<Length, Time> {
     l / t
+}
+```
+
+## `serde`
+Serialization and deserialization of the units is provided via `serde` if the `serde` feature gate is enabled:
+```rust
+use diman::si::f64::{Length, Velocity};
+use serde::{Serialize, Deserialize};
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+struct Parameters {
+    my_length: Length,
+    my_vel: Velocity,
+}
+
+let params: Parameters = 
+     serde_yaml::from_str("
+        my_length: 100 m
+        my_vel: 10 m s^-1
+    ").unwrap();
+assert_eq!(
+    params, 
+    Parameters {
+        my_length: Length::meters(100.0),
+        my_vel: Velocity::meters_per_second(10.0),
+    }
+)
+```
+
+## `rand`
+Diman allows generating random quantities via `rand` if the `rand` feature gate is enabled:
+```rust
+use rand::Rng;
+
+use diman::si::f64::Length;
+
+let mut rng = rand::thread_rng();
+for _ in 0..100 {
+    let x = rng.gen_range(Length::meters(0.0)..Length::kilometers(1.0));
+    assert!(Length::meters(0.0) <= x);
+    assert!(x < Length::meters(1000.0));
 }
 ```
