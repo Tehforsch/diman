@@ -1,0 +1,76 @@
+name: Rust
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: -D warnings
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Install latest nightly
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: nightly
+            override: true
+      - name: Install hdf5 libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install libhdf5-dev
+      - name: Install mpich libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install mpich
+      - name: Build
+        run: cargo build --verbose --all-targets
+      - name: Run tests (all features)
+        run: cargo test --tests --all-features
+      - name: Run tests (default features)
+        run: cargo test --tests
+      - name: Doctests
+        run: cargo test --doc --all-features
+
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Install latest nightly
+      uses: actions-rs/toolchain@v1
+      with:
+          override: true
+          toolchain: nightly
+          components: clippy
+    - name: Install hdf5 libraries
+      run: |
+        sudo apt-get update
+        sudo apt-get install libhdf5-dev
+    - name: Install mpich libraries
+      run: |
+        sudo apt-get update
+        sudo apt-get install mpich
+    - name: Run clippy on all targets
+      run: cargo clippy --all-targets --all-features -- -D warnings
+
+  rustfmt:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Install latest nightly
+      uses: actions-rs/toolchain@v1
+      with:
+          override: true
+          toolchain: nightly
+          components: rustfmt
+    - name: Run rustfmt
+      run: cargo fmt -- --check
