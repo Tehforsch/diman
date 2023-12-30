@@ -8,8 +8,7 @@ unit_system!(
     dimension Mass;
     dimension Temperature;
     dimension Dimensionless = 1;
-    #[base(Dimensionless)]
-    unit dimensionless: Dimensionless;
+    unit dimensionless = 1;
     #[base(Length)]
     #[symbol(m)]
     #[metric_prefixes]

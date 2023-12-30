@@ -36,6 +36,16 @@ pub struct WrongTypeInAnnotationError<'a> {
     pub annotation_kind: Kind,
 }
 
+pub struct MultipleBaseUnitsForDimensionError<'a> {
+    pub dimension: &'a Ident,
+    pub unit: &'a Ident,
+}
+
+pub struct BaseUnitForNonBaseDimensionError<'a> {
+    pub dimension: &'a Ident,
+    pub unit: &'a Ident,
+}
+
 pub trait Emit {
     fn emit(self);
 }
@@ -220,6 +230,37 @@ impl<'a> Emit for WrongTypeInAnnotationError<'a> {
                 name, self.annotation_ident
             ))
             .note(format!("Annotations can only be done using dimensions."))
+            .emit();
+    }
+}
+
+impl<'a> Emit for MultipleBaseUnitsForDimensionError<'a> {
+    fn emit(self) {
+        self.unit
+            .span()
+            .unwrap()
+            .error(format!(
+                "'{}' is defined to be a base unit for dimension '{}', but there already is a base unit for this dimension.",
+                self.unit,
+                self.dimension,
+            ))
+            .note(format!("There can only be one base unit per base dimension."))
+            .emit();
+    }
+}
+
+impl<'a> Emit for BaseUnitForNonBaseDimensionError<'a> {
+    fn emit(self) {
+        self.unit
+            .span()
+            .unwrap()
+            .error(format!(
+                "'{}' is defined to be a base unit for dimension '{}', but '{}' is not a base dimension.",
+                self.unit,
+                self.dimension,
+                self.dimension,
+            ))
+            .note(format!("Base units can only be defined for base dimensions."))
             .emit();
     }
 }

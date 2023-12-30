@@ -9,8 +9,8 @@ unit_system!(
     dimension Length;
     #[base(Length)]
     unit meters: Length;
-    unit foo: Length = 10.0 * meters;
-    unit foo: Length = 20.0 * meters;
+    #[base(Length)]
+    unit parsec: Length;
 );
 
 fn main() {}

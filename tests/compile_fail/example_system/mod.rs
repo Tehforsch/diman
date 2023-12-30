@@ -9,8 +9,7 @@ unit_system!(
     dimension Mass;
     dimension Temperature;
     dimension Dimensionless = 1;
-    #[base(Dimensionless)]
-    unit dimensionless: Dimensionless;
+    unit dimensionless = 1;
     #[base(Length)]
     unit meters: Length;
     unit kilometers = 1000.0 * meters;
@@ -19,8 +18,7 @@ unit_system!(
     dimension Velocity = Length / Time;
     unit meters_per_second = meters / seconds;
     dimension Energy = Mass * Velocity * Velocity;
-    #[base(Energy)]
-    unit joules: Energy;
+    unit joules: Energy = kilograms * meters_per_second^2;
     #[base(Mass)]
     unit kilograms: Mass;
     unit grams = 1e-3 * kilograms;
