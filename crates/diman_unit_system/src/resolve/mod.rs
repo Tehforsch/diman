@@ -11,7 +11,7 @@ use crate::types::{Definition, Defs, DimensionEntry, UnitEntry, UnresolvedDefs};
 use self::{
     error::{
         emit_if_err, BaseUnitForNonBaseDimensionError, Emit, MultipleBaseUnitsForDimensionError,
-        MultipleTypeDefinitionsError,
+        MultipleTypeDefinitionsError, SymbolDefinedMultipleTimes,
     },
     ident_storage::IdentStorage,
 };
@@ -71,6 +71,7 @@ impl UnresolvedDefs {
         ));
         let mut idents = IdentStorage::default();
         let base_dimensions = get_base_dimensions(&self.dimensions, &self.units);
+        check_multiply_defined_symbols(&self.units);
         idents.add(self.dimensions);
         idents.add(self.units);
         idents.add(self.constants);
@@ -92,6 +93,23 @@ impl UnresolvedDefs {
             units,
             constants,
             base_dimensions,
+        }
+    }
+}
+
+fn check_multiply_defined_symbols(units: &[UnitEntry]) {
+    let mut units_by_symbol: HashMap<&Ident, Vec<&Ident>> = HashMap::new();
+    for unit in units {
+        if let Some(ref symbol) = unit.symbol {
+            units_by_symbol
+                .entry(&symbol.0)
+                .or_insert_with(|| vec![])
+                .push(&unit.name);
+        }
+    }
+    for (symbol, units) in units_by_symbol {
+        if units.len() > 1 {
+            SymbolDefinedMultipleTimes { symbol, units }.emit()
         }
     }
 }

@@ -46,6 +46,11 @@ pub struct BaseUnitForNonBaseDimensionError<'a> {
     pub unit: &'a Ident,
 }
 
+pub struct SymbolDefinedMultipleTimes<'a> {
+    pub symbol: &'a Ident,
+    pub units: Vec<&'a Ident>,
+}
+
 pub trait Emit {
     fn emit(self);
 }
@@ -262,5 +267,19 @@ impl<'a> Emit for BaseUnitForNonBaseDimensionError<'a> {
             ))
             .note(format!("Base units can only be defined for base dimensions."))
             .emit();
+    }
+}
+
+impl<'a> Emit for SymbolDefinedMultipleTimes<'a> {
+    fn emit(self) {
+        Diagnostic::spanned(
+            self.units
+                .into_iter()
+                .map(|ident| ident.span().unwrap())
+                .collect::<Vec<_>>(),
+            Level::Error,
+            format!("Symbol '{}' is used for multiple units.", self.symbol),
+        )
+        .emit()
     }
 }

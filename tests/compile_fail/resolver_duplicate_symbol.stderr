@@ -1,0 +1,8 @@
+error: Symbol 'mm' is used for multiple units.
+  --> tests/compile_fail/resolver_duplicate_symbol.rs:13:10
+   |
+13 |     unit meters: Length;
+   |          ^^^^^^
+14 |     #[symbol(mm)]
+15 |     unit my_unit: Length = meters * 10.0;
+   |          ^^^^^^^
