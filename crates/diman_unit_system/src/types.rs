@@ -2,7 +2,10 @@ use proc_macro2::Span;
 use syn::*;
 
 use crate::{
-    derive_dimension::to_snakecase, dimension_math::BaseDimensions, expression::Expr, parse::One,
+    derive_dimension::to_snakecase,
+    dimension_math::BaseDimensions,
+    expression::{self, BinaryOperator, Expr, Operator},
+    parse::One,
     prefixes::Prefix,
 };
 
@@ -61,6 +64,13 @@ pub struct Alias {
 pub struct Symbol(pub Ident);
 
 #[derive(Clone)]
+pub struct ConstantEntry {
+    pub name: Ident,
+    pub rhs: Expr<Factor<f64>, IntExponent>,
+    pub dimension_annotation: Option<Ident>,
+}
+
+#[derive(Clone)]
 pub struct UnitEntry {
     pub name: Ident,
     pub symbol: Option<Symbol>,
@@ -71,18 +81,119 @@ pub struct UnitEntry {
 }
 
 #[derive(Clone)]
-pub struct ConstantEntry {
+pub struct ConcreteUnitEntry {
     pub name: Ident,
-    pub rhs: Expr<Factor<f64>, IntExponent>,
+    pub symbol: Option<Symbol>,
     pub dimension_annotation: Option<Ident>,
+    pub definition: Definition<Ident, f64>,
 }
 
-pub struct UnresolvedDefs {
+impl UnitEntry {
+    fn format_name(&self, prefix: Option<&Prefix>, alias: Option<&Alias>) -> Ident {
+        let name = match alias {
+            None => self.name.clone(),
+            Some(alias) => alias.name.clone(),
+        };
+        match prefix {
+            None => name,
+            Some(prefix) => Ident::new(&format!("{}{}", prefix.name(), name), name.span()),
+        }
+    }
+
+    fn format_symbol(&self, prefix: Option<&Prefix>, alias: Option<&Alias>) -> Option<Symbol> {
+        // Prevent generating lots of non-unique symbols by only setting the symbol for the non-aliased units
+        if alias.is_some() {
+            None
+        } else {
+            match prefix {
+                None => self.symbol.clone(),
+                Some(prefix) => self.symbol.as_ref().map(|symbol| {
+                    Symbol(Ident::new(
+                        &format!("{}{}", prefix.short(), symbol.0),
+                        self.name.span(),
+                    ))
+                }),
+            }
+        }
+    }
+
+    fn get_definition(
+        &self,
+        prefix: Option<&Prefix>,
+        alias: Option<&Alias>,
+    ) -> Definition<Ident, f64> {
+        let factor = prefix.map(|prefix| prefix.factor()).unwrap_or(1.0);
+        if alias.is_none() && prefix.is_none() {
+            self.definition.clone()
+        } else {
+            Definition::Expression(Expr::Binary(BinaryOperator {
+                lhs: Box::new(Expr::Value(expression::Factor::Value(Factor::Concrete(
+                    factor,
+                )))),
+                rhs: expression::Factor::Value(Factor::Other(self.name.clone())),
+                operator: Operator::Mul,
+            }))
+        }
+    }
+
+    fn expand_prefix_and_alias(
+        &self,
+        prefix: Option<&Prefix>,
+        alias: Option<&Alias>,
+    ) -> ConcreteUnitEntry {
+        let name = self.format_name(prefix, alias);
+        let symbol = self.format_symbol(prefix, alias);
+        let definition = self.get_definition(prefix, alias);
+        ConcreteUnitEntry {
+            name,
+            symbol,
+            definition,
+            dimension_annotation: self.dimension_annotation.clone(),
+        }
+    }
+
+    fn expand(mut self) -> Vec<ConcreteUnitEntry> {
+        let mut prefixes: Vec<_> = self.prefixes.drain(..).map(|prefix| Some(prefix)).collect();
+        prefixes.push(None);
+        let mut aliases: Vec<_> = self.aliases.drain(..).map(|alias| Some(alias)).collect();
+        aliases.push(None);
+        prefixes
+            .iter()
+            .flat_map(|prefix| {
+                aliases
+                    .iter()
+                    .map(|alias| self.expand_prefix_and_alias(prefix.as_ref(), alias.as_ref()))
+            })
+            .collect()
+    }
+}
+
+pub struct Unresolved<U> {
     pub dimension_types: Vec<Ident>,
     pub quantity_types: Vec<Ident>,
     pub dimensions: Vec<DimensionEntry>,
-    pub units: Vec<UnitEntry>,
+    pub units: Vec<U>,
     pub constants: Vec<ConstantEntry>,
+}
+
+pub type UnresolvedTemplates = Unresolved<UnitEntry>;
+pub type UnresolvedDefs = Unresolved<ConcreteUnitEntry>;
+
+impl UnresolvedTemplates {
+    pub fn expand_templates(self) -> UnresolvedDefs {
+        let units = self
+            .units
+            .into_iter()
+            .flat_map(|template| template.expand())
+            .collect();
+        UnresolvedDefs {
+            dimension_types: self.dimension_types,
+            quantity_types: self.quantity_types,
+            dimensions: self.dimensions,
+            units,
+            constants: self.constants,
+        }
+    }
 }
 
 pub struct Dimension {
@@ -108,92 +219,23 @@ pub struct Unit {
     pub symbol: Option<Symbol>,
 }
 
-impl UnitTemplate {
-    fn expand_prefix_and_alias(&self, prefix: Option<&Prefix>, alias: Option<&Alias>) -> Unit {
-        let name = match alias {
-            None => &self.name,
-            Some(alias) => &alias.name,
-        };
-        let (name, symbol, factor) = match prefix {
-            Some(prefix) => {
-                let name = Ident::new(&format!("{}{}", prefix.name(), name), name.span());
-                let symbol = self
-                    .symbol
-                    .as_ref()
-                    .filter(|_| alias.is_none()) // Prevent generating lots of non-unique symbols by only setting the symbol for the non-aliased units
-                    .map(|symbol| {
-                        Symbol(Ident::new(
-                            &format!("{}{}", prefix.short(), symbol.0),
-                            self.name.span(),
-                        ))
-                    });
-                let factor = self.factor * prefix.factor();
-                (name, symbol, factor)
-            }
-            None => (name.clone(), self.symbol.clone(), self.factor),
-        };
-        Unit {
-            name,
-            dimensions: self.dimensions.clone(),
-            factor,
-            symbol,
-        }
-    }
-
-    fn expand(mut self) -> Vec<Unit> {
-        let mut prefixes: Vec<_> = self.prefixes.drain(..).map(|prefix| Some(prefix)).collect();
-        prefixes.push(None);
-        let mut aliases: Vec<_> = self.aliases.drain(..).map(|alias| Some(alias)).collect();
-        aliases.push(None);
-        prefixes
-            .iter()
-            .flat_map(|prefix| {
-                aliases
-                    .iter()
-                    .map(|alias| self.expand_prefix_and_alias(prefix.as_ref(), alias.as_ref()))
-            })
-            .collect()
-    }
-}
-
 pub struct Constant {
     pub name: Ident,
     pub dimensions: BaseDimensions,
     pub factor: f64,
 }
 
-pub struct GenericDefs<U> {
+pub struct Defs {
     pub dimension_type: Ident,
     pub quantity_type: Ident,
     pub dimensions: Vec<Dimension>,
-    pub units: Vec<U>,
+    pub units: Vec<Unit>,
     pub constants: Vec<Constant>,
     pub base_dimensions: Vec<Ident>,
 }
 
-pub type TemplateDefs = GenericDefs<UnitTemplate>;
-pub type Defs = GenericDefs<Unit>;
-
 impl Defs {
     pub fn base_dimensions(&self) -> impl Iterator<Item = &Ident> + '_ {
         self.base_dimensions.iter()
-    }
-}
-
-impl TemplateDefs {
-    pub fn expand_templates(self) -> Defs {
-        let units = self
-            .units
-            .into_iter()
-            .flat_map(|template| template.expand())
-            .collect();
-        Defs {
-            dimension_type: self.dimension_type,
-            quantity_type: self.quantity_type,
-            dimensions: self.dimensions,
-            units,
-            constants: self.constants,
-            base_dimensions: self.base_dimensions,
-        }
     }
 }

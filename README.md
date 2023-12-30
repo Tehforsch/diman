@@ -97,7 +97,8 @@ unit_system!(
 
     unit hours: Time = 3600 * seconds;
     unit meters_per_second: Velocity = meters / seconds;
-    constant MY_FAVORITE_VELOCITY = 1000 * meters_per_second;
+    unit kilometers_per_hour: Velocity = kilometers / hours;
+    constant MY_FAVORITE_VELOCITY = 1000 * kilometers_per_hour;
 );
 
 use f64::{Length, Time, Velocity, MY_FAVORITE_VELOCITY};
@@ -105,7 +106,7 @@ use f64::{Length, Time, Velocity, MY_FAVORITE_VELOCITY};
 fn fast_enough(x: Length, t: Time) {
     let vel = x / t;
     if vel > MY_FAVORITE_VELOCITY {
-        println!("{} is definitely fast enough!", vel.in_meters_per_second());
+        println!("{} m/s is definitely fast enough!", vel.in_meters_per_second());
     }
 }
 

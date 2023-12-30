@@ -11,7 +11,7 @@ use crate::{
     expression::{BinaryOperator, Expr, Factor, Operator},
     parse::attributes::Attributes,
     prefixes::{ExplicitPrefixes, MetricPrefixes},
-    types::{Alias, BaseAttribute, Definition, IntExponent, UnresolvedDefs},
+    types::{Alias, BaseAttribute, Definition, IntExponent, UnresolvedTemplates},
 };
 
 use self::{
@@ -339,7 +339,7 @@ impl<T: Parse, E: Parse> Parse for Expr<T, E> {
     }
 }
 
-impl Parse for UnresolvedDefs {
+impl Parse for UnresolvedTemplates {
     fn parse(input: ParseStream) -> Result<Self> {
         let mut dimensions = vec![];
         let mut units = vec![];

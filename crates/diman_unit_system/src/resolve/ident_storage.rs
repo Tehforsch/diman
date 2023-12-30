@@ -6,8 +6,8 @@ use crate::{
     dimension_math::{BaseDimensions, DimensionsAndFactor},
     expression::{self, Expr},
     types::{
-        Constant, ConstantEntry, Definition, Dimension, DimensionEntry, Factor, IntExponent,
-        UnitEntry, UnitTemplate,
+        ConcreteUnitEntry, Constant, ConstantEntry, Definition, Dimension, DimensionEntry, Factor,
+        IntExponent, Unit,
     },
 };
 
@@ -47,7 +47,7 @@ pub struct Item {
 #[derive(Clone)]
 pub enum ItemType {
     Dimension(DimensionEntry),
-    Unit(UnitEntry),
+    Unit(ConcreteUnitEntry),
     Constant(ConstantEntry),
 }
 
@@ -88,7 +88,7 @@ impl ItemType {
         }
     }
 
-    fn unwrap_unit(self) -> UnitEntry {
+    fn unwrap_unit(self) -> ConcreteUnitEntry {
         match self {
             Self::Unit(entry) => entry,
             _ => panic!("unwrap_unit called on non-unit entry"),
@@ -315,8 +315,8 @@ impl From<DimensionEntry> for Item {
     }
 }
 
-impl From<UnitEntry> for Item {
-    fn from(entry: UnitEntry) -> Self {
+impl From<ConcreteUnitEntry> for Item {
+    fn from(entry: ConcreteUnitEntry) -> Self {
         let expr = match &entry.definition {
             Definition::Expression(rhs) => rhs
                 .clone()
@@ -364,20 +364,18 @@ impl FromItem for Dimension {
     }
 }
 
-impl FromItem for UnitTemplate {
+impl FromItem for Unit {
     fn is_correct_kind(kind: Kind) -> bool {
         kind == Kind::Unit || kind == Kind::BaseUnit
     }
 
     fn from_item_and_dimensions(item: Item, dimensions: DimensionsAndFactor) -> Self {
         let unit_entry = item.type_.unwrap_unit();
-        UnitTemplate {
+        Unit {
             dimensions: dimensions.dimensions,
             name: unit_entry.name,
             factor: dimensions.factor,
-            aliases: unit_entry.aliases,
             symbol: unit_entry.symbol,
-            prefixes: unit_entry.prefixes,
         }
     }
 }

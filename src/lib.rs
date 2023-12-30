@@ -148,7 +148,8 @@ pub use type_aliases::Quotient;
 ///
 ///     unit hours: Time = 3600 * seconds;
 ///     unit meters_per_second: Velocity = meters / seconds;
-///     constant MY_FAVORITE_VELOCITY = 1000 * meters_per_second;
+///     unit kilometers_per_hour: Velocity = kilometers / hours;
+///     constant MY_FAVORITE_VELOCITY = 1000 * kilometers_per_hour;
 /// );
 /// # }
 /// ```

@@ -283,7 +283,7 @@ unit_system!(
     #[metric_prefixes]
     #[symbol(l)]
     #[alias(litres)]
-    unit litre: Volume = 1e-3 meter^3;
+    unit litre: Volume = decimeter^3;
 
     #[metric_prefixes]
     #[alias(tonnes)]
