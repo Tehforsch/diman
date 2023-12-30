@@ -1,0 +1,5 @@
+error: Undefined identifier "undefined".
+  --> tests/compile_fail/resolver_prefixed_or_aliased_units_dont_generate_multiple_errors.rs:10:16
+   |
+10 |     unit foo = undefined;
+   |                ^^^^^^^^^
