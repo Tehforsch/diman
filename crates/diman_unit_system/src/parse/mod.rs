@@ -22,7 +22,7 @@ use self::{
     },
 };
 
-use super::types::{ConstantEntry, DimensionEntry, DimensionFactor, UnitEntry};
+use super::types::{ConstantEntry, DimensionEntry, DimensionFactor, UnitTemplate};
 
 pub mod keywords {
     syn::custom_keyword!(quantity_type);
@@ -61,7 +61,7 @@ pub enum Entry {
     QuantityType(Ident),
     DimensionType(Ident),
     Dimension(DimensionEntry),
-    Unit(UnitEntry),
+    Unit(UnitTemplate),
     Constant(ConstantEntry),
 }
 
@@ -199,7 +199,7 @@ impl Parse for ConstantEntry {
     }
 }
 
-impl ParseWithAttributes for UnitEntry {
+impl ParseWithAttributes for UnitTemplate {
     fn parse_with_attributes(input: ParseStream, mut attributes: Attributes) -> Result<Self> {
         let _ = input.parse::<keywords::unit>()?;
         let name = input.parse()?;
@@ -274,7 +274,7 @@ impl Parse for Entry {
         } else if lookahead.peek(kw::dimension) {
             Ok(Self::Dimension(input.parse()?))
         } else if lookahead.peek(kw::unit) {
-            Ok(Self::Unit(UnitEntry::parse_with_attributes(
+            Ok(Self::Unit(UnitTemplate::parse_with_attributes(
                 input, attributes,
             )?))
         } else if lookahead.peek(kw::constant) {

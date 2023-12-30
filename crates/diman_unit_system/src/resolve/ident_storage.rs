@@ -6,8 +6,8 @@ use crate::{
     dimension_math::{BaseDimensions, DimensionsAndFactor},
     expression::{self, Expr},
     types::{
-        ConcreteUnitEntry, Constant, ConstantEntry, Definition, Dimension, DimensionEntry, Factor,
-        IntExponent, Unit,
+        Constant, ConstantEntry, Definition, Dimension, DimensionEntry, Factor, IntExponent, Unit,
+        UnitEntry,
     },
 };
 
@@ -47,7 +47,7 @@ pub struct Item {
 #[derive(Clone)]
 pub enum ItemType {
     Dimension(DimensionEntry),
-    Unit(ConcreteUnitEntry),
+    Unit(UnitEntry),
     Constant(ConstantEntry),
 }
 
@@ -88,7 +88,7 @@ impl ItemType {
         }
     }
 
-    fn unwrap_unit(self) -> ConcreteUnitEntry {
+    fn unwrap_unit(self) -> UnitEntry {
         match self {
             Self::Unit(entry) => entry,
             _ => panic!("unwrap_unit called on non-unit entry"),
@@ -335,8 +335,8 @@ impl From<DimensionEntry> for Item {
     }
 }
 
-impl From<ConcreteUnitEntry> for Item {
-    fn from(entry: ConcreteUnitEntry) -> Self {
+impl From<UnitEntry> for Item {
+    fn from(entry: UnitEntry) -> Self {
         let expr = match &entry.definition {
             Definition::Expression(rhs) => rhs
                 .clone()
