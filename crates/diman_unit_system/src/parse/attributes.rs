@@ -62,7 +62,7 @@ impl<'a> Attributes<'a> {
             let _: tokens::AttributeToken = input.parse()?;
             let content;
             let _ = bracketed!(content in input);
-            let span = content.span().clone();
+            let span = content.span();
             let lookahead = content.lookahead1();
             let name = if lookahead.peek(attr_kw::base) {
                 let _: attr_kw::base = content.parse()?;
@@ -117,15 +117,11 @@ impl<'a> Attributes<'a> {
         }
     }
 
-    #[must_use]
     pub fn check_none_left_over(mut self) -> Result<()> {
         if self.0.is_empty() {
             Ok(())
         } else {
-            Err(Error::new(
-                self.0.remove(0).span,
-                format!("Unused attribute."),
-            ))
+            Err(Error::new(self.0.remove(0).span, "Unused attribute."))
         }
     }
 }
@@ -142,7 +138,7 @@ impl<'a> Attribute<'a> {
     fn inner_or_err(&self) -> Result<&ParseBuffer> {
         self.inner
             .as_ref()
-            .ok_or_else(|| Error::new(self.span, format!("Attribute expects arguments.")))
+            .ok_or_else(|| Error::new(self.span, "Attribute expects arguments."))
     }
 }
 

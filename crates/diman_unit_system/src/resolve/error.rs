@@ -108,7 +108,7 @@ impl<'a> Emit for ViolatedAnnotationError<'a> {
         self.annotation
             .span()
             .unwrap()
-            .error(format!("Dimension mismatch in expression."))
+            .error("Dimension mismatch in expression.")
             .help(format!(
                 "The annotation on the left-hand side has dimensions {}",
                 lhs
@@ -127,9 +127,7 @@ impl<'a> Emit for UndefinedAnnotationDimensionError<'a> {
             .span()
             .unwrap()
             .error(format!("Undefined dimension {} in annotation.", self.0))
-            .note(format!(
-                "Annotations using units and constants are not allowed."
-            ))
+            .note("Annotations using units and constants are not allowed.")
             .emit();
     }
 }
@@ -234,7 +232,7 @@ impl<'a> Emit for WrongTypeInAnnotationError<'a> {
                 "Type error in annotation: Expected dimension, found {} '{}'.",
                 name, self.annotation_ident
             ))
-            .note(format!("Annotations can only be done using dimensions."))
+            .note("Annotations can only be done using dimensions.")
             .emit();
     }
 }
@@ -249,7 +247,7 @@ impl<'a> Emit for MultipleBaseUnitsForDimensionError<'a> {
                 self.unit,
                 self.dimension,
             ))
-            .note(format!("There can only be one base unit per base dimension."))
+            .note("There can only be one base unit per base dimension.")
             .emit();
     }
 }
@@ -265,7 +263,7 @@ impl<'a> Emit for BaseUnitForNonBaseDimensionError<'a> {
                 self.dimension,
                 self.dimension,
             ))
-            .note(format!("Base units can only be defined for base dimensions."))
+            .note("Base units can only be defined for base dimensions.")
             .emit();
     }
 }

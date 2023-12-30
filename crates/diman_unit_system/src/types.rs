@@ -156,9 +156,9 @@ impl UnitTemplate {
     }
 
     fn expand(mut self) -> Vec<UnitEntry> {
-        let mut prefixes: Vec<_> = self.prefixes.drain(..).map(|prefix| Some(prefix)).collect();
+        let mut prefixes: Vec<_> = self.prefixes.drain(..).map(Some).collect();
         prefixes.push(None);
-        let mut aliases: Vec<_> = self.aliases.drain(..).map(|alias| Some(alias)).collect();
+        let mut aliases: Vec<_> = self.aliases.drain(..).map(Some).collect();
         aliases.push(None);
         prefixes
             .iter()

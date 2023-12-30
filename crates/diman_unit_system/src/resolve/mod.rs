@@ -103,7 +103,7 @@ fn check_multiply_defined_symbols(units: &[UnitEntry]) {
         if let Some(ref symbol) = unit.symbol {
             units_by_symbol
                 .entry(&symbol.0)
-                .or_insert_with(|| vec![])
+                .or_default()
                 .push(&unit.name);
         }
     }
@@ -119,7 +119,7 @@ pub fn get_base_dimensions(dimensions: &[DimensionEntry], units: &[UnitEntry]) -
         .iter()
         .filter(|d| d.is_base_dimension())
         .collect();
-    check_invalid_base_units(&units, &base_dimensions);
+    check_invalid_base_units(units, &base_dimensions);
     base_dimensions
         .into_iter()
         .map(|x| x.dimension_entry_name())

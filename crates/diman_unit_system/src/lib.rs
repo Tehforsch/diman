@@ -19,6 +19,6 @@ pub fn unit_system(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let expanded = defs.expand_templates();
     let resolved = expanded.resolve();
     let dimension_impl = resolved.dimension_impl();
-    let impls: TokenStream = resolved.code_gen().into();
-    self::codegen::join([dimension_impl.into(), impls.into()]).into()
+    let impls: TokenStream = resolved.code_gen();
+    self::codegen::join([dimension_impl.into(), impls]).into()
 }

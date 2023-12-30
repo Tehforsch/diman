@@ -213,23 +213,21 @@ impl ParseWithAttributes for UnitTemplate {
             } else {
                 Err(syn::Error::new(
                     base_attributes[0].attribute_span,
-                    format!("Unit declared as base unit, but an expression is given."),
+                    "Unit declared as base unit, but an expression is given.",
                 ))
             }
+        } else if base_attributes.len() == 1 {
+            Ok(Definition::Base(base_attributes[0].dimension.clone()))
+        } else if base_attributes.is_empty() {
+            Err(syn::Error::new_spanned(
+                &name,
+                "Unit declared as base unit, but the base dimension is not specified.",
+            ))
         } else {
-            if base_attributes.len() == 1 {
-                Ok(Definition::Base(base_attributes[0].dimension.clone()))
-            } else if base_attributes.len() == 0 {
-                Err(syn::Error::new_spanned(
-                    &name,
-                    format!("Unit declared as base unit, but the base dimension is not specified."),
-                ))
-            } else {
-                Err(syn::Error::new(
-                    base_attributes[0].attribute_span,
-                    format!("Base dimension is specified multiple times."),
-                ))
-            }
+            Err(syn::Error::new(
+                base_attributes[0].attribute_span,
+                "Base dimension is specified multiple times.",
+            ))
         }?;
         let aliases: Vec<Vec<Alias>> = attributes.remove_all_of_type()?;
         let aliases = aliases

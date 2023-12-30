@@ -31,6 +31,7 @@ impl BaseDimensions {
 impl std::ops::Mul for BaseDimensions {
     type Output = Self;
 
+    #[allow(clippy::suspicious_arithmetic_impl)]
     fn mul(self, rhs: Self) -> Self::Output {
         let mut fields = self.fields;
         for (name_rhs, val_rhs) in rhs.fields {

@@ -155,7 +155,14 @@ impl Defs {
                 let value = constant.factor;
                 let float_type = &type_.base_storage().name;
                 let type_ = type_.name();
+                // TODO(minor): The allow(clippy::approx_constant)
+                // exists to allow definitions of, for example, PI in
+                // unit_system calls.  A better solution would
+                // probably be to define PI (and possibly some other
+                // mathematical constants) for use in the unit_system
+                // macro, but this is an easy fix for now.
                 quote! {
+                    #[allow(clippy::approx_constant)]
                     pub const #constant_name: #quantity_type::<#type_, { #dimension }> = #quantity_type::<#type_, { #dimension }>(#value as #float_type);
                 }
             })

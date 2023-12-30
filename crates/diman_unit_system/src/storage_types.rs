@@ -50,7 +50,7 @@ impl StorageType for FloatType {
     }
 
     fn base_storage(&self) -> &FloatType {
-        &self
+        self
     }
 }
 
