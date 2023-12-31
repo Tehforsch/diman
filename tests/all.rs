@@ -29,6 +29,9 @@ mod serde;
 #[cfg(feature = "rand")]
 mod rand;
 
+#[cfg(feature = "rational-dimensions")]
+mod rational_dimensions;
+
 #[test]
 #[cfg(feature = "f32")]
 fn compile_fail_float() {
