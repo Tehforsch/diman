@@ -49,37 +49,37 @@ impl Defs {
         let type_name = &self.dimension_type;
         let none_gen: proc_macro2::TokenStream = self
             .base_dimensions()
-            .map(|ident| self.zero(ident))
+            .map(|ident| self.zero_entry(ident))
             .collect();
 
         let mul_gen: proc_macro2::TokenStream = self
             .base_dimensions()
-            .map(|ident| self.add(ident))
+            .map(|ident| self.add_entry(ident))
             .collect();
 
         let div_gen: proc_macro2::TokenStream = self
             .base_dimensions()
-            .map(|ident| self.sub(ident))
+            .map(|ident| self.sub_entry(ident))
             .collect();
 
         let inv_gen: proc_macro2::TokenStream = self
             .base_dimensions()
-            .map(|ident| self.neg(ident))
+            .map(|ident| self.neg_entry(ident))
             .collect();
 
         let powi_gen: proc_macro2::TokenStream = self
             .base_dimensions()
-            .map(|ident| self.mul(ident))
+            .map(|ident| self.mul_entry(ident))
             .collect();
 
         let sqrt_gen: proc_macro2::TokenStream = self
             .base_dimensions()
-            .map(|ident| self.sqrt(ident))
+            .map(|ident| self.sqrt_entry(ident))
             .collect();
 
         let cbrt_gen: proc_macro2::TokenStream = self
             .base_dimensions()
-            .map(|ident| self.cbrt(ident))
+            .map(|ident| self.cbrt_entry(ident))
             .collect();
 
         let sqrt_safety_gen: proc_macro2::TokenStream = self

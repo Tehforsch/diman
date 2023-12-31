@@ -13,41 +13,41 @@ impl Defs {
         quote! { Ratio }
     }
 
-    pub fn zero(&self, ident: &Ident) -> TokenStream {
+    pub fn zero_entry(&self, ident: &Ident) -> TokenStream {
         quote! { #ident: Ratio::int(0), }
     }
 
-    pub fn add(&self, ident: &Ident) -> TokenStream {
+    pub fn add_entry(&self, ident: &Ident) -> TokenStream {
         quote! {
             #ident: self.#ident.add(other.#ident),
         }
     }
 
-    pub fn sub(&self, ident: &Ident) -> TokenStream {
+    pub fn sub_entry(&self, ident: &Ident) -> TokenStream {
         quote! {
             #ident: self.#ident.sub(other.#ident),
         }
     }
 
-    pub fn neg(&self, ident: &Ident) -> TokenStream {
+    pub fn neg_entry(&self, ident: &Ident) -> TokenStream {
         quote! {
             #ident: self.#ident.neg(),
         }
     }
 
-    pub fn mul(&self, ident: &Ident) -> TokenStream {
+    pub fn mul_entry(&self, ident: &Ident) -> TokenStream {
         quote! {
             #ident: self.#ident.mul(Ratio::int(other)),
         }
     }
 
-    pub fn sqrt(&self, ident: &Ident) -> TokenStream {
+    pub fn sqrt_entry(&self, ident: &Ident) -> TokenStream {
         quote! {
             #ident: self.#ident.div(Ratio::int(2)),
         }
     }
 
-    pub fn cbrt(&self, ident: &Ident) -> TokenStream {
+    pub fn cbrt_entry(&self, ident: &Ident) -> TokenStream {
         quote! {
             #ident: self.#ident.div(Ratio::int(3)),
         }
@@ -72,41 +72,41 @@ impl Defs {
         quote! { i32 }
     }
 
-    pub fn zero(&self, ident: &Ident) -> TokenStream {
+    pub fn zero_entry(&self, ident: &Ident) -> TokenStream {
         quote! { #ident: 0, }
     }
 
-    pub fn add(&self, ident: &Ident) -> TokenStream {
+    pub fn add_entry(&self, ident: &Ident) -> TokenStream {
         quote! {
             #ident: self.#ident + other.#ident,
         }
     }
 
-    pub fn sub(&self, ident: &Ident) -> TokenStream {
+    pub fn sub_entry(&self, ident: &Ident) -> TokenStream {
         quote! {
             #ident: self.#ident - other.#ident,
         }
     }
 
-    pub fn neg(&self, ident: &Ident) -> TokenStream {
+    pub fn neg_entry(&self, ident: &Ident) -> TokenStream {
         quote! {
             #ident: -self.#ident,
         }
     }
 
-    pub fn mul(&self, ident: &Ident) -> TokenStream {
+    pub fn mul_entry(&self, ident: &Ident) -> TokenStream {
         quote! {
             #ident: self.#ident * other,
         }
     }
 
-    pub fn sqrt(&self, ident: &Ident) -> TokenStream {
+    pub fn sqrt_entry(&self, ident: &Ident) -> TokenStream {
         quote! {
             #ident: self.#ident / 2,
         }
     }
 
-    pub fn cbrt(&self, ident: &Ident) -> TokenStream {
+    pub fn cbrt_entry(&self, ident: &Ident) -> TokenStream {
         quote! {
             #ident: self.#ident / 3,
         }
