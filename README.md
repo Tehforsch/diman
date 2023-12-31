@@ -144,7 +144,7 @@ This includes `squared`, `cubed`, `sqrt`, `cbrt` as well as `powi`.
 ## Prefixes
 Unit prefixes can automatically be generated with the `#[prefix(...)]` attribute for unit statements.
 For example
-```rust
+```rust ignore
 #[prefix(kilo, milli)]
 #[symbol(m)]
 unit meters;
@@ -154,7 +154,7 @@ For simplicity, the attribute `#[metric_prefixes]` is provided, which will gener
 
 ## Aliases
 Unit aliases can automatically be generated with the `#[alias(...)]` macro. For example
-```rust
+```rust ignore
 #[alias(metres)]
 unit meters;
 ```
@@ -178,7 +178,7 @@ fn bar(l: Length, t: Time) -> Quotient<Length, Time> {
 
 ## `serde`
 Serialization and deserialization of the units is provided via `serde` if the `serde` feature gate is enabled:
-```rust
+```rust ignore
 use diman::si::f64::{Length, Velocity};
 use serde::{Serialize, Deserialize};
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -203,7 +203,7 @@ assert_eq!(
 
 ## `rand`
 Diman allows generating random quantities via `rand` if the `rand` feature gate is enabled:
-```rust
+```rust ignore
 use rand::Rng;
 
 use diman::si::f64::Length;
