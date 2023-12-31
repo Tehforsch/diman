@@ -71,6 +71,7 @@ impl Defs {
             .collect();
         let span = self.quantity_type.span();
         quote_spanned! {span =>
+                #[allow(clippy::needless_update)]
                 #dimension_type {
                     #field_updates
                     ..#dimension_type::none()
