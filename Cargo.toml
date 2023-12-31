@@ -23,6 +23,7 @@ f32 = ["diman_unit_system/f32"]
 f64 = ["diman_unit_system/f64"]
 gen-vec-names = ["diman_unit_system/gen-vec-names"]
 si = []
+rational-dimensions = ["diman_unit_system/rational-dimensions"]
 
 mpi = ["dep:once_cell", "dep:mpi", "diman_unit_system/mpi"]
 hdf5 = ["dep:hdf5", "diman_unit_system/hdf5"]

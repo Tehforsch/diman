@@ -22,16 +22,19 @@ impl Defs {
     pub(crate) fn dimension_impl(&self) -> proc_macro::TokenStream {
         let name = &self.dimension_type;
 
+        let dim_type = self.base_dimension_type();
         let dimensions: proc_macro2::TokenStream = self
             .base_dimensions()
             .map(|dim| {
                 quote! {
-                    #dim: i32,
+                    #dim: #dim_type,
                 }
             })
             .collect();
         let methods_impl: proc_macro2::TokenStream = self.dimension_methods_impl().into();
+        let ratio_impl = self.ratio_impl();
         let output = quote! {
+            #ratio_impl
             #[derive(::std::cmp::PartialEq, ::std::cmp::Eq, ::std::clone::Clone, ::std::fmt::Debug, ::std::marker::ConstParamTy)]
             pub struct #name {
                 #dimensions
@@ -46,83 +49,47 @@ impl Defs {
         let type_name = &self.dimension_type;
         let none_gen: proc_macro2::TokenStream = self
             .base_dimensions()
-            .map(|ident| {
-                quote! {
-                    #ident: 0,
-                }
-            })
+            .map(|ident| self.zero(ident))
             .collect();
 
         let mul_gen: proc_macro2::TokenStream = self
             .base_dimensions()
-            .map(|ident| {
-                quote! {
-                    #ident: self.#ident + other.#ident,
-                }
-            })
+            .map(|ident| self.add(ident))
             .collect();
 
         let div_gen: proc_macro2::TokenStream = self
             .base_dimensions()
-            .map(|ident| {
-                quote! {
-                    #ident: self.#ident - other.#ident,
-                }
-            })
+            .map(|ident| self.sub(ident))
             .collect();
 
         let inv_gen: proc_macro2::TokenStream = self
             .base_dimensions()
-            .map(|ident| {
-                quote! {
-                    #ident: -self.#ident,
-                }
-            })
+            .map(|ident| self.neg(ident))
             .collect();
 
         let powi_gen: proc_macro2::TokenStream = self
             .base_dimensions()
-            .map(|ident| {
-                quote! {
-                    #ident: self.#ident * other,
-                }
-            })
+            .map(|ident| self.mul(ident))
             .collect();
-
-        let sqrt_safety_gen: proc_macro2::TokenStream = self.base_dimensions()
-            .map(|ident| {
-            quote! {
-                if self.#ident % 2 != 0 {
-                    panic!("Cannot take square root of quantity with a dimension that is not divisible by 2 in all components.");
-                }
-            }
-        }).collect();
 
         let sqrt_gen: proc_macro2::TokenStream = self
             .base_dimensions()
-            .map(|ident| {
-                quote! {
-                    #ident: self.#ident / 2,
-                }
-            })
+            .map(|ident| self.sqrt(ident))
             .collect();
-
-        let cbrt_safety_gen: proc_macro2::TokenStream = self.base_dimensions()
-            .map(|ident| {
-            quote! {
-                if self.#ident % 3 != 0 {
-                    panic!("Cannot take cubic root of quantity with a dimension that is not divisible by 3 in all components.");
-                }
-            }
-        }).collect();
 
         let cbrt_gen: proc_macro2::TokenStream = self
             .base_dimensions()
-            .map(|ident| {
-                quote! {
-                    #ident: self.#ident / 3,
-                }
-            })
+            .map(|ident| self.cbrt(ident))
+            .collect();
+
+        let sqrt_safety_gen: proc_macro2::TokenStream = self
+            .base_dimensions()
+            .map(|ident| self.sqrt_safety(ident))
+            .collect();
+
+        let cbrt_safety_gen: proc_macro2::TokenStream = self
+            .base_dimensions()
+            .map(|ident| self.cbrt_safety(ident))
             .collect();
 
         let gen = quote! {
@@ -173,6 +140,80 @@ impl Defs {
             }
         };
         gen.into()
+    }
+
+    #[cfg(not(feature = "rational-dimensions"))]
+    fn ratio_impl(&self) -> proc_macro2::TokenStream {
+        quote! {}
+    }
+
+    #[cfg(feature = "rational-dimensions")]
+    fn ratio_impl(&self) -> proc_macro2::TokenStream {
+        quote! {
+            #[derive(::std::cmp::PartialEq, ::std::cmp::Eq, ::std::clone::Clone, ::std::fmt::Debug, ::std::marker::ConstParamTy)]
+            struct Ratio {
+                num: i32,
+                denom: i32,
+            }
+
+            const fn gcd(mut a: i32, mut b: i32) -> i32 {
+                while b != 0 {
+                    let temp = b;
+                    b = a % b;
+                    a = temp;
+                }
+                a.abs()
+            }
+
+            impl Ratio  {
+                const fn int(num: i32) -> Self {
+                    Self { num, denom: 1 }
+                }
+
+                const fn new(num: i32, denom: i32) -> Self {
+                    let gcd = gcd(num, denom);
+                    Ratio {
+                        num: num / gcd,
+                        denom: denom / gcd,
+                    }
+                }
+
+                const fn add(self, rhs: Self) -> Self {
+                    let num = self.num * rhs.denom + rhs.num * self.denom;
+                    let denom = self.denom * rhs.denom;
+                    Self::new(num, denom)
+                }
+
+                const fn sub(self, rhs: Self) -> Self {
+                    self.add(rhs.neg())
+                }
+
+                const fn neg(self) -> Self {
+                    Self {
+                        num: -self.num,
+                        denom: self.denom,
+                    }
+                }
+
+                const fn mul(self, rhs: Self) -> Self {
+                    let num = self.num * rhs.num;
+                    let denom = self.denom * rhs.denom;
+                    Self::new(num, denom)
+                }
+
+                const fn div(self, rhs: Self) -> Self {
+                    self.mul(rhs.inv())
+                }
+
+                const fn inv(self) -> Self {
+                    Self {
+                        num: self.denom,
+                        denom: self.num,
+                    }
+                }
+
+            }
+        }
     }
 }
 

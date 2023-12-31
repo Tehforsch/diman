@@ -67,9 +67,7 @@ impl Defs {
         let field_updates: TokenStream = dim
             .fields
             .iter()
-            .map(|(ident, value)| {
-                quote! { #ident: #value, }
-            })
+            .map(|(field, value)| self.get_base_dimenison_entry(field, value))
             .collect();
         let span = self.quantity_type.span();
         quote_spanned! {span =>
@@ -98,6 +96,16 @@ impl Defs {
             .collect()
     }
 
+    #[cfg(feature = "rational-dimensions")]
+    fn use_ratio(&self) -> TokenStream {
+        quote! { use super::Ratio; }
+    }
+
+    #[cfg(not(feature = "rational-dimensions"))]
+    fn use_ratio(&self) -> TokenStream {
+        quote! {}
+    }
+
     pub fn definitions_for_storage_type<T: StorageType>(
         &self,
         type_: &T,
@@ -118,10 +126,12 @@ impl Defs {
         } else {
             quote! {}
         };
+        let use_ratio = self.use_ratio();
         quote! {
             pub mod #module_name {
                 use super::#dimension_type;
                 use super::#quantity_type;
+                #use_ratio
                 #quantities
                 #constants
             }

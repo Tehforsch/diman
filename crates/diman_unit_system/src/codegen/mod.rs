@@ -1,4 +1,5 @@
 mod debug;
+mod dimension_entry_type;
 mod float_methods;
 mod generic_methods;
 #[cfg(feature = "hdf5")]

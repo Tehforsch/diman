@@ -9,9 +9,10 @@ mod float;
 
 mod type_aliases;
 
-mod dimension_defs;
-
 pub mod unit_aliases;
+
+#[cfg(feature = "f64")]
+mod dimension_defs;
 
 #[cfg(feature = "f64")]
 mod gas;
@@ -50,6 +51,7 @@ fn compile_fail_resolver() {
 }
 
 #[test]
+#[cfg(not(feature = "rational-dimensions"))]
 fn compile_fail_type_mismatch() {
     let t = trybuild::TestCases::new();
     t.compile_fail("tests/compile_fail/type_mismatch_*.rs");
