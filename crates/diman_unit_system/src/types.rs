@@ -2,11 +2,11 @@ use proc_macro2::Span;
 use syn::*;
 
 use crate::{
-    derive_dimension::to_snakecase,
     dimension_math::BaseDimensions,
     expression::{self, BinaryOperator, Expr, Operator},
     parse::One,
     prefixes::Prefix,
+    to_snakecase::to_snakecase,
 };
 
 pub type IntExponent = i32;

@@ -1,13 +1,13 @@
 #![feature(proc_macro_diagnostic)]
 
 mod codegen;
-mod derive_dimension;
 mod dimension_math;
 mod expression;
 mod parse;
 mod prefixes;
 mod resolve;
 mod storage_types;
+mod to_snakecase;
 mod types;
 
 use proc_macro2::TokenStream;
