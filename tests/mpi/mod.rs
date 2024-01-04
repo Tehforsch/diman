@@ -31,6 +31,7 @@ macro_rules! gen_tests_for_float {
     };
 }
 
+#[cfg(any(feature = "glam-vec2", feature = "glam-dvec2"))]
 macro_rules! gen_tests_for_vector_2 {
     ($vec_mod_name: ident) => {
         mod $vec_mod_name {
@@ -52,6 +53,7 @@ macro_rules! gen_tests_for_vector_2 {
     };
 }
 
+#[cfg(any(feature = "glam-vec3", feature = "glam-dvec3"))]
 macro_rules! gen_tests_for_vector_3 {
     ($vec_mod_name: ident) => {
         mod $vec_mod_name {

@@ -6,8 +6,8 @@ use crate::{
     dimension_math::{BaseDimensions, DimensionsAndFactor},
     expression::{self, Expr},
     types::{
-        Constant, ConstantEntry, Definition, Dimension, DimensionEntry, Factor, IntExponent, Unit,
-        UnitEntry,
+        BaseDimensionExponent, Constant, ConstantEntry, Definition, Dimension, DimensionEntry,
+        Factor, Unit, UnitEntry,
     },
 };
 
@@ -40,7 +40,7 @@ impl Kind {
 
 #[derive(Clone)]
 pub struct Item {
-    expr: Expr<Factor<DimensionsAndFactor>, IntExponent>,
+    expr: Expr<Factor<DimensionsAndFactor>, BaseDimensionExponent>,
     type_: ItemType,
 }
 
@@ -322,7 +322,7 @@ impl From<DimensionEntry> for Item {
             }),
             Definition::Base(()) => {
                 let mut fields = HashMap::default();
-                fields.insert(entry.dimension_entry_name(), 1);
+                fields.insert(entry.dimension_entry_name(), BaseDimensionExponent::one());
                 Expr::Value(expression::Factor::Value(Factor::Concrete(
                     DimensionsAndFactor::dimensions(BaseDimensions { fields }),
                 )))

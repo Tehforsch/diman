@@ -2,11 +2,11 @@ use std::collections::HashMap;
 
 use proc_macro2::Ident;
 
-use crate::expression::MulDiv;
+use crate::{expression::MulDiv, types::BaseDimensionExponent};
 
 #[derive(Clone)]
 pub struct BaseDimensions {
-    pub fields: HashMap<Ident, i32>,
+    pub fields: HashMap<Ident, BaseDimensionExponent>,
 }
 
 impl PartialEq for BaseDimensions {
@@ -65,7 +65,7 @@ impl std::ops::Div for BaseDimensions {
 }
 
 impl MulDiv for BaseDimensions {
-    fn powi(self, pow: i32) -> Self {
+    fn pow(self, pow: BaseDimensionExponent) -> Self {
         BaseDimensions {
             fields: self
                 .fields
@@ -121,10 +121,10 @@ impl std::ops::Div for DimensionsAndFactor {
 }
 
 impl MulDiv for DimensionsAndFactor {
-    fn powi(self, pow: i32) -> Self {
+    fn pow(self, pow: BaseDimensionExponent) -> Self {
         Self {
-            factor: self.factor.powi(pow),
-            dimensions: self.dimensions.powi(pow),
+            factor: BaseDimensionExponent::pow(self.factor, pow),
+            dimensions: self.dimensions.pow(pow),
         }
     }
 }

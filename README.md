@@ -42,6 +42,7 @@ If you cannot use unstable Rust for your project or require a stable library, co
 * Invalid operations between physical quantities (adding length and time, for example) turn into compile errors.
 * Newly created quantities are automatically converted to an underlying base representation. This means that the used types are dimensions (such as `Length`) instead of concrete units (such as `meters`) which makes for more meaningful code.
 * Systems of dimensions and units can be user defined via the `unit_system!` macro. This gives the user complete freedom over the choice of dimensions and makes them part of the user's library, so that arbitrary new methods can be implemented on them.
+* The `rational-dimensions` features allows the usage of quantities and units with rational exponents.
 * `f32` and `f64` float storage types (behind the `f32` and `f64` feature gate respectively).
 * Vector storage types via [`glam`](https://crates.io/crates/glam/) (behind the `glam-vec2`, `glam-vec3`, `glam-dvec2` and `glam-dvec3` features).
 * Serialization and Deserialization via [`serde`](https://crates.io/crates/serde) (behind the `serde` feature gate, see the official documentation for more info).
@@ -175,6 +176,22 @@ fn bar(l: Length, t: Time) -> Quotient<Length, Time> {
     l / t
 }
 ```
+
+## Rational dimensions
+The `rational-dimensions` feature allows using quantities with rational exponents in their base dimensions, as opposed to just integer values. This allows expressing defining dimensions and units such as
+```rust ignore
+dimension Sorptivity = Length Time^(-1/2);
+unit meters_per_sqrt_second: Sorptivity = meters / seconds^(1/2);
+```
+and using them in the usual manner
+```rust ignore
+let l = Length::micrometers(2.0);
+let t = Time::milliseconds(5.0);
+let sorptivity: Sorptivity = l / t.sqrt();
+```
+
+The unit system generated with `rational-dimensions` supports a superset of features of a unit system generated without them.
+Still, this feature should be enabled only when necessary, since the compiler errors in case of dimension mismatches will be harder to read.
 
 ## `serde`
 Serialization and deserialization of the units is provided via `serde` if the `serde` feature gate is enabled:
