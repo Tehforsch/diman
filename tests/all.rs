@@ -30,7 +30,7 @@ mod serde;
 mod rand;
 
 #[cfg(feature = "rational-dimensions")]
-mod rational_dimensions;
+pub mod rational_dimensions;
 
 #[test]
 #[cfg(feature = "f32")]
