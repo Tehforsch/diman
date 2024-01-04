@@ -21,69 +21,64 @@ enum Trait {
     PartialOrd,
 }
 
+use Trait::*;
+
 impl Trait {
     fn name(&self) -> TokenStream {
         match self {
-            Trait::Add => quote! { std::ops::Add },
-            Trait::Sub => quote! { std::ops::Sub },
-            Trait::Mul => quote! { std::ops::Mul },
-            Trait::Div => quote! { std::ops::Div },
-            Trait::AddAssign => quote! { std::ops::AddAssign },
-            Trait::SubAssign => quote! { std::ops::SubAssign },
-            Trait::MulAssign => quote! { std::ops::MulAssign },
-            Trait::DivAssign => quote! { std::ops::DivAssign },
-            Trait::PartialEq => quote! { std::cmp::PartialEq },
-            Trait::PartialOrd => quote! { std::cmp::PartialOrd },
+            Add => quote! { std::ops::Add },
+            Sub => quote! { std::ops::Sub },
+            Mul => quote! { std::ops::Mul },
+            Div => quote! { std::ops::Div },
+            AddAssign => quote! { std::ops::AddAssign },
+            SubAssign => quote! { std::ops::SubAssign },
+            MulAssign => quote! { std::ops::MulAssign },
+            DivAssign => quote! { std::ops::DivAssign },
+            PartialEq => quote! { std::cmp::PartialEq },
+            PartialOrd => quote! { std::cmp::PartialOrd },
         }
     }
 
     fn fn_name(&self) -> TokenStream {
         match self {
-            Trait::Add => quote! { add },
-            Trait::Sub => quote! { sub },
-            Trait::Mul => quote! { mul },
-            Trait::Div => quote! { div },
-            Trait::AddAssign => quote! { add_assign },
-            Trait::SubAssign => quote! { sub_assign },
-            Trait::MulAssign => quote! { mul_assign },
-            Trait::DivAssign => quote! { div_assign },
-            Trait::PartialEq => quote! { eq },
-            Trait::PartialOrd => quote! { partial_cmp },
+            Add => quote! { add },
+            Sub => quote! { sub },
+            Mul => quote! { mul },
+            Div => quote! { div },
+            AddAssign => quote! { add_assign },
+            SubAssign => quote! { sub_assign },
+            MulAssign => quote! { mul_assign },
+            DivAssign => quote! { div_assign },
+            PartialEq => quote! { eq },
+            PartialOrd => quote! { partial_cmp },
         }
     }
 
     fn fn_return_type(&self) -> TokenStream {
         match self {
-            Trait::Add | Trait::Sub | Trait::Mul | Trait::Div => quote! { Self::Output },
-            Trait::AddAssign | Trait::SubAssign | Trait::MulAssign | Trait::DivAssign => {
+            Add | Sub | Mul | Div => quote! { Self::Output },
+            AddAssign | SubAssign | MulAssign | DivAssign => {
                 quote! { () }
             }
-            Trait::PartialEq => quote! { bool },
-            Trait::PartialOrd => quote! { Option<std::cmp::Ordering> },
+            PartialEq => quote! { bool },
+            PartialOrd => quote! { Option<std::cmp::Ordering> },
         }
     }
 
     fn lhs_arg(&self) -> TokenStream {
         match self {
-            Trait::Add | Trait::Sub | Trait::Mul | Trait::Div => quote! { self },
-            Trait::AddAssign | Trait::SubAssign | Trait::MulAssign | Trait::DivAssign => {
+            Add | Sub | Mul | Div => quote! { self },
+            AddAssign | SubAssign | MulAssign | DivAssign => {
                 quote! { &mut self }
             }
-            Trait::PartialEq | Trait::PartialOrd => quote! { &self },
+            PartialEq | PartialOrd => quote! { &self },
         }
     }
 
     fn rhs_arg_type(&self, rhs: &TokenStream) -> TokenStream {
         match self {
-            Trait::Add
-            | Trait::Sub
-            | Trait::Mul
-            | Trait::Div
-            | Trait::AddAssign
-            | Trait::SubAssign
-            | Trait::MulAssign
-            | Trait::DivAssign => rhs.clone(),
-            Trait::PartialEq | Trait::PartialOrd => {
+            Add | Sub | Mul | Div | AddAssign | SubAssign | MulAssign | DivAssign => rhs.clone(),
+            PartialEq | PartialOrd => {
                 let rhs = rhs.clone();
                 quote! { &#rhs }
             }
@@ -557,14 +552,9 @@ impl Defs {
     }
 
     fn iter_numeric_traits(&self) -> impl Iterator<Item = NumericTrait> + '_ {
-        use Trait::*;
         let Self { quantity_type, .. } = self;
         vec![
-            NumericTrait::add_or_sub_quantity_quantity(
-                self,
-                Trait::Add,
-                quote! { Self(self.0 + rhs.0) },
-            ),
+            NumericTrait::add_or_sub_quantity_quantity(self, Add, quote! { Self(self.0 + rhs.0) }),
             NumericTrait::add_or_sub_quantity_quantity(self, Sub, quote! { Self(self.0 - rhs.0) }),
             NumericTrait::add_or_sub_quantity_refquantity(
                 self,
