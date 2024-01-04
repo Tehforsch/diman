@@ -4,10 +4,58 @@ use syn::Type;
 
 use crate::types::Defs;
 
+// Add the default impl for the convenient update syntax on `NumericTrait`,
+// this will never actually be used
+#[derive(Default)]
+enum Trait {
+    #[default]
+    Add,
+    Sub,
+    Mul,
+    Div,
+    AddAssign,
+    SubAssign,
+    MulAssign,
+    DivAssign,
+    PartialEq,
+    PartialOrd,
+}
+
+impl Trait {
+    fn name(&self) -> TokenStream {
+        match self {
+            Trait::Add => quote! { std::ops::Add },
+            Trait::Sub => quote! { std::ops::Sub },
+            Trait::Mul => quote! { std::ops::Mul },
+            Trait::Div => quote! { std::ops::Div },
+            Trait::AddAssign => quote! { std::ops::AddAssign },
+            Trait::SubAssign => quote! { std::ops::SubAssign },
+            Trait::MulAssign => quote! { std::ops::MulAssign },
+            Trait::DivAssign => quote! { std::ops::DivAssign },
+            Trait::PartialEq => quote! { std::cmp::PartialEq },
+            Trait::PartialOrd => quote! { std::cmp::PartialOrd },
+        }
+    }
+
+    fn fn_name(&self) -> TokenStream {
+        match self {
+            Trait::Add => quote! { add },
+            Trait::Sub => quote! { sub },
+            Trait::Mul => quote! { mul },
+            Trait::Div => quote! { div },
+            Trait::AddAssign => quote! { add_assign },
+            Trait::SubAssign => quote! { sub_assign },
+            Trait::MulAssign => quote! { mul_assign },
+            Trait::DivAssign => quote! { div_assign },
+            Trait::PartialEq => quote! { eq },
+            Trait::PartialOrd => quote! { partial_cmp },
+        }
+    }
+}
+
 #[derive(Default)]
 struct NumericTrait {
-    name: TokenStream,
-    fn_name: TokenStream,
+    name: Trait,
     fn_return_type: TokenStream,
     fn_args: TokenStream,
     fn_return_expr: TokenStream,
@@ -47,19 +95,14 @@ impl NumericTrait {
     }
 
     /// For an impl of Add or Sub between two quantities
-    fn add_or_sub_quantity_quantity(
-        defs: &Defs,
-        name: TokenStream,
-        fn_name: TokenStream,
-        fn_return_expr: TokenStream,
-    ) -> Self {
+    fn add_or_sub_quantity_quantity(defs: &Defs, name: Trait, fn_return_expr: TokenStream) -> Self {
+        let trait_name = name.name();
         Self {
-            name: name.clone(),
-            fn_name,
+            name,
             fn_return_expr,
             fn_return_type: quote! { Self },
             fn_args: quote! {self, rhs: Self},
-            trait_bound_impl: quote! {S: #name<Output = S>},
+            trait_bound_impl: quote! {S: #trait_name<Output = S>},
             output_type_def: quote! { type Output = Self; },
             ..Self::additive_quantity_quantity_defaults(defs)
         }
@@ -68,17 +111,16 @@ impl NumericTrait {
     /// For an impl of Add or Sub between a quantity and a reference to a quantity
     fn add_or_sub_quantity_refquantity(
         defs: &Defs,
-        name: TokenStream,
-        fn_name: TokenStream,
+        name: Trait,
         fn_return_expr: TokenStream,
     ) -> Self {
+        let trait_name = name.name();
         Self {
-            name: name.clone(),
-            fn_name,
+            name,
             fn_return_expr,
             fn_return_type: quote! { Self },
             fn_args: quote! {self, rhs: &'a Self},
-            trait_bound_impl: quote! {S: #name<&'a S, Output = S>},
+            trait_bound_impl: quote! {S: #trait_name<&'a S, Output = S>},
             output_type_def: quote! { type Output = Self; },
             ..Self::additive_ref_quantity_quantity_defaults(defs)
         }
@@ -87,18 +129,17 @@ impl NumericTrait {
     /// For an impl of AddAssign or SubAssign between two quantities
     fn add_or_sub_assign_quantity_quantity(
         defs: &Defs,
-        name: TokenStream,
-        fn_name: TokenStream,
+        name: Trait,
         fn_return_expr: TokenStream,
     ) -> Self {
+        let trait_name = name.name();
         Self {
-            name: name.clone(),
-            fn_name,
+            name,
             fn_return_expr,
             fn_return_type: quote! {()},
             fn_args: quote! {&mut self, rhs: Self},
             output_type_def: quote! {},
-            trait_bound_impl: quote! {S: #name<S>},
+            trait_bound_impl: quote! {S: #trait_name<S>},
             ..Self::additive_quantity_quantity_defaults(defs)
         }
     }
@@ -106,29 +147,23 @@ impl NumericTrait {
     /// For an impl of AddAssign or SubAssign between a quantity and a reference to a quantity
     fn add_or_sub_assign_quantity_refquantity(
         defs: &Defs,
-        name: TokenStream,
-        fn_name: TokenStream,
+        name: Trait,
         fn_return_expr: TokenStream,
     ) -> Self {
+        let trait_name = name.name();
         Self {
-            name: name.clone(),
-            fn_name,
+            name,
             fn_return_expr,
             fn_return_type: quote! {()},
             fn_args: quote! {&mut self, rhs: &'a Self},
             output_type_def: quote! {},
-            trait_bound_impl: quote! {S: #name<&'a S>},
+            trait_bound_impl: quote! {S: #trait_name<&'a S>},
             ..Self::additive_ref_quantity_quantity_defaults(defs)
         }
     }
 
     /// For an impl of Add or Sub between a dimensionless quantity and a storage type
-    fn add_or_sub_quantity_type(
-        defs: &Defs,
-        name: TokenStream,
-        fn_name: TokenStream,
-        fn_return_expr: TokenStream,
-    ) -> Self {
+    fn add_or_sub_quantity_type(defs: &Defs, name: Trait, fn_return_expr: TokenStream) -> Self {
         let Defs {
             quantity_type,
             dimension_type,
@@ -139,15 +174,14 @@ impl NumericTrait {
             rhs: quote! { S },
             lhs: quote! { #quantity_type<S, { #dimension_type::none() }> },
             fn_args: quote! {self, rhs: S},
-            ..Self::add_or_sub_quantity_quantity(defs, name, fn_name, fn_return_expr)
+            ..Self::add_or_sub_quantity_quantity(defs, name, fn_return_expr)
         }
     }
 
     /// For an impl of AddAssign or SubAssign between a dimensionless quantity and a storage type
     fn add_or_sub_assign_quantity_type(
         defs: &Defs,
-        name: TokenStream,
-        fn_name: TokenStream,
+        name: Trait,
         fn_return_expr: TokenStream,
     ) -> Self {
         let Defs {
@@ -160,15 +194,14 @@ impl NumericTrait {
             rhs: quote! { S },
             lhs: quote! { #quantity_type<S, { #dimension_type::none() }> },
             fn_args: quote! {&mut self, rhs: S},
-            ..Self::add_or_sub_assign_quantity_quantity(defs, name, fn_name, fn_return_expr)
+            ..Self::add_or_sub_assign_quantity_quantity(defs, name, fn_return_expr)
         }
     }
 
     /// For an impl of Add or Sub between a storage type and a dimensionless quantity
     fn add_or_sub_type_quantity(
         defs: &Defs,
-        name: TokenStream,
-        fn_name: TokenStream,
+        name: Trait,
         fn_inner_return_expr: TokenStream,
         storage_type: &Type,
     ) -> Self {
@@ -189,7 +222,6 @@ impl NumericTrait {
             output_type_def: quote! { type Output = #quantity; },
             fn_return_type: quantity,
             name,
-            fn_name,
             fn_return_expr,
             trait_bound_impl: quote! {},
         }
@@ -198,8 +230,7 @@ impl NumericTrait {
     /// For an impl of AddAssign or SubAssign between a storage type and a dimensionless quantity
     fn add_or_sub_assign_type_quantity(
         defs: &Defs,
-        name: TokenStream,
-        fn_name: TokenStream,
+        name: Trait,
         fn_return_expr: TokenStream,
         storage_type: &Type,
     ) -> Self {
@@ -217,7 +248,6 @@ impl NumericTrait {
             output_type_def: quote! {},
             fn_return_type: quote! {()},
             name,
-            fn_name,
             fn_return_expr,
             trait_bound_impl: quote! {},
         }
@@ -226,8 +256,7 @@ impl NumericTrait {
     /// For an impl of Mul or Div between two quantities
     fn mul_or_div_quantity_quantity(
         defs: &Defs,
-        name: TokenStream,
-        fn_name: TokenStream,
+        name: Trait,
         fn_return_expr: TokenStream,
         dimension_fn: TokenStream,
     ) -> Self {
@@ -239,20 +268,20 @@ impl NumericTrait {
         let span = defs.span();
         let lhs = quote! { #quantity_type<LHS, DL> };
         let rhs = quote! { #quantity_type<RHS, DR> };
+        let trait_name = name.name();
         Self {
-            name: name.clone(),
-            fn_name,
+            name,
             fn_return_expr,
-            fn_return_type: quote! { #quantity_type< <LHS as #name<RHS>>::Output, { DL.#dimension_fn(DR) }> },
+            fn_return_type: quote! { #quantity_type< <LHS as #trait_name<RHS>>::Output, { DL.#dimension_fn(DR) }> },
             fn_args: quote! { self, rhs: #rhs },
             trait_bound_impl: quote! {
-                LHS: #name<RHS>,
+                LHS: #trait_name<RHS>,
                 #quantity_type<LHS, { DL.#dimension_fn(DR) }>:,
             },
             output_type_def: quote_spanned! {
                 span=>
                 type Output = #quantity_type<
-                    <LHS as #name<RHS>>::Output,
+                    <LHS as #trait_name<RHS>>::Output,
                     { DL.#dimension_fn(DR) },
                 >;
             },
@@ -265,8 +294,7 @@ impl NumericTrait {
     /// For an impl of Mul or Div between a quantity and a concrete storage type
     fn mul_or_div_quantity_type(
         defs: &Defs,
-        name: TokenStream,
-        fn_name: TokenStream,
+        name: Trait,
         fn_return_expr: TokenStream,
         storage_type: &Type,
     ) -> NumericTrait {
@@ -277,20 +305,20 @@ impl NumericTrait {
         } = defs;
         let lhs = quote! { #quantity_type<LHS, D> };
         let rhs = quote! { #storage_type };
+        let trait_name = name.name();
         Self {
-            name: name.clone(),
-            fn_name,
+            name,
             fn_return_expr,
             lhs,
             rhs: rhs.clone(),
             fn_return_type: quote! { Self::Output },
             fn_args: quote! { self, rhs: #rhs },
             trait_bound_impl: quote! {
-                LHS: #name<#storage_type>,
+                LHS: #trait_name<#storage_type>,
             },
             output_type_def: quote! {
                 type Output = #quantity_type<
-                    <LHS as #name<#storage_type>>::Output,
+                    <LHS as #trait_name<#storage_type>>::Output,
                     D,
                 >;
             },
@@ -301,33 +329,32 @@ impl NumericTrait {
     /// For an impl of Mul or Div between a concrete storage type and a quantity
     fn div_type_quantity(
         defs: &Defs,
-        name: TokenStream,
-        fn_name: TokenStream,
+        name: Trait,
         fn_return_expr: TokenStream,
         storage_type: &Type,
     ) -> NumericTrait {
         let Defs { quantity_type, .. } = defs;
         let span = defs.span();
+        let trait_name = name.name();
         Self {
             trait_bound_impl: quote! {
-                #storage_type: #name<RHS>,
+                #storage_type: #trait_name<RHS>,
                 #quantity_type<#storage_type, { D.dimension_inv() }>:,
             },
             output_type_def: quote_spanned! {span=>
                 type Output = #quantity_type<
-                    <#storage_type as #name<RHS>>::Output,
+                    <#storage_type as #trait_name<RHS>>::Output,
                     { D.dimension_inv() },
                 >;
             },
-            ..Self::mul_type_quantity(defs, name, fn_name, fn_return_expr, storage_type)
+            ..Self::mul_type_quantity(defs, name, fn_return_expr, storage_type)
         }
     }
 
     /// For an impl of Mul or Div between a concrete storage type and a quantity
     fn mul_type_quantity(
         defs: &Defs,
-        name: TokenStream,
-        fn_name: TokenStream,
+        name: Trait,
         fn_return_expr: TokenStream,
         storage_type: &Type,
     ) -> NumericTrait {
@@ -338,20 +365,20 @@ impl NumericTrait {
         } = defs;
         let rhs = quote! { #quantity_type<RHS, D> };
         let lhs = quote! { #storage_type };
+        let trait_name = name.name();
         Self {
-            name: name.clone(),
-            fn_name,
+            name,
             fn_return_expr,
             lhs,
             rhs: rhs.clone(),
             fn_return_type: quote! { Self::Output },
             fn_args: quote! { self, rhs: #rhs },
             trait_bound_impl: quote! {
-                #storage_type: #name<RHS>,
+                #storage_type: #trait_name<RHS>,
             },
             output_type_def: quote! {
                 type Output = #quantity_type<
-                    <#storage_type as #name<RHS>>::Output,
+                    <#storage_type as #trait_name<RHS>>::Output,
                     D,
                 >;
             },
@@ -363,8 +390,7 @@ impl NumericTrait {
     /// dimensionless right hand side)
     fn mul_or_div_assign_quantity_quantity(
         defs: &Defs,
-        name: TokenStream,
-        fn_name: TokenStream,
+        name: Trait,
         fn_return_expr: TokenStream,
     ) -> Self {
         let Defs {
@@ -374,14 +400,14 @@ impl NumericTrait {
         } = defs;
         let lhs = quote! { #quantity_type<LHS, DL> };
         let rhs = quote! { #quantity_type<RHS, { #dimension_type::none() }> };
+        let trait_name = name.name();
         Self {
-            name: name.clone(),
-            fn_name,
+            name,
             fn_return_expr,
             fn_return_type: quote! {()},
             fn_args: quote! { &mut self, rhs: #rhs },
             trait_bound_impl: quote! {
-                LHS: #name<RHS>,
+                LHS: #trait_name<RHS>,
             },
             output_type_def: quote! {},
             impl_generics: quote! { < const DL: #dimension_type, LHS, RHS > },
@@ -393,8 +419,7 @@ impl NumericTrait {
     /// For an impl of MulAssign or DivAssign between a quantity and a storage type
     fn mul_or_div_assign_quantity_type(
         defs: &Defs,
-        name: TokenStream,
-        fn_name: TokenStream,
+        name: Trait,
         fn_return_expr: TokenStream,
         rhs: &Type,
     ) -> Self {
@@ -404,14 +429,14 @@ impl NumericTrait {
             ..
         } = defs;
         let lhs = quote! { #quantity_type<LHS, DL> };
+        let trait_name = name.name();
         Self {
-            name: name.clone(),
-            fn_name,
+            name,
             fn_return_expr,
             fn_return_type: quote! {()},
             fn_args: quote! { &mut self, rhs: #rhs },
             trait_bound_impl: quote! {
-                LHS: #name<#rhs>,
+                LHS: #trait_name<#rhs>,
             },
             output_type_def: quote! {},
             impl_generics: quote! { < const DL: #dimension_type, LHS > },
@@ -423,8 +448,7 @@ impl NumericTrait {
     /// For an impl of MulAssign or DivAssign between a quantity and a storage type
     fn mul_or_div_assign_type_quantity(
         defs: &Defs,
-        name: TokenStream,
-        fn_name: TokenStream,
+        name: Trait,
         fn_return_expr: TokenStream,
         lhs: &Type,
     ) -> Self {
@@ -434,14 +458,14 @@ impl NumericTrait {
             ..
         } = defs;
         let rhs = quote! { #quantity_type<RHS, D> };
+        let trait_name = name.name();
         Self {
-            name: name.clone(),
-            fn_name,
+            name,
             fn_return_expr,
             fn_return_type: quote! {()},
             fn_args: quote! { &mut self, rhs: #rhs },
             trait_bound_impl: quote! {
-                #lhs: #name<RHS>,
+                #lhs: #trait_name<RHS>,
             },
             output_type_def: quote! {},
             impl_generics: quote! { < const D: #dimension_type, RHS > },
@@ -453,8 +477,7 @@ impl NumericTrait {
     fn cmp_trait_quantity_type(
         defs: &Defs,
         rhs: &Type,
-        name: TokenStream,
-        fn_name: TokenStream,
+        name: Trait,
         fn_return_type: TokenStream,
     ) -> Self {
         let Defs {
@@ -462,13 +485,14 @@ impl NumericTrait {
             dimension_type,
             ..
         } = defs;
+        let fn_name = name.fn_name();
+        let trait_name = name.name();
         Self {
-            name: name.clone(),
-            fn_name: fn_name.clone(),
+            name,
             fn_return_type,
             fn_args: quote! { &self, other: &#rhs },
             fn_return_expr: quote! { self.0.#fn_name(other) },
-            trait_bound_impl: quote! { LHS: #name<#rhs> },
+            trait_bound_impl: quote! { LHS: #trait_name<#rhs> },
             output_type_def: quote! {},
             impl_generics: quote! { < LHS > },
             rhs: quote! { #rhs },
@@ -479,8 +503,7 @@ impl NumericTrait {
     fn cmp_trait_type_quantity(
         defs: &Defs,
         lhs: &Type,
-        name: TokenStream,
-        fn_name: TokenStream,
+        name: Trait,
         fn_return_type: TokenStream,
     ) -> Self {
         let Defs {
@@ -489,13 +512,14 @@ impl NumericTrait {
             ..
         } = defs;
         let rhs = quote! { #quantity_type<RHS, {#dimension_type::none()} > };
+        let fn_name = name.fn_name();
+        let trait_name = name.name();
         Self {
-            name: name.clone(),
-            fn_name: fn_name.clone(),
+            name,
             fn_return_type,
             fn_args: quote! { &self, other: &#rhs },
             fn_return_expr: quote! { self.#fn_name(&other.0) },
-            trait_bound_impl: quote! { #lhs: #name<RHS> },
+            trait_bound_impl: quote! { #lhs: #trait_name<RHS> },
             output_type_def: quote! {},
             impl_generics: quote! { < RHS > },
             rhs,
@@ -523,104 +547,77 @@ impl Defs {
     }
 
     fn iter_numeric_traits(&self) -> impl Iterator<Item = NumericTrait> + '_ {
+        use Trait::*;
         let Self { quantity_type, .. } = self;
         vec![
             NumericTrait::add_or_sub_quantity_quantity(
                 self,
-                quote! { std::ops::Add },
-                quote! { add },
+                Trait::Add,
                 quote! { Self(self.0 + rhs.0) },
             ),
-            NumericTrait::add_or_sub_quantity_quantity(
-                self,
-                quote! { std::ops::Sub },
-                quote! { sub },
-                quote! { Self(self.0 - rhs.0) },
-            ),
+            NumericTrait::add_or_sub_quantity_quantity(self, Sub, quote! { Self(self.0 - rhs.0) }),
             NumericTrait::add_or_sub_quantity_refquantity(
                 self,
-                quote! { std::ops::Add },
-                quote! { add },
+                Add,
                 quote! { Self(self.0 + &rhs.0) },
             ),
             NumericTrait::add_or_sub_quantity_refquantity(
                 self,
-                quote! { std::ops::Sub },
-                quote! { sub },
+                Sub,
                 quote! { Self(self.0 - &rhs.0) },
             ),
             NumericTrait::add_or_sub_assign_quantity_quantity(
                 self,
-                quote! { std::ops::AddAssign },
-                quote! { add_assign },
+                AddAssign,
                 quote! { self.0 += rhs.0; },
             ),
             NumericTrait::add_or_sub_assign_quantity_quantity(
                 self,
-                quote! { std::ops::SubAssign },
-                quote! { sub_assign },
+                SubAssign,
                 quote! { self.0 -= rhs.0; },
             ),
             NumericTrait::add_or_sub_assign_quantity_refquantity(
                 self,
-                quote! { std::ops::AddAssign },
-                quote! { add_assign },
+                AddAssign,
                 quote! { self.0 += &rhs.0; },
             ),
             NumericTrait::add_or_sub_assign_quantity_refquantity(
                 self,
-                quote! { std::ops::SubAssign },
-                quote! { sub_assign },
+                SubAssign,
                 quote! { self.0 -= &rhs.0; },
             ),
-            NumericTrait::add_or_sub_quantity_type(
-                self,
-                quote! { std::ops::Add },
-                quote! { add },
-                quote! { Self(self.0 + rhs) },
-            ),
-            NumericTrait::add_or_sub_quantity_type(
-                self,
-                quote! { std::ops::Sub },
-                quote! { sub },
-                quote! { Self(self.0 - rhs) },
-            ),
+            NumericTrait::add_or_sub_quantity_type(self, Add, quote! { Self(self.0 + rhs) }),
+            NumericTrait::add_or_sub_quantity_type(self, Sub, quote! { Self(self.0 - rhs) }),
             NumericTrait::add_or_sub_assign_quantity_type(
                 self,
-                quote! { std::ops::AddAssign },
-                quote! { add_assign },
+                AddAssign,
                 quote! { self.0 += rhs; },
             ),
             NumericTrait::add_or_sub_assign_quantity_type(
                 self,
-                quote! { std::ops::SubAssign },
-                quote! { sub_assign },
+                SubAssign,
                 quote! { self.0 -= rhs; },
             ),
             NumericTrait::mul_or_div_quantity_quantity(
                 self,
-                quote! { std::ops::Mul },
-                quote! { mul },
+                Mul,
                 quote! { #quantity_type(self.0 * rhs.0) },
                 quote! { dimension_mul },
             ),
             NumericTrait::mul_or_div_quantity_quantity(
                 self,
-                quote! { std::ops::Div },
-                quote! { div },
+                Div,
                 quote! { #quantity_type(self.0 / rhs.0) },
                 quote! { dimension_div },
             ),
             NumericTrait::mul_or_div_assign_quantity_quantity(
                 self,
-                quote! { std::ops::MulAssign },
-                quote! { mul_assign },
+                MulAssign,
                 quote! { self.0 *= rhs.0; },
             ),
             NumericTrait::mul_or_div_assign_quantity_quantity(
                 self,
-                quote! { std::ops::DivAssign },
-                quote! { div_assign },
+                DivAssign,
                 quote! { self.0 /= rhs.0; },
             ),
         ]
@@ -632,114 +629,98 @@ impl Defs {
                     [
                         NumericTrait::mul_or_div_quantity_type(
                             self,
-                            quote! { std::ops::Mul },
-                            quote! { mul },
+                            Mul,
                             quote! { #quantity_type(self.0 * rhs) },
                             &storage_type,
                         ),
                         NumericTrait::mul_or_div_quantity_type(
                             self,
-                            quote! { std::ops::Div },
-                            quote! { div },
+                            Div,
                             quote! { #quantity_type(self.0 / rhs) },
                             &storage_type,
                         ),
                         NumericTrait::mul_or_div_assign_quantity_type(
                             self,
-                            quote! { std::ops::MulAssign },
-                            quote! { mul_assign },
+                            MulAssign,
                             quote! { self.0 *= rhs; },
                             &storage_type,
                         ),
                         NumericTrait::mul_or_div_assign_quantity_type(
                             self,
-                            quote! { std::ops::DivAssign },
-                            quote! { div_assign },
+                            DivAssign,
                             quote! { self.0 /= rhs; },
                             &storage_type,
                         ),
                         NumericTrait::mul_or_div_assign_type_quantity(
                             self,
-                            quote! { std::ops::MulAssign },
-                            quote! { mul_assign },
+                            MulAssign,
                             quote! { *self *= rhs.0; },
                             &storage_type,
                         ),
                         NumericTrait::mul_or_div_assign_type_quantity(
                             self,
-                            quote! { std::ops::DivAssign },
-                            quote! { div_assign },
+                            DivAssign,
                             quote! { *self /= rhs.0; },
                             &storage_type,
                         ),
                         NumericTrait::mul_type_quantity(
                             self,
-                            quote! { std::ops::Mul },
-                            quote! { mul },
+                            Mul,
                             quote! { #quantity_type(self * rhs.0) },
                             &storage_type,
                         ),
                         NumericTrait::div_type_quantity(
                             self,
-                            quote! { std::ops::Div },
-                            quote! { div },
+                            Div,
                             quote! { #quantity_type(self / rhs.0) },
                             &storage_type,
                         ),
                         NumericTrait::add_or_sub_type_quantity(
                             self,
-                            quote! { std::ops::Add },
-                            quote! { add },
+                            Add,
                             quote! { self + rhs.0 },
                             &storage_type,
                         ),
                         NumericTrait::add_or_sub_type_quantity(
                             self,
-                            quote! { std::ops::Sub },
-                            quote! { sub },
+                            Sub,
                             quote! { self - rhs.0 },
                             &storage_type,
                         ),
                         NumericTrait::add_or_sub_assign_type_quantity(
                             self,
-                            quote! { std::ops::AddAssign },
-                            quote! { add_assign },
+                            AddAssign,
                             quote! { *self += rhs.0; },
                             &storage_type,
                         ),
                         NumericTrait::add_or_sub_assign_type_quantity(
                             self,
-                            quote! { std::ops::SubAssign },
-                            quote! { sub_assign },
+                            SubAssign,
                             quote! { *self -= rhs.0; },
                             &storage_type,
                         ),
                         NumericTrait::cmp_trait_quantity_type(
                             self,
                             &storage_type,
-                            quote! { std::cmp::PartialEq },
-                            quote! { eq },
+                            PartialEq,
                             quote! { bool },
                         ),
                         NumericTrait::cmp_trait_type_quantity(
                             self,
                             &storage_type,
-                            quote! { std::cmp::PartialEq },
-                            quote! { eq },
+                            PartialEq,
                             quote! { bool },
                         ),
                         NumericTrait::cmp_trait_quantity_type(
                             self,
                             &storage_type,
-                            quote! { std::cmp::PartialOrd },
-                            quote! { partial_cmp },
+                            PartialOrd,
                             quote! { Option<std::cmp::Ordering> },
                         ),
                         NumericTrait::cmp_trait_type_quantity(
                             self,
                             &storage_type,
-                            quote! { std::cmp::PartialOrd },
-                            quote! { partial_cmp },
+                            PartialOrd,
                             quote! { Option<std::cmp::Ordering> },
                         ),
                     ]
@@ -767,7 +748,6 @@ impl Defs {
     fn generic_numeric_trait_impl(&self, numeric_trait: NumericTrait) -> TokenStream {
         let NumericTrait {
             name,
-            fn_name,
             fn_return_type,
             fn_args,
             trait_bound_impl,
@@ -777,8 +757,10 @@ impl Defs {
             rhs,
             lhs,
         } = &numeric_trait;
+        let fn_name = name.fn_name();
+        let trait_name = name.name();
         quote! {
-            impl #impl_generics #name::<#rhs> for #lhs
+            impl #impl_generics #trait_name::<#rhs> for #lhs
             where
                 #trait_bound_impl
             {
