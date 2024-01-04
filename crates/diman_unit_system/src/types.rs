@@ -1,3 +1,5 @@
+mod allowed_exponent;
+
 use proc_macro2::Span;
 use syn::*;
 
@@ -9,7 +11,7 @@ use crate::{
     to_snakecase::to_snakecase,
 };
 
-pub type IntExponent = i32;
+pub use allowed_exponent::BaseDimensionExponent;
 
 #[derive(Clone)]
 pub enum Factor<C> {
@@ -29,7 +31,7 @@ impl<C1: Clone> Factor<C1> {
 #[derive(Clone)]
 pub enum Definition<Base, C> {
     Base(Base),
-    Expression(Expr<Factor<C>, IntExponent>),
+    Expression(Expr<Factor<C>, BaseDimensionExponent>),
 }
 
 pub type DimensionFactor = Factor<One>;
@@ -66,7 +68,7 @@ pub struct Symbol(pub Ident);
 #[derive(Clone)]
 pub struct ConstantEntry {
     pub name: Ident,
-    pub rhs: Expr<Factor<f64>, IntExponent>,
+    pub rhs: Expr<Factor<f64>, BaseDimensionExponent>,
     pub dimension_annotation: Option<Ident>,
 }
 

@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use proc_macro::{Diagnostic, Level};
 use syn::Ident;
 
-use crate::dimension_math::BaseDimensions;
+use crate::{dimension_math::BaseDimensions, types::BaseDimensionExponent};
 
 use super::ident_storage::Kind;
 
@@ -89,7 +89,10 @@ fn format_lhs_rhs_dimensions(lhs: &BaseDimensions, rhs: &BaseDimensions) -> (Str
         available_dims
             .iter()
             .map(|dim| {
-                let value = *dims.fields.get(dim).unwrap_or(&0);
+                let value = *dims
+                    .fields
+                    .get(dim)
+                    .unwrap_or(&BaseDimensionExponent::zero());
                 format!("{}^{}", dim, value)
             })
             .collect::<Vec<_>>()

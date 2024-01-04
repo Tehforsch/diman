@@ -1,4 +1,4 @@
-use crate::types::IntExponent;
+use crate::types::BaseDimensionExponent;
 
 #[derive(Clone)]
 #[cfg_attr(test, derive(PartialEq, Debug))]
@@ -44,7 +44,7 @@ pub enum Factor<T, E> {
 pub trait MulDiv:
     std::ops::Mul<Output = Self> + std::ops::Div<Output = Self> + Sized + Clone
 {
-    fn powi(self, pow: i32) -> Self;
+    fn pow(self, pow: BaseDimensionExponent) -> Self;
 }
 
 impl<T, E> Expr<T, E> {
@@ -122,7 +122,7 @@ impl<T, E> Factor<T, E> {
     }
 }
 
-impl<T: MulDiv, I: Into<IntExponent> + Clone> Expr<T, I> {
+impl<T: MulDiv, I: Into<BaseDimensionExponent> + Clone> Expr<T, I> {
     pub fn eval(&self) -> T {
         match self {
             Expr::Value(val) => val.eval(),
@@ -138,19 +138,20 @@ impl<T: MulDiv, I: Into<IntExponent> + Clone> Expr<T, I> {
     }
 }
 
-impl<T: MulDiv, I: Into<IntExponent> + Clone> Factor<T, I> {
+impl<T: MulDiv, I: Into<BaseDimensionExponent> + Clone> Factor<T, I> {
     pub fn eval(&self) -> T {
         match self {
             Factor::Value(val) => val.clone(),
             Factor::ParenExpr(expr) => expr.eval(),
-            Factor::Power(val, exponent) => val.clone().powi(exponent.clone().into()),
+            Factor::Power(val, exponent) => val.clone().pow(exponent.clone().into()),
         }
     }
 }
 
 #[cfg(test)]
+#[cfg(not(feature = "rational-dimensions"))]
 mod tests {
-    use crate::parse::tests::MyInt;
+    use crate::{parse::tests::MyInt, types::BaseDimensionExponent};
     use quote::quote;
 
     use super::{super::parse::tests::parse_expr, MulDiv};
@@ -172,14 +173,14 @@ mod tests {
     }
 
     impl MulDiv for MyInt {
-        fn powi(self, pow: i32) -> Self {
-            Self(self.0.pow(pow as u32))
+        fn pow(self, pow: BaseDimensionExponent) -> Self {
+            Self(self.0.pow(pow.0 as u32))
         }
     }
 
-    impl From<MyInt> for i32 {
+    impl From<MyInt> for BaseDimensionExponent {
         fn from(value: MyInt) -> Self {
-            value.0
+            BaseDimensionExponent(value.0)
         }
     }
 

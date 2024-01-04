@@ -11,7 +11,7 @@ use crate::{
     expression::{BinaryOperator, Expr, Factor, Operator},
     parse::attributes::Attributes,
     prefixes::{ExplicitPrefixes, MetricPrefixes},
-    types::{Alias, BaseAttribute, Definition, IntExponent, UnresolvedTemplates},
+    types::{Alias, BaseAttribute, BaseDimensionExponent, Definition, UnresolvedTemplates},
 };
 
 use self::{
@@ -55,7 +55,14 @@ pub struct Int {
 #[derive(Clone)]
 pub struct One;
 
-pub struct Exponent(i32);
+#[cfg(feature = "rational-dimensions")]
+struct Exponent {
+    num: Int,
+    denom: Option<Int>,
+}
+
+#[cfg(not(feature = "rational-dimensions"))]
+struct Exponent(i32);
 
 pub enum Entry {
     QuantityType(Ident),
@@ -114,6 +121,30 @@ impl Parse for One {
     }
 }
 
+#[cfg(feature = "rational-dimensions")]
+impl Parse for Exponent {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let lookahead = input.lookahead1();
+        if lookahead.peek(Lit) {
+            let num: Int = input.parse()?;
+            Ok(Self { num, denom: None })
+        } else if lookahead.peek(Paren) {
+            let content;
+            let _: token::Paren = parenthesized!(content in input);
+            let num: Int = content.parse()?;
+            let _: DivisionToken = content.parse()?;
+            let denom: Int = content.parse()?;
+            Ok(Self {
+                num,
+                denom: Some(denom),
+            })
+        } else {
+            Err(lookahead.error())
+        }
+    }
+}
+
+#[cfg(not(feature = "rational-dimensions"))]
 impl Parse for Exponent {
     fn parse(input: ParseStream) -> Result<Self> {
         let int: Int = input.parse()?;
@@ -147,9 +178,22 @@ impl Parse for DimensionFactor {
     }
 }
 
-fn parse_int_exponent_expr<T: Parse>(input: ParseStream) -> Result<Expr<T, IntExponent>> {
+#[cfg(feature = "rational-dimensions")]
+fn read_exponent(e: Exponent) -> BaseDimensionExponent {
+    BaseDimensionExponent {
+        num: e.num.int,
+        denom: e.denom.map(|denom| denom.int).unwrap_or(1),
+    }
+}
+
+#[cfg(not(feature = "rational-dimensions"))]
+fn read_exponent(e: Exponent) -> BaseDimensionExponent {
+    BaseDimensionExponent(e.0)
+}
+
+fn parse_int_exponent_expr<T: Parse>(input: ParseStream) -> Result<Expr<T, BaseDimensionExponent>> {
     let expr: Expr<T, Exponent> = input.parse()?;
-    Ok(expr.map_exp(|e| e.0))
+    Ok(expr.map_exp(read_exponent))
 }
 
 impl Parse for Definition<(), One> {
