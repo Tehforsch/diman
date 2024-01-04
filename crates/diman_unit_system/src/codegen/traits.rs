@@ -6,7 +6,7 @@ use crate::types::Defs;
 
 // Add the default impl for the convenient update syntax on `NumericTrait`,
 // this will never actually be used
-#[derive(Default)]
+#[derive(Default, Debug)]
 enum Trait {
     #[default]
     Add,
@@ -51,12 +51,22 @@ impl Trait {
             Trait::PartialOrd => quote! { partial_cmp },
         }
     }
+
+    fn fn_return_type(&self) -> TokenStream {
+        match self {
+            Trait::Add | Trait::Sub | Trait::Mul | Trait::Div => quote! { Self::Output },
+            Trait::AddAssign | Trait::SubAssign | Trait::MulAssign | Trait::DivAssign => {
+                quote! { () }
+            }
+            Trait::PartialEq => quote! { bool },
+            Trait::PartialOrd => quote! { Option<std::cmp::Ordering> },
+        }
+    }
 }
 
 #[derive(Default)]
 struct NumericTrait {
     name: Trait,
-    fn_return_type: TokenStream,
     fn_args: TokenStream,
     fn_return_expr: TokenStream,
     trait_bound_impl: TokenStream,
@@ -100,7 +110,6 @@ impl NumericTrait {
         Self {
             name,
             fn_return_expr,
-            fn_return_type: quote! { Self },
             fn_args: quote! {self, rhs: Self},
             trait_bound_impl: quote! {S: #trait_name<Output = S>},
             output_type_def: quote! { type Output = Self; },
@@ -118,7 +127,6 @@ impl NumericTrait {
         Self {
             name,
             fn_return_expr,
-            fn_return_type: quote! { Self },
             fn_args: quote! {self, rhs: &'a Self},
             trait_bound_impl: quote! {S: #trait_name<&'a S, Output = S>},
             output_type_def: quote! { type Output = Self; },
@@ -136,7 +144,6 @@ impl NumericTrait {
         Self {
             name,
             fn_return_expr,
-            fn_return_type: quote! {()},
             fn_args: quote! {&mut self, rhs: Self},
             output_type_def: quote! {},
             trait_bound_impl: quote! {S: #trait_name<S>},
@@ -154,7 +161,6 @@ impl NumericTrait {
         Self {
             name,
             fn_return_expr,
-            fn_return_type: quote! {()},
             fn_args: quote! {&mut self, rhs: &'a Self},
             output_type_def: quote! {},
             trait_bound_impl: quote! {S: #trait_name<&'a S>},
@@ -220,7 +226,6 @@ impl NumericTrait {
             rhs: quantity.clone(),
             fn_args: quote! {self, rhs: #quantity},
             output_type_def: quote! { type Output = #quantity; },
-            fn_return_type: quantity,
             name,
             fn_return_expr,
             trait_bound_impl: quote! {},
@@ -246,7 +251,6 @@ impl NumericTrait {
             rhs: quantity.clone(),
             fn_args: quote! {&mut self, rhs: #quantity},
             output_type_def: quote! {},
-            fn_return_type: quote! {()},
             name,
             fn_return_expr,
             trait_bound_impl: quote! {},
@@ -272,7 +276,6 @@ impl NumericTrait {
         Self {
             name,
             fn_return_expr,
-            fn_return_type: quote! { #quantity_type< <LHS as #trait_name<RHS>>::Output, { DL.#dimension_fn(DR) }> },
             fn_args: quote! { self, rhs: #rhs },
             trait_bound_impl: quote! {
                 LHS: #trait_name<RHS>,
@@ -311,7 +314,6 @@ impl NumericTrait {
             fn_return_expr,
             lhs,
             rhs: rhs.clone(),
-            fn_return_type: quote! { Self::Output },
             fn_args: quote! { self, rhs: #rhs },
             trait_bound_impl: quote! {
                 LHS: #trait_name<#storage_type>,
@@ -371,7 +373,6 @@ impl NumericTrait {
             fn_return_expr,
             lhs,
             rhs: rhs.clone(),
-            fn_return_type: quote! { Self::Output },
             fn_args: quote! { self, rhs: #rhs },
             trait_bound_impl: quote! {
                 #storage_type: #trait_name<RHS>,
@@ -404,7 +405,6 @@ impl NumericTrait {
         Self {
             name,
             fn_return_expr,
-            fn_return_type: quote! {()},
             fn_args: quote! { &mut self, rhs: #rhs },
             trait_bound_impl: quote! {
                 LHS: #trait_name<RHS>,
@@ -433,7 +433,6 @@ impl NumericTrait {
         Self {
             name,
             fn_return_expr,
-            fn_return_type: quote! {()},
             fn_args: quote! { &mut self, rhs: #rhs },
             trait_bound_impl: quote! {
                 LHS: #trait_name<#rhs>,
@@ -462,7 +461,6 @@ impl NumericTrait {
         Self {
             name,
             fn_return_expr,
-            fn_return_type: quote! {()},
             fn_args: quote! { &mut self, rhs: #rhs },
             trait_bound_impl: quote! {
                 #lhs: #trait_name<RHS>,
@@ -474,12 +472,7 @@ impl NumericTrait {
         }
     }
 
-    fn cmp_trait_quantity_type(
-        defs: &Defs,
-        rhs: &Type,
-        name: Trait,
-        fn_return_type: TokenStream,
-    ) -> Self {
+    fn cmp_trait_quantity_type(defs: &Defs, rhs: &Type, name: Trait) -> Self {
         let Defs {
             quantity_type,
             dimension_type,
@@ -489,7 +482,6 @@ impl NumericTrait {
         let trait_name = name.name();
         Self {
             name,
-            fn_return_type,
             fn_args: quote! { &self, other: &#rhs },
             fn_return_expr: quote! { self.0.#fn_name(other) },
             trait_bound_impl: quote! { LHS: #trait_name<#rhs> },
@@ -500,12 +492,7 @@ impl NumericTrait {
         }
     }
 
-    fn cmp_trait_type_quantity(
-        defs: &Defs,
-        lhs: &Type,
-        name: Trait,
-        fn_return_type: TokenStream,
-    ) -> Self {
+    fn cmp_trait_type_quantity(defs: &Defs, lhs: &Type, name: Trait) -> Self {
         let Defs {
             quantity_type,
             dimension_type,
@@ -516,7 +503,6 @@ impl NumericTrait {
         let trait_name = name.name();
         Self {
             name,
-            fn_return_type,
             fn_args: quote! { &self, other: &#rhs },
             fn_return_expr: quote! { self.#fn_name(&other.0) },
             trait_bound_impl: quote! { #lhs: #trait_name<RHS> },
@@ -699,30 +685,10 @@ impl Defs {
                             quote! { *self -= rhs.0; },
                             &storage_type,
                         ),
-                        NumericTrait::cmp_trait_quantity_type(
-                            self,
-                            &storage_type,
-                            PartialEq,
-                            quote! { bool },
-                        ),
-                        NumericTrait::cmp_trait_type_quantity(
-                            self,
-                            &storage_type,
-                            PartialEq,
-                            quote! { bool },
-                        ),
-                        NumericTrait::cmp_trait_quantity_type(
-                            self,
-                            &storage_type,
-                            PartialOrd,
-                            quote! { Option<std::cmp::Ordering> },
-                        ),
-                        NumericTrait::cmp_trait_type_quantity(
-                            self,
-                            &storage_type,
-                            PartialOrd,
-                            quote! { Option<std::cmp::Ordering> },
-                        ),
+                        NumericTrait::cmp_trait_quantity_type(self, &storage_type, PartialEq),
+                        NumericTrait::cmp_trait_type_quantity(self, &storage_type, PartialEq),
+                        NumericTrait::cmp_trait_quantity_type(self, &storage_type, PartialOrd),
+                        NumericTrait::cmp_trait_type_quantity(self, &storage_type, PartialOrd),
                     ]
                     .into_iter()
                 }),
@@ -748,7 +714,6 @@ impl Defs {
     fn generic_numeric_trait_impl(&self, numeric_trait: NumericTrait) -> TokenStream {
         let NumericTrait {
             name,
-            fn_return_type,
             fn_args,
             trait_bound_impl,
             fn_return_expr,
@@ -759,6 +724,7 @@ impl Defs {
         } = &numeric_trait;
         let fn_name = name.fn_name();
         let trait_name = name.name();
+        let fn_return_type = name.fn_return_type();
         quote! {
             impl #impl_generics #trait_name::<#rhs> for #lhs
             where
