@@ -44,6 +44,14 @@ macro_rules! gen_tests_for_float {
             }
 
             #[test]
+            fn add_assign_quantity_ref() {
+                let mut x = Length::meters(1.0);
+                let y = Length::kilometers(10.0);
+                x += &y;
+                assert_is_close(x, Length::meters(10001.0));
+            }
+
+            #[test]
             fn add_assign_quantity_type() {
                 let mut x = Dimensionless::dimensionless(1.0);
                 let y = 10.0;
@@ -103,6 +111,14 @@ macro_rules! gen_tests_for_float {
                 let mut x = Length::meters(1.0);
                 let y = Length::kilometers(10.0);
                 x -= y;
+                assert_is_close(x, Length::meters(-9999.0));
+            }
+
+            #[test]
+            fn sub_assign_quantity_ref() {
+                let mut x = Length::meters(1.0);
+                let y = Length::kilometers(10.0);
+                x -= &y;
                 assert_is_close(x, Length::meters(-9999.0));
             }
 
