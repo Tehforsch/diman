@@ -16,12 +16,9 @@ jobs:
       RUSTFLAGS: -D warnings
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install latest nightly
-        uses: actions-rs/toolchain@v1
-        with:
-            toolchain: nightly
-            override: true
+        uses: dtolnay/rust-toolchain@nightly
       - name: Install hdf5 libraries
         run: |
           sudo apt-get update
@@ -43,12 +40,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Install latest nightly
-      uses: actions-rs/toolchain@v1
+      uses: dtolnay/rust-toolchain@nightly
       with:
-          override: true
-          toolchain: nightly
           components: clippy
     - name: Install hdf5 libraries
       run: |
@@ -65,12 +60,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Install latest nightly
-      uses: actions-rs/toolchain@v1
+      uses: dtolnay/rust-toolchain@nightly
       with:
-          override: true
-          toolchain: nightly
           components: rustfmt
     - name: Run rustfmt
       run: cargo fmt -- --check
