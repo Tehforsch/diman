@@ -32,10 +32,12 @@ jobs:
           sudo apt-get install mpich
       - name: Build
         run: cargo build --verbose --all-targets
-      - name: Run tests (all features)
-        run: cargo test --tests --all-features
       - name: Run tests (default features)
         run: cargo test --tests
+      - name: Run tests (all features, no rational dimensions)
+        run: cargo test --tests --features glam,glam-vec2,glam-dvec2,glam-vec3,glam-dvec3,f32,f64,gen-vec-names,si,mpi,hdf5,rand,serde
+      - name: Run tests (all features)
+        run: cargo test --tests --all-features
       - name: Doctests
         run: cargo test --doc --all-features
 
