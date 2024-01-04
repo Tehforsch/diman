@@ -93,8 +93,8 @@ struct NumericTrait {
     trait_bound_impl: TokenStream,
     output_type_def: TokenStream,
     impl_generics: TokenStream,
-    rhs: TokenStream,
-    lhs: TokenStream,
+    lhs_type: TokenStream,
+    rhs_type: TokenStream,
 }
 
 impl std::fmt::Debug for NumericTrait {
@@ -105,8 +105,8 @@ impl std::fmt::Debug for NumericTrait {
         write!(f, "  trait_bound_impl: {}\n", self.trait_bound_impl)?;
         write!(f, "  output_type_def: {}\n", self.output_type_def)?;
         write!(f, "  impl_generics: {}\n", self.impl_generics)?;
-        write!(f, "  rhs: {}\n", self.rhs)?;
-        write!(f, "  lhs: {}\n", self.lhs)?;
+        write!(f, "  lhs: {}\n", self.lhs_type)?;
+        write!(f, "  rhs: {}\n", self.rhs_type)?;
         write!(f, "{}", "}")
     }
 }
@@ -120,8 +120,8 @@ impl NumericTrait {
         } = defs;
         Self {
             impl_generics: quote! { < const D: #dimension_type, S > },
-            rhs: quote! { #quantity_type<S, D> },
-            lhs: quote! { #quantity_type<S, D> },
+            rhs_type: quote! { #quantity_type<S, D> },
+            lhs_type: quote! { #quantity_type<S, D> },
             ..Default::default()
         }
     }
@@ -134,7 +134,7 @@ impl NumericTrait {
         } = defs;
         Self {
             impl_generics: quote! { < 'a, const D: #dimension_type, S > },
-            rhs: quote! { &'a #quantity_type<S, D> },
+            rhs_type: quote! { &'a #quantity_type<S, D> },
             ..Self::additive_quantity_quantity_defaults(defs)
         }
     }
@@ -208,8 +208,8 @@ impl NumericTrait {
         } = defs;
         Self {
             impl_generics: quote! { < S > },
-            rhs: quote! { S },
-            lhs: quote! { #quantity_type<S, { #dimension_type::none() }> },
+            rhs_type: quote! { S },
+            lhs_type: quote! { #quantity_type<S, { #dimension_type::none() }> },
             ..Self::add_or_sub_quantity_quantity(defs, name, fn_return_expr)
         }
     }
@@ -227,8 +227,8 @@ impl NumericTrait {
         } = defs;
         Self {
             impl_generics: quote! { < S > },
-            rhs: quote! { S },
-            lhs: quote! { #quantity_type<S, { #dimension_type::none() }> },
+            rhs_type: quote! { S },
+            lhs_type: quote! { #quantity_type<S, { #dimension_type::none() }> },
             ..Self::add_or_sub_assign_quantity_quantity(defs, name, fn_return_expr)
         }
     }
@@ -251,8 +251,8 @@ impl NumericTrait {
         let fn_return_expr = quote! { #quantity( #fn_inner_return_expr ) };
         Self {
             impl_generics: quote! {},
-            lhs: quote! { #storage_type },
-            rhs: quantity.clone(),
+            lhs_type: quote! { #storage_type },
+            rhs_type: quantity.clone(),
             output_type_def: quote! { type Output = #quantity; },
             name,
             fn_return_expr,
@@ -275,8 +275,8 @@ impl NumericTrait {
         let quantity = quote! { #quantity_type::<#storage_type, { #dimension_type::none() }> };
         Self {
             impl_generics: quote! {},
-            lhs: quote! { #storage_type },
-            rhs: quantity.clone(),
+            lhs_type: quote! { #storage_type },
+            rhs_type: quantity.clone(),
             output_type_def: quote! {},
             name,
             fn_return_expr,
@@ -315,8 +315,8 @@ impl NumericTrait {
                 >;
             },
             impl_generics: quote! { < const DL: #dimension_type, const DR: #dimension_type, LHS, RHS > },
-            rhs,
-            lhs,
+            rhs_type: rhs,
+            lhs_type: lhs,
         }
     }
 
@@ -338,8 +338,8 @@ impl NumericTrait {
         Self {
             name,
             fn_return_expr,
-            lhs,
-            rhs: rhs.clone(),
+            lhs_type: lhs,
+            rhs_type: rhs.clone(),
             trait_bound_impl: quote! {
                 LHS: #trait_name<#storage_type>,
             },
@@ -396,8 +396,8 @@ impl NumericTrait {
         Self {
             name,
             fn_return_expr,
-            lhs,
-            rhs: rhs.clone(),
+            lhs_type: lhs,
+            rhs_type: rhs.clone(),
             trait_bound_impl: quote! {
                 #storage_type: #trait_name<RHS>,
             },
@@ -434,8 +434,8 @@ impl NumericTrait {
             },
             output_type_def: quote! {},
             impl_generics: quote! { < const DL: #dimension_type, LHS, RHS > },
-            rhs,
-            lhs,
+            rhs_type: rhs,
+            lhs_type: lhs,
         }
     }
 
@@ -461,8 +461,8 @@ impl NumericTrait {
             },
             output_type_def: quote! {},
             impl_generics: quote! { < const DL: #dimension_type, LHS > },
-            rhs: quote! { #rhs },
-            lhs,
+            rhs_type: quote! { #rhs },
+            lhs_type: lhs,
         }
     }
 
@@ -488,8 +488,8 @@ impl NumericTrait {
             },
             output_type_def: quote! {},
             impl_generics: quote! { < const D: #dimension_type, RHS > },
-            rhs,
-            lhs: quote! { #lhs },
+            rhs_type: rhs,
+            lhs_type: quote! { #lhs },
         }
     }
 
@@ -507,8 +507,8 @@ impl NumericTrait {
             trait_bound_impl: quote! { LHS: #trait_name<#rhs> },
             output_type_def: quote! {},
             impl_generics: quote! { < LHS > },
-            rhs: quote! { #rhs },
-            lhs: quote! { #quantity_type<LHS, {#dimension_type::none()} > },
+            rhs_type: quote! { #rhs },
+            lhs_type: quote! { #quantity_type<LHS, {#dimension_type::none()} > },
         }
     }
 
@@ -527,8 +527,8 @@ impl NumericTrait {
             trait_bound_impl: quote! { #lhs: #trait_name<RHS> },
             output_type_def: quote! {},
             impl_generics: quote! { < RHS > },
-            rhs,
-            lhs: quote! { #lhs },
+            rhs_type: rhs,
+            lhs_type: quote! { #lhs },
         }
     }
 }
@@ -732,8 +732,8 @@ impl Defs {
             fn_return_expr,
             output_type_def,
             impl_generics,
-            rhs,
-            lhs,
+            rhs_type: rhs,
+            lhs_type: lhs,
         } = &numeric_trait;
         let fn_name = name.fn_name();
         let trait_name = name.name();
