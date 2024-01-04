@@ -178,12 +178,18 @@ fn bar(l: Length, t: Time) -> Quotient<Length, Time> {
 ```
 
 ## Rational dimensions
-The `rational-dimensions` feature allows using quantities with rational exponents in their base dimensions, as opposed to just integer values. This allows expressing writing expressions such as
+The `rational-dimensions` feature allows using quantities with rational exponents in their base dimensions, as opposed to just integer values. This allows expressing defining dimensions and units such as
 ```rust ignore
-let x = Length::meters(10.0);
-let foo = x.sqrt();
+dimension Sorptivity = Length Time^(-1/2);
+unit meters_per_sqrt_second: Sorptivity = meters / seconds^(1/2);
 ```
-Without `rational-dimensions`, this would not be allowed, since the dimension of foo is L^(1/2).
+and using them in the usual manner
+```rust ignore
+let l = Length::micrometers(2.0);
+let t = Time::milliseconds(5.0);
+let sorptivity: Sorptivity = l / t.sqrt();
+```
+
 The unit system generated with `rational-dimensions` supports a superset of features of a unit system generated without them.
 Still, this feature should be enabled only when necessary, since the compiler errors in case of dimension mismatches will be harder to read.
 
