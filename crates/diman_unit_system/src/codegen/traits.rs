@@ -62,18 +62,43 @@ impl Trait {
             Trait::PartialOrd => quote! { Option<std::cmp::Ordering> },
         }
     }
+
+    fn lhs_arg(&self) -> TokenStream {
+        match self {
+            Trait::Add | Trait::Sub | Trait::Mul | Trait::Div => quote! { self },
+            Trait::AddAssign | Trait::SubAssign | Trait::MulAssign | Trait::DivAssign => {
+                quote! { &mut self }
+            }
+            Trait::PartialEq | Trait::PartialOrd => quote! { &self },
+        }
+    }
 }
 
 #[derive(Default)]
 struct NumericTrait {
     name: Trait,
-    fn_args: TokenStream,
+    rhs_arg: TokenStream,
     fn_return_expr: TokenStream,
     trait_bound_impl: TokenStream,
     output_type_def: TokenStream,
     impl_generics: TokenStream,
     rhs: TokenStream,
     lhs: TokenStream,
+}
+
+impl std::fmt::Debug for NumericTrait {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Trait {}\n", "{")?;
+        write!(f, "  name: {:?}\n", self.name)?;
+        write!(f, "  rhs_arg: {}\n", self.rhs_arg)?;
+        write!(f, "  fn_return_expr: {}\n", self.fn_return_expr)?;
+        write!(f, "  trait_bound_impl: {}\n", self.trait_bound_impl)?;
+        write!(f, "  output_type_def: {}\n", self.output_type_def)?;
+        write!(f, "  impl_generics: {}\n", self.impl_generics)?;
+        write!(f, "  rhs: {}\n", self.rhs)?;
+        write!(f, "  lhs: {}\n", self.lhs)?;
+        write!(f, "{}", "}")
+    }
 }
 
 impl NumericTrait {
@@ -110,7 +135,7 @@ impl NumericTrait {
         Self {
             name,
             fn_return_expr,
-            fn_args: quote! {self, rhs: Self},
+            rhs_arg: quote! {rhs: Self},
             trait_bound_impl: quote! {S: #trait_name<Output = S>},
             output_type_def: quote! { type Output = Self; },
             ..Self::additive_quantity_quantity_defaults(defs)
@@ -127,7 +152,7 @@ impl NumericTrait {
         Self {
             name,
             fn_return_expr,
-            fn_args: quote! {self, rhs: &'a Self},
+            rhs_arg: quote! {rhs: &'a Self},
             trait_bound_impl: quote! {S: #trait_name<&'a S, Output = S>},
             output_type_def: quote! { type Output = Self; },
             ..Self::additive_ref_quantity_quantity_defaults(defs)
@@ -144,7 +169,7 @@ impl NumericTrait {
         Self {
             name,
             fn_return_expr,
-            fn_args: quote! {&mut self, rhs: Self},
+            rhs_arg: quote! {rhs: Self},
             output_type_def: quote! {},
             trait_bound_impl: quote! {S: #trait_name<S>},
             ..Self::additive_quantity_quantity_defaults(defs)
@@ -161,7 +186,7 @@ impl NumericTrait {
         Self {
             name,
             fn_return_expr,
-            fn_args: quote! {&mut self, rhs: &'a Self},
+            rhs_arg: quote! {rhs: &'a Self},
             output_type_def: quote! {},
             trait_bound_impl: quote! {S: #trait_name<&'a S>},
             ..Self::additive_ref_quantity_quantity_defaults(defs)
@@ -179,7 +204,7 @@ impl NumericTrait {
             impl_generics: quote! { < S > },
             rhs: quote! { S },
             lhs: quote! { #quantity_type<S, { #dimension_type::none() }> },
-            fn_args: quote! {self, rhs: S},
+            rhs_arg: quote! {rhs: S},
             ..Self::add_or_sub_quantity_quantity(defs, name, fn_return_expr)
         }
     }
@@ -199,7 +224,7 @@ impl NumericTrait {
             impl_generics: quote! { < S > },
             rhs: quote! { S },
             lhs: quote! { #quantity_type<S, { #dimension_type::none() }> },
-            fn_args: quote! {&mut self, rhs: S},
+            rhs_arg: quote! {rhs: S},
             ..Self::add_or_sub_assign_quantity_quantity(defs, name, fn_return_expr)
         }
     }
@@ -224,7 +249,7 @@ impl NumericTrait {
             impl_generics: quote! {},
             lhs: quote! { #storage_type },
             rhs: quantity.clone(),
-            fn_args: quote! {self, rhs: #quantity},
+            rhs_arg: quote! {rhs: #quantity},
             output_type_def: quote! { type Output = #quantity; },
             name,
             fn_return_expr,
@@ -249,7 +274,7 @@ impl NumericTrait {
             impl_generics: quote! {},
             lhs: quote! { #storage_type },
             rhs: quantity.clone(),
-            fn_args: quote! {&mut self, rhs: #quantity},
+            rhs_arg: quote! {rhs: #quantity},
             output_type_def: quote! {},
             name,
             fn_return_expr,
@@ -276,7 +301,7 @@ impl NumericTrait {
         Self {
             name,
             fn_return_expr,
-            fn_args: quote! { self, rhs: #rhs },
+            rhs_arg: quote! { rhs: #rhs },
             trait_bound_impl: quote! {
                 LHS: #trait_name<RHS>,
                 #quantity_type<LHS, { DL.#dimension_fn(DR) }>:,
@@ -314,7 +339,7 @@ impl NumericTrait {
             fn_return_expr,
             lhs,
             rhs: rhs.clone(),
-            fn_args: quote! { self, rhs: #rhs },
+            rhs_arg: quote! { rhs: #rhs },
             trait_bound_impl: quote! {
                 LHS: #trait_name<#storage_type>,
             },
@@ -373,7 +398,7 @@ impl NumericTrait {
             fn_return_expr,
             lhs,
             rhs: rhs.clone(),
-            fn_args: quote! { self, rhs: #rhs },
+            rhs_arg: quote! { rhs: #rhs },
             trait_bound_impl: quote! {
                 #storage_type: #trait_name<RHS>,
             },
@@ -405,7 +430,7 @@ impl NumericTrait {
         Self {
             name,
             fn_return_expr,
-            fn_args: quote! { &mut self, rhs: #rhs },
+            rhs_arg: quote! { rhs: #rhs },
             trait_bound_impl: quote! {
                 LHS: #trait_name<RHS>,
             },
@@ -433,7 +458,7 @@ impl NumericTrait {
         Self {
             name,
             fn_return_expr,
-            fn_args: quote! { &mut self, rhs: #rhs },
+            rhs_arg: quote! { rhs: #rhs },
             trait_bound_impl: quote! {
                 LHS: #trait_name<#rhs>,
             },
@@ -461,7 +486,7 @@ impl NumericTrait {
         Self {
             name,
             fn_return_expr,
-            fn_args: quote! { &mut self, rhs: #rhs },
+            rhs_arg: quote! { rhs: #rhs },
             trait_bound_impl: quote! {
                 #lhs: #trait_name<RHS>,
             },
@@ -482,7 +507,7 @@ impl NumericTrait {
         let trait_name = name.name();
         Self {
             name,
-            fn_args: quote! { &self, other: &#rhs },
+            rhs_arg: quote! { other: &#rhs },
             fn_return_expr: quote! { self.0.#fn_name(other) },
             trait_bound_impl: quote! { LHS: #trait_name<#rhs> },
             output_type_def: quote! {},
@@ -503,7 +528,7 @@ impl NumericTrait {
         let trait_name = name.name();
         Self {
             name,
-            fn_args: quote! { &self, other: &#rhs },
+            rhs_arg: quote! { other: &#rhs },
             fn_return_expr: quote! { self.#fn_name(&other.0) },
             trait_bound_impl: quote! { #lhs: #trait_name<RHS> },
             output_type_def: quote! {},
@@ -714,7 +739,7 @@ impl Defs {
     fn generic_numeric_trait_impl(&self, numeric_trait: NumericTrait) -> TokenStream {
         let NumericTrait {
             name,
-            fn_args,
+            rhs_arg,
             trait_bound_impl,
             fn_return_expr,
             output_type_def,
@@ -725,6 +750,8 @@ impl Defs {
         let fn_name = name.fn_name();
         let trait_name = name.name();
         let fn_return_type = name.fn_return_type();
+        let lhs_arg = name.lhs_arg();
+        let fn_args = quote! { #lhs_arg, #rhs_arg };
         quote! {
             impl #impl_generics #trait_name::<#rhs> for #lhs
             where
