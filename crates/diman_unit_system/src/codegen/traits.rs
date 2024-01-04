@@ -33,6 +33,14 @@ impl NumericTrait {
         }
     }
 
+    fn additive_ref_quantity_quantity_defaults(defs: &Defs) -> Self {
+        let Defs { dimension_type, .. } = defs;
+        Self {
+            impl_generics: quote! { < 'a, const D: #dimension_type, S > },
+            ..Self::additive_quantity_quantity_defaults(defs)
+        }
+    }
+
     /// For an impl of Add or Sub between two quantities
     fn add_or_sub_quantity_quantity(
         defs: &Defs,
@@ -49,6 +57,27 @@ impl NumericTrait {
             trait_bound_impl: quote! {S: #name<Output = S>},
             output_type_def: quote! { type Output = Self; },
             ..Self::additive_quantity_quantity_defaults(defs)
+        }
+    }
+
+    /// For an impl of Add or Sub between a quantity and a reference to a quantity
+    fn add_or_sub_quantity_refquantity(
+        defs: &Defs,
+        name: TokenStream,
+        fn_name: TokenStream,
+        fn_return_expr: TokenStream,
+    ) -> Self {
+        let Defs { quantity_type, .. } = defs;
+        Self {
+            name: name.clone(),
+            fn_name,
+            fn_return_expr,
+            fn_return_type: quote! { Self },
+            fn_args: quote! {self, rhs: &'a Self},
+            trait_bound_impl: quote! {S: #name<&'a S, Output = S>},
+            output_type_def: quote! { type Output = Self; },
+            rhs: quote! { &'a #quantity_type<S, D> },
+            ..Self::additive_ref_quantity_quantity_defaults(defs)
         }
     }
 
@@ -485,6 +514,18 @@ impl Defs {
                 quote! { std::ops::Sub },
                 quote! { sub },
                 quote! { Self(self.0 - rhs.0) },
+            ),
+            NumericTrait::add_or_sub_quantity_refquantity(
+                self,
+                quote! { std::ops::Add },
+                quote! { add },
+                quote! { Self(self.0 + &rhs.0) },
+            ),
+            NumericTrait::add_or_sub_quantity_refquantity(
+                self,
+                quote! { std::ops::Sub },
+                quote! { sub },
+                quote! { Self(self.0 - &rhs.0) },
             ),
             NumericTrait::add_or_sub_assign_quantity_quantity(
                 self,
