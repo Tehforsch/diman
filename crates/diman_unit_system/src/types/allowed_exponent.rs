@@ -1,5 +1,10 @@
 #[cfg(feature = "rational-dimensions")]
 mod reexport {
+    /// Represents a ratio between two numbers.
+    /// This is an even smaller reimplementation of the
+    /// `Ratio` type that `unit_system` implements for the calling crate.
+    /// Unfortunately, using the ratio type here is not possible, since
+    /// that would require another proc macro crate.
     #[derive(Clone, PartialEq, Copy)]
     pub struct BaseDimensionExponent {
         pub num: i32,

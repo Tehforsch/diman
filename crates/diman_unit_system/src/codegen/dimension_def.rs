@@ -131,6 +131,9 @@ impl Defs {
         quote! {}
     }
 
+    /// Defines the `Ratio` type inside the calling crate.
+    /// This is done to improve error messages, since the
+    /// messages would otherwise show diman::Ratio everywhere.
     #[cfg(feature = "rational-dimensions")]
     fn ratio_impl(&self) -> proc_macro2::TokenStream {
         quote! {
