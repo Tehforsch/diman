@@ -2,6 +2,7 @@
 Diman is a library for zero-cost compile time unit checking.
 
 ```rust
+# #![feature(generic_const_exprs)]
 use diman::si::f64::{Length, Time, Velocity};
 
 fn get_velocity(x: Length, t: Time) -> Velocity {
