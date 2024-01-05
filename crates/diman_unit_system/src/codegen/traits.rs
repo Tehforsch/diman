@@ -84,22 +84,6 @@ impl Trait {
             }
         }
     }
-
-    fn different_dimensions_allowed(&self) -> bool {
-        match self {
-            Add | Sub | AddAssign | SubAssign | MulAssign | DivAssign | PartialEq | PartialOrd => {
-                false
-            }
-            Mul | Div => true,
-        }
-    }
-
-    fn different_storage_types_allowed(&self) -> bool {
-        match self {
-            Add | Sub | AddAssign | SubAssign | PartialEq | PartialOrd => false,
-            Mul | Div | MulAssign | DivAssign => true,
-        }
-    }
 }
 
 #[derive(Default, Debug)]
@@ -162,22 +146,61 @@ impl std::fmt::Debug for NumericTrait {
 }
 
 impl NumericTrait {
+    fn different_dimensions_allowed(&self) -> bool {
+        use Trait::*;
+        match self.name {
+            Add | Sub | AddAssign | SubAssign | MulAssign | DivAssign | PartialEq | PartialOrd => {
+                false
+            }
+            Mul | Div => true,
+        }
+    }
+
+    fn different_storage_types_allowed(&self) -> bool {
+        let trait_allows = match self.name {
+            Add | Sub | AddAssign | SubAssign | PartialEq | PartialOrd => false,
+            Mul | Div | MulAssign | DivAssign => true,
+        };
+        trait_allows
+            && matches!(self.lhs_operand.type_, QuantityType::Quantity)
+            && matches!(self.rhs_operand.type_, QuantityType::Quantity)
+    }
+
+    fn dimension_types(&self) -> (Option<TokenStream>, Option<TokenStream>) {
+        use QuantityType::*;
+        match (&self.lhs_operand.type_, &self.rhs_operand.type_) {
+            (Quantity, Quantity) => {
+                if self.different_dimensions_allowed() {
+                    (Some(quote! { DL }), Some(quote! { DR }))
+                } else {
+                    (Some(quote! { D }), Some(quote! { D }))
+                }
+            }
+            (Quantity, _) => (Some(quote! { D }), None),
+            (_, Quantity) => (None, Some(quote! { D })),
+            _ => (None, None),
+        }
+    }
+
+    fn storage_types(&self) -> (TokenStream, TokenStream) {
+        use StorageType::*;
+        let different_storage_types_allowed = self.different_storage_types_allowed();
+        match (&self.lhs_operand.storage, &self.rhs_operand.storage) {
+            (Generic, Generic) => {
+                if different_storage_types_allowed {
+                    (quote! { LHS }, quote! { RHS })
+                } else {
+                    (quote! { S }, quote! { S })
+                }
+            }
+            (Concrete(ty), Generic) => (quote! {#ty}, quote! {S}),
+            (Generic, Concrete(ty)) => (quote! {S}, quote! {#ty}),
+            (Concrete(tyl), Concrete(tyr)) => (quote! {#tyl}, quote! {#tyr}),
+        }
+    }
+
     fn generics(&self, dimension_type: &Ident) -> Vec<TokenStream> {
         let mut num_lifetimes = 0;
-        let mut num_dimensions = 0;
-        let mut num_storage_types = 0;
-        if let QuantityType::Quantity = self.lhs_operand.type_ {
-            num_dimensions += 1
-        }
-        if let QuantityType::Quantity = self.rhs_operand.type_ {
-            num_dimensions += 1;
-        }
-        if let StorageType::Generic = self.lhs_operand.storage {
-            num_storage_types += 1
-        }
-        if let StorageType::Generic = self.rhs_operand.storage {
-            num_storage_types += 1
-        }
         if let ReferenceType::Reference = self.lhs_operand.reference {
             num_lifetimes += 1
         }
@@ -190,31 +213,23 @@ impl NumericTrait {
             1 => types.push(quote! { 'a }),
             _ => todo!(),
         }
-        if num_dimensions == 2 {
-            if self.name.different_dimensions_allowed() {
-                types.push(quote! { const DL: #dimension_type });
-                types.push(quote! { const DR: #dimension_type });
-            } else {
-                types.push(quote! { const D: #dimension_type });
-            }
-        } else if num_dimensions == 1 {
-            types.push(quote! { const D: #dimension_type });
+        let make_dim_expr_from_name = |name| quote! { const #name: #dimension_type };
+        let (lhs_dimension, rhs_dimension) = self.dimension_types();
+        let has_lhs_dimension = lhs_dimension.is_some();
+        types.extend(lhs_dimension.into_iter().map(make_dim_expr_from_name));
+        // Make sure we don't declare the dimension type twice if it is the same
+        if self.different_dimensions_allowed() || !has_lhs_dimension {
+            types.extend(rhs_dimension.into_iter().map(make_dim_expr_from_name));
         }
-        let different_storage_types_allowed = self.name.different_storage_types_allowed()
-            && matches!(self.lhs_operand.type_, QuantityType::Quantity)
-            && matches!(self.rhs_operand.type_, QuantityType::Quantity);
-        match num_storage_types {
-            0 => {}
-            1 => types.push(quote! { S }),
-            2 => {
-                if different_storage_types_allowed {
-                    types.push(quote! { LHS });
-                    types.push(quote! { RHS });
-                } else {
-                    types.push(quote! { S });
-                }
-            }
-            _ => unreachable!(),
+        let (lhs_storage, rhs_storage) = self.storage_types();
+        if matches!(self.lhs_operand.storage, StorageType::Generic) {
+            types.push(lhs_storage);
+        }
+        // Make sure we don't declare the storage type twice if it is the same
+        if matches!(self.rhs_operand.storage, StorageType::Generic)
+            && self.different_storage_types_allowed()
+        {
+            types.push(rhs_storage);
         }
         types
     }
