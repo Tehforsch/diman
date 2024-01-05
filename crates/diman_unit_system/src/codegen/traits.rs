@@ -153,19 +153,16 @@ impl NumericTrait {
     }
 
     fn different_storage_types_allowed(&self) -> bool {
-        let trait_allows = match self.name {
-            Add | Sub | AddAssign | SubAssign | PartialEq | PartialOrd => false,
-            Mul | Div | MulAssign | DivAssign => true,
-        };
-        trait_allows
-            && matches!(
-                self.lhs_operand.type_,
-                QuantityType::Quantity | QuantityType::DimensionlessQuantity
-            )
-            && matches!(
-                self.rhs_operand.type_,
-                QuantityType::Quantity | QuantityType::DimensionlessQuantity
-            )
+        // This restriction could be restricted in principle, in practice however,
+        // if I am too lose here, I run into ICEs which are very hard to track down
+        // and very hard to reproduce. See https://github.com/Tehforsch/diman/issues/2
+        matches!(
+            self.lhs_operand.type_,
+            QuantityType::Quantity | QuantityType::DimensionlessQuantity
+        ) && matches!(
+            self.rhs_operand.type_,
+            QuantityType::Quantity | QuantityType::DimensionlessQuantity
+        )
     }
 
     fn dimension_types(&self) -> (Option<TokenStream>, Option<TokenStream>) {
@@ -300,8 +297,8 @@ impl NumericTrait {
         Self {
             name,
             fn_return_expr,
-            trait_bound_impl: quote! {S: #trait_name<Output = S>},
-            output_type: Some(quote! { Self }),
+            trait_bound_impl: quote! {LHS: #trait_name<RHS>},
+            output_type: Some(quote! { Quantity< <LHS as #trait_name<RHS>>::Output, D> }),
             lhs_operand: Operand {
                 type_: QuantityType::Quantity,
                 storage: StorageType::Generic,
@@ -326,8 +323,8 @@ impl NumericTrait {
         Self {
             name,
             fn_return_expr,
-            trait_bound_impl: quote! {S: #trait_name<&'a S, Output = S>},
-            output_type: Some(quote! { Self }),
+            trait_bound_impl: quote! {LHS: #trait_name<&'a RHS>},
+            output_type: Some(quote! { Quantity< <LHS as #trait_name<&'a RHS>>::Output, D> }),
             lhs_operand: Operand {
                 type_: QuantityType::Quantity,
                 storage: StorageType::Generic,
@@ -353,7 +350,7 @@ impl NumericTrait {
             name,
             fn_return_expr,
             output_type: None,
-            trait_bound_impl: quote! {S: #trait_name<S>},
+            trait_bound_impl: quote! {LHS: #trait_name<RHS>},
             ..Default::default()
         }
     }
@@ -369,7 +366,7 @@ impl NumericTrait {
             name,
             fn_return_expr,
             output_type: None,
-            trait_bound_impl: quote! {S: #trait_name<&'a S>},
+            trait_bound_impl: quote! {LHS: #trait_name<&'a RHS>},
             lhs_operand: Operand {
                 type_: QuantityType::Quantity,
                 storage: StorageType::Generic,
@@ -386,6 +383,8 @@ impl NumericTrait {
 
     /// For an impl of Add or Sub between a dimensionless quantity and a storage type
     fn add_or_sub_quantity_type(defs: &Defs, name: Trait, fn_return_expr: TokenStream) -> Self {
+        let trait_name = name.name();
+        let Defs { dimension_type, .. } = &defs;
         Self {
             lhs_operand: Operand {
                 type_: QuantityType::DimensionlessQuantity,
@@ -397,6 +396,10 @@ impl NumericTrait {
                 storage: StorageType::Generic,
                 reference: ReferenceType::Value,
             },
+            output_type: Some(
+                quote! { Quantity< <S as #trait_name<S>>::Output, {#dimension_type::none()}> },
+            ),
+            trait_bound_impl: quote! {S: #trait_name<S>},
             ..Self::add_or_sub_quantity_quantity(defs, name, fn_return_expr)
         }
     }
@@ -407,6 +410,7 @@ impl NumericTrait {
         name: Trait,
         fn_return_expr: TokenStream,
     ) -> Self {
+        let trait_name = name.name();
         Self {
             lhs_operand: Operand {
                 type_: QuantityType::DimensionlessQuantity,
@@ -418,6 +422,7 @@ impl NumericTrait {
                 storage: StorageType::Generic,
                 reference: ReferenceType::Value,
             },
+            trait_bound_impl: quote! {S: #trait_name<S>},
             ..Self::add_or_sub_assign_quantity_quantity(defs, name, fn_return_expr)
         }
     }
@@ -759,17 +764,25 @@ impl Defs {
     fn iter_numeric_traits(&self) -> impl Iterator<Item = NumericTrait> + '_ {
         let Self { quantity_type, .. } = self;
         vec![
-            NumericTrait::add_or_sub_quantity_quantity(self, Add, quote! { Self(self.0 + rhs.0) }),
-            NumericTrait::add_or_sub_quantity_quantity(self, Sub, quote! { Self(self.0 - rhs.0) }),
+            NumericTrait::add_or_sub_quantity_quantity(
+                self,
+                Add,
+                quote! { Quantity(self.0 + rhs.0) },
+            ),
+            NumericTrait::add_or_sub_quantity_quantity(
+                self,
+                Sub,
+                quote! { Quantity(self.0 - rhs.0) },
+            ),
             NumericTrait::add_or_sub_quantity_refquantity(
                 self,
                 Add,
-                quote! { Self(self.0 + &rhs.0) },
+                quote! { Quantity(self.0 + &rhs.0) },
             ),
             NumericTrait::add_or_sub_quantity_refquantity(
                 self,
                 Sub,
-                quote! { Self(self.0 - &rhs.0) },
+                quote! { Quantity(self.0 - &rhs.0) },
             ),
             NumericTrait::add_or_sub_assign_quantity_quantity(
                 self,
@@ -791,8 +804,8 @@ impl Defs {
                 SubAssign,
                 quote! { self.0 -= &rhs.0; },
             ),
-            NumericTrait::add_or_sub_quantity_type(self, Add, quote! { Self(self.0 + rhs) }),
-            NumericTrait::add_or_sub_quantity_type(self, Sub, quote! { Self(self.0 - rhs) }),
+            NumericTrait::add_or_sub_quantity_type(self, Add, quote! { Quantity(self.0 + rhs) }),
+            NumericTrait::add_or_sub_quantity_type(self, Sub, quote! { Quantity(self.0 - rhs) }),
             NumericTrait::add_or_sub_assign_quantity_type(
                 self,
                 AddAssign,
