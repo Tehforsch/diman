@@ -162,8 +162,14 @@ impl NumericTrait {
             Mul | Div | MulAssign | DivAssign => true,
         };
         trait_allows
-            && matches!(self.lhs_operand.type_, QuantityType::Quantity)
-            && matches!(self.rhs_operand.type_, QuantityType::Quantity)
+            && matches!(
+                self.lhs_operand.type_,
+                QuantityType::Quantity | QuantityType::DimensionlessQuantity
+            )
+            && matches!(
+                self.rhs_operand.type_,
+                QuantityType::Quantity | QuantityType::DimensionlessQuantity
+            )
     }
 
     fn dimension_types(&self) -> (Option<TokenStream>, Option<TokenStream>) {
@@ -227,7 +233,8 @@ impl NumericTrait {
         }
         // Make sure we don't declare the storage type twice if it is the same
         if matches!(self.rhs_operand.storage, StorageType::Generic)
-            && self.different_storage_types_allowed()
+            && (!matches!(self.lhs_operand.storage, StorageType::Generic)
+                || self.different_storage_types_allowed())
         {
             types.push(rhs_storage);
         }
@@ -239,6 +246,23 @@ impl NumericTrait {
         quote! {
             < #(#types),* >
         }
+    }
+
+    fn rhs_type(&self, quantity_type: &Ident, dimension_type: &Ident) -> TokenStream {
+        let ref_sign = match self.rhs_operand.reference {
+            ReferenceType::Value => quote! {},
+            ReferenceType::Reference => quote! {&'a },
+        };
+        let storage = self.storage_types().1;
+        let dimension = self.dimension_types().1;
+        let type_name = match self.rhs_operand.type_ {
+            QuantityType::Quantity => quote! { #quantity_type < #storage, #dimension > },
+            QuantityType::DimensionlessQuantity => {
+                quote! {#quantity_type < #storage, { #dimension_type :: none() } >}
+            }
+            QuantityType::Storage => quote! {#storage},
+        };
+        quote! {#ref_sign #type_name}
     }
 
     fn additive_quantity_quantity_defaults(defs: &Defs) -> Self {
@@ -542,7 +566,7 @@ impl NumericTrait {
             },
             rhs_operand: Operand {
                 type_: QuantityType::Storage,
-                storage: StorageType::Generic,
+                storage: StorageType::Concrete(storage_type.clone()),
                 reference: ReferenceType::Value,
             },
         }
@@ -641,7 +665,7 @@ impl NumericTrait {
                 reference: ReferenceType::Value,
             },
             rhs_operand: Operand {
-                type_: QuantityType::Quantity,
+                type_: QuantityType::DimensionlessQuantity,
                 storage: StorageType::Generic,
                 reference: ReferenceType::Value,
             },
@@ -674,7 +698,7 @@ impl NumericTrait {
             },
             rhs_operand: Operand {
                 type_: QuantityType::Storage,
-                storage: StorageType::Generic,
+                storage: StorageType::Concrete(rhs.clone()),
                 reference: ReferenceType::Value,
             },
         }
@@ -701,7 +725,7 @@ impl NumericTrait {
             lhs_type: quote! { #lhs },
             lhs_operand: Operand {
                 type_: QuantityType::Storage,
-                storage: StorageType::Generic,
+                storage: StorageType::Concrete(lhs.clone()),
                 reference: ReferenceType::Value,
             },
             rhs_operand: Operand {
@@ -734,7 +758,7 @@ impl NumericTrait {
             },
             rhs_operand: Operand {
                 type_: QuantityType::Storage,
-                storage: StorageType::Generic,
+                storage: StorageType::Concrete(rhs.clone()),
                 reference: ReferenceType::Value,
             },
         }
@@ -758,7 +782,7 @@ impl NumericTrait {
             lhs_type: quote! { #lhs },
             lhs_operand: Operand {
                 type_: QuantityType::Storage,
-                storage: StorageType::Generic,
+                storage: StorageType::Concrete(lhs.clone()),
                 reference: ReferenceType::Value,
             },
             rhs_operand: Operand {
@@ -984,6 +1008,7 @@ impl Defs {
             None => quote! {},
         };
         let impl_generics = numeric_trait.generics_gen(&self.dimension_type);
+        let rhs = numeric_trait.rhs_type(&self.quantity_type, &self.dimension_type);
         quote! {
             impl #impl_generics #trait_name::<#rhs> for #lhs
             where
