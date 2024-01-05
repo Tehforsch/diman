@@ -13,7 +13,7 @@ impl Defs {
         quote_spanned! {span =>
                 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Default)]
                 #[repr(transparent)]
-                pub struct #quantity_type<S: 'static, const D: #dimension_type>(pub(crate) S);
+                pub struct #quantity_type<S, const D: #dimension_type>(pub(crate) S);
         }
     }
 
