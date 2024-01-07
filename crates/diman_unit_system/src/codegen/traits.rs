@@ -500,6 +500,7 @@ macro_rules! add_trait {
 }
 
 impl Defs {
+    #[rustfmt::skip]
     fn iter_numeric_traits(&self) -> impl Iterator<Item = NumericTrait> + '_ {
         let mut traits = vec![];
         use StorageType::*;
@@ -516,54 +517,19 @@ impl Defs {
         }
         for storage_type in self.storage_type_names() {
             for t in [Add, Sub, AddAssign, SubAssign] {
-                add_trait!(
-                    traits,
-                    t,
-                    (Storage, Concrete(storage_type.clone())),
-                    (Dimensionless, Concrete(storage_type.clone()))
-                );
+                add_trait!(traits, t, (Storage, Concrete(storage_type.clone())), (Dimensionless, Concrete(storage_type.clone())));
             }
             for t in [Mul, Div] {
-                add_trait!(
-                    traits,
-                    t,
-                    (Quantity, Concrete(storage_type.clone())),
-                    (Storage, Concrete(storage_type.clone()))
-                );
-                add_trait!(
-                    traits,
-                    t,
-                    (Storage, Concrete(storage_type.clone())),
-                    (Quantity, Generic)
-                );
+                add_trait!(traits, t, (Quantity, Concrete(storage_type.clone())), (Storage, Concrete(storage_type.clone())));
+                add_trait!(traits, t, (Storage, Concrete(storage_type.clone())), (Quantity, Generic));
             }
             for t in [MulAssign, DivAssign] {
-                add_trait!(
-                    traits,
-                    t,
-                    (Quantity, Generic),
-                    (Storage, Concrete(storage_type.clone()))
-                );
-                add_trait!(
-                    traits,
-                    t,
-                    (Storage, Concrete(storage_type.clone())),
-                    (Quantity, Generic)
-                );
+                add_trait!(traits, t, (Quantity, Generic), (Storage, Concrete(storage_type.clone())));
+                add_trait!(traits, t, (Storage, Concrete(storage_type.clone())), (Quantity, Generic));
             }
             for t in [PartialEq, PartialOrd] {
-                add_trait!(
-                    traits,
-                    t,
-                    (Dimensionless, Generic),
-                    (Storage, Concrete(storage_type.clone()))
-                );
-                add_trait!(
-                    traits,
-                    t,
-                    (Storage, Concrete(storage_type.clone())),
-                    (Dimensionless, Generic)
-                );
+                add_trait!(traits, t, (Dimensionless, Generic), (Storage, Concrete(storage_type.clone())));
+                add_trait!(traits, t, (Storage, Concrete(storage_type.clone())), (Dimensionless, Generic));
             }
         }
         traits.into_iter()
