@@ -289,8 +289,8 @@ impl NumericTrait {
         let mut types = vec![];
         match num_lifetimes {
             0 => {}
-            1 => types.push(quote! { 'a }),
-            _ => todo!(),
+            1 | 2 => types.push(quote! { 'a }),
+            _ => unreachable!(),
         }
         let make_dim_expr_from_name = |name| quote! { const #name: #dimension_type };
         let (lhs_dimension, rhs_dimension) = self.dimension_types();
@@ -529,12 +529,14 @@ impl Defs {
             add_trait!(traits, t, (Quantity, Generic), (Quantity, Generic));
             add_trait!(traits, t, (Quantity, Generic), (&Quantity, Generic));
             add_trait!(traits, t, (&Quantity, Generic), (Quantity, Generic));
+            add_trait!(traits, t, (&Quantity, Generic), (&Quantity, Generic));
             add_trait!(traits, t, (Dimensionless, Generic), (Storage, Generic));
         }
         for t in [AddAssign, SubAssign] {
             add_trait!(traits, t, (Quantity, Generic), (Quantity, Generic));
             add_trait!(traits, t, (Quantity, Generic), (&Quantity, Generic));
             add_trait!(traits, t, (&mut Quantity, Generic), (Quantity, Generic));
+            add_trait!(traits, t, (&mut Quantity, Generic), (&Quantity, Generic));
             add_trait!(traits, t, (Dimensionless, Generic), (Storage, Generic));
         }
         for t in [Mul, Div] {
