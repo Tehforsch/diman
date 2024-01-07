@@ -33,7 +33,7 @@ impl Defs {
             self.vector_definitions(),
             self.unit_constructors(),
             self.qproduct_trait(),
-            self.numeric_traits(),
+            self.impl_numeric_traits(),
             self.debug_trait(),
             self.float_methods(),
             self.vector_methods(),

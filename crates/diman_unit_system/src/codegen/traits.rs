@@ -480,19 +480,6 @@ macro_rules! add_trait {
 }
 
 impl Defs {
-    pub(crate) fn qproduct_trait(&self) -> TokenStream {
-        let Self {
-            quantity_type,
-            dimension_type,
-            ..
-        } = &self;
-        quote! {
-            impl<S, const D: #dimension_type> diman::QProduct for #quantity_type<S, D> {
-                type Output = #quantity_type<S, D>;
-            }
-        }
-    }
-
     fn iter_numeric_traits(&self) -> impl Iterator<Item = NumericTrait> + '_ {
         let mut traits = vec![];
         use StorageType::*;
@@ -562,19 +549,16 @@ impl Defs {
         traits.into_iter()
     }
 
-    pub fn numeric_traits(&self) -> TokenStream {
-        let ops: TokenStream = self
-            .iter_numeric_traits()
-            .map(|num_trait| self.generic_numeric_trait_impl(num_trait))
-            .collect();
-        let sum = self.impl_sum();
-        let neg = self.impl_neg();
-        let from = self.impl_from();
+    pub(crate) fn qproduct_trait(&self) -> TokenStream {
+        let Self {
+            quantity_type,
+            dimension_type,
+            ..
+        } = &self;
         quote! {
-            #ops
-            #sum
-            #neg
-            #from
+            impl<S, const D: #dimension_type> diman::QProduct for #quantity_type<S, D> {
+                type Output = #quantity_type<S, D>;
+            }
         }
     }
 
@@ -668,6 +652,22 @@ impl Defs {
                 }
             }
 
+        }
+    }
+
+    pub fn impl_numeric_traits(&self) -> TokenStream {
+        let ops: TokenStream = self
+            .iter_numeric_traits()
+            .map(|num_trait| self.generic_numeric_trait_impl(num_trait))
+            .collect();
+        let sum = self.impl_sum();
+        let neg = self.impl_neg();
+        let from = self.impl_from();
+        quote! {
+            #ops
+            #sum
+            #neg
+            #from
         }
     }
 }
