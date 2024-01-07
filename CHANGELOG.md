@@ -1,3 +1,15 @@
+# v0.4.0
+## Features
+- Overhauled the `unit_system` macro. (see the readme and the SI module in `src/si.rs` for example usage). (See #44)
+- - The `Dimension` type does not need to be defined by the user anymore and is derived automatically.
+- - The new syntax is much more explicit about what the base units are and prevents accidentally declaring multiple base units (which could be a critical error). 
+- - Similarly, defining units in terms of a dimension is not allowed anymore and units can only be derived from the base units and other derived units.
+- - Support adding prefixes to custom units via the `#[prefix(...)]` attribute to save time and prevent bugs due to typos due to wrong conversion factors.
+- - Support adding aliases to custom units via the `#[alias(...)]` attribute.
+- - Added a large list of dimensions and units to the SI module, each including all metric prefixes from atto to exa.
+- Add support for rational dimensions. This is not enabled by default and requires the `rational-dimensions` feature gate. (See #48)
+- Add various numeric trait implementations for references of quantities. (See #50 and #53)
+
 # v0.3.0
 ## Features
 - Add various trait implementations for dimensionless quantities and their underlying storage types: `MulAssign`, `DivAssign` , `PartialEq`, `PartialOrd`, `From`. For example, this makes it possible to write:
