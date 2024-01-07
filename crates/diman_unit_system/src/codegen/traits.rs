@@ -104,6 +104,17 @@ enum QuantityType {
 enum ReferenceType {
     Value,
     Reference,
+    MutableReference,
+}
+
+impl ReferenceType {
+    fn is_ref(&self) -> bool {
+        match self {
+            ReferenceType::Value => false,
+            ReferenceType::Reference => true,
+            ReferenceType::MutableReference => true,
+        }
+    }
 }
 
 struct Operand {
@@ -116,6 +127,7 @@ impl Operand {
         match self.reference {
             ReferenceType::Value => quote! {},
             ReferenceType::Reference => quote! {&'a },
+            ReferenceType::MutableReference => quote! {&'a mut },
         }
     }
 }
@@ -268,10 +280,10 @@ impl NumericTrait {
 
     fn generics(&self, dimension_type: &Ident) -> Vec<TokenStream> {
         let mut num_lifetimes = 0;
-        if let ReferenceType::Reference = self.lhs.reference {
+        if self.lhs.reference.is_ref() {
             num_lifetimes += 1
         }
-        if let ReferenceType::Reference = self.rhs.reference {
+        if self.rhs.reference.is_ref() {
             num_lifetimes += 1
         }
         let mut types = vec![];
@@ -346,8 +358,11 @@ impl NumericTrait {
     }
 
     /// Generates the trait bounds for a concrete implementation.
-    /// This consists of a trait bound for the underlying storage types
-    /// and, if necessary, a bound on the const generic expression for
+    /// This consists of
+    /// 1. A trait bound for the same trait but for the underlying storage types
+    /// 2. If necessary, a `Copy` trait bound for the LHS/RHS storage type, if we only
+    ///    receive a &Quantity on the LHS/RHS respectively.
+    /// 3. If necessary, a bound on the const generic expression for
     /// mul/div-type traits, where a new dimension is created.
     fn trait_bounds(
         &self,
@@ -358,15 +373,26 @@ impl NumericTrait {
             || matches!(self.rhs.storage, StorageType::Generic)
         {
             let (lhs_storage, rhs_storage) = self.storage_types();
-            let ref_sign = self.rhs.ref_sign();
             let trait_name = self.name.name();
             let output_bound = quote! {};
+            let lhs_copy_bound = if self.lhs.reference.is_ref() {
+                quote! { #lhs_storage: Copy, }
+            } else {
+                quote! {}
+            };
+            let rhs_copy_bound = if self.rhs.reference.is_ref() {
+                quote! { #rhs_storage: Copy, }
+            } else {
+                quote! {}
+            };
             let generic_const_bound = output_type
                 .as_ref()
                 .map(|output_type| output_type.generic_const_bound(&quantity_type))
                 .unwrap_or(quote! {});
             quote! {
-                #lhs_storage: #trait_name :: < #ref_sign #rhs_storage, #output_bound >,
+                #lhs_storage: #trait_name :: < #rhs_storage, #output_bound >,
+                #lhs_copy_bound
+                #rhs_copy_bound
                 #generic_const_bound
             }
         } else {
@@ -378,14 +404,6 @@ impl NumericTrait {
         assert!(self.name.has_output_type());
         let trait_name = self.name.name();
         let (lhs, rhs) = self.storage_types();
-        let lhs = match self.lhs.reference {
-            ReferenceType::Value => lhs,
-            ReferenceType::Reference => quote! { &'a #lhs },
-        };
-        let rhs = match self.rhs.reference {
-            ReferenceType::Value => rhs,
-            ReferenceType::Reference => quote! { &'a #rhs },
-        };
         quote! { < #lhs as #trait_name<#rhs> >::Output }
     }
 
@@ -430,11 +448,7 @@ impl NumericTrait {
 
     /// Whether the trait function takes its argument by reference.
     fn rhs_takes_ref(&self) -> bool {
-        if matches!(self.name, PartialOrd | PartialEq) {
-            true
-        } else {
-            matches!(self.rhs.reference, ReferenceType::Reference)
-        }
+        matches!(self.name, PartialOrd | PartialEq)
     }
 
     /// The returned expression from the trait function.
@@ -470,6 +484,13 @@ impl NumericTrait {
 }
 
 macro_rules! def_operand {
+    (&mut $quantity: ident, $storage: expr) => {
+        Operand {
+            reference: ReferenceType::MutableReference,
+            type_: QuantityType::$quantity,
+            storage: $storage,
+        }
+    };
     (& $quantity: ident, $storage: expr) => {
         Operand {
             reference: ReferenceType::Reference,
@@ -504,9 +525,16 @@ impl Defs {
     fn iter_numeric_traits(&self) -> impl Iterator<Item = NumericTrait> + '_ {
         let mut traits = vec![];
         use StorageType::*;
-        for t in [Add, AddAssign, Sub, SubAssign] {
+        for t in [Add, Sub] {
             add_trait!(traits, t, (Quantity, Generic), (Quantity, Generic));
             add_trait!(traits, t, (Quantity, Generic), (&Quantity, Generic));
+            add_trait!(traits, t, (&Quantity, Generic), (Quantity, Generic));
+            add_trait!(traits, t, (Dimensionless, Generic), (Storage, Generic));
+        }
+        for t in [AddAssign, SubAssign] {
+            add_trait!(traits, t, (Quantity, Generic), (Quantity, Generic));
+            add_trait!(traits, t, (Quantity, Generic), (&Quantity, Generic));
+            add_trait!(traits, t, (&mut Quantity, Generic), (Quantity, Generic));
             add_trait!(traits, t, (Dimensionless, Generic), (Storage, Generic));
         }
         for t in [Mul, Div] {
