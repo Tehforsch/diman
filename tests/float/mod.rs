@@ -50,6 +50,41 @@ macro_rules! gen_tests_for_float {
             }
 
             #[test]
+            fn add_quantity_type() {
+                let x = Dimensionless::dimensionless(1.0);
+                let y = 10.0;
+                assert_is_close(x + y, Dimensionless::dimensionless(11.0));
+            }
+
+            #[test]
+            fn add_type_quantity() {
+                let x = Dimensionless::dimensionless(1.0);
+                let y = 10.0;
+                assert_is_close(y + x, Dimensionless::dimensionless(11.0));
+            }
+
+            #[test]
+            fn add_ref_type() {
+                let x = &Dimensionless::dimensionless(1.0);
+                let y = 10.0;
+                assert_is_close(x + y, Dimensionless::dimensionless(11.0));
+            }
+
+            #[test]
+            fn add_quantity_reftype() {
+                let x = Dimensionless::dimensionless(1.0);
+                let y = &10.0;
+                assert_is_close(x + y, Dimensionless::dimensionless(11.0));
+            }
+
+            #[test]
+            fn add_ref_reftype() {
+                let x = &Dimensionless::dimensionless(1.0);
+                let y = &10.0;
+                assert_is_close(x + y, Dimensionless::dimensionless(11.0));
+            }
+
+            #[test]
             fn add_assign_quantity_quantity() {
                 let mut x = Length::meters(1.0);
                 let y = Length::kilometers(10.0);
@@ -98,41 +133,6 @@ macro_rules! gen_tests_for_float {
             }
 
             #[test]
-            fn add_quantity_type() {
-                let x = Dimensionless::dimensionless(1.0);
-                let y = 10.0;
-                assert_is_close(x + y, Dimensionless::dimensionless(11.0));
-            }
-
-            #[test]
-            fn add_type_quantity() {
-                let x = Dimensionless::dimensionless(1.0);
-                let y = 10.0;
-                assert_is_close(y + x, Dimensionless::dimensionless(11.0));
-            }
-
-            #[test]
-            fn add_ref_type() {
-                let x = &Dimensionless::dimensionless(1.0);
-                let y = 10.0;
-                assert_is_close(x + y, Dimensionless::dimensionless(11.0));
-            }
-
-            #[test]
-            fn add_quantity_reftype() {
-                let x = Dimensionless::dimensionless(1.0);
-                let y = &10.0;
-                assert_is_close(x + y, Dimensionless::dimensionless(11.0));
-            }
-
-            #[test]
-            fn add_ref_reftype() {
-                let x = &Dimensionless::dimensionless(1.0);
-                let y = &10.0;
-                assert_is_close(x + y, Dimensionless::dimensionless(11.0));
-            }
-
-            #[test]
             fn sum_quantity_type() {
                 let items = [
                     Length::meters(3.0),
@@ -162,6 +162,41 @@ macro_rules! gen_tests_for_float {
                 let x = Length::meters(1.0);
                 let y = Length::meters(10.0);
                 assert_is_close(&x - &y, Length::meters(-9.0));
+            }
+
+            #[test]
+            fn sub_quantity_type() {
+                let x = Dimensionless::dimensionless(1.0);
+                let y = 10.0;
+                assert_is_close(x - y, Dimensionless::dimensionless(-9.0));
+            }
+
+            #[test]
+            fn sub_type_quantity() {
+                let x = Dimensionless::dimensionless(1.0);
+                let y = 10.0;
+                assert_is_close(y - x, Dimensionless::dimensionless(9.0));
+            }
+
+            #[test]
+            fn sub_ref_type() {
+                let x = &Dimensionless::dimensionless(1.0);
+                let y = 10.0;
+                assert_is_close(x - y, Dimensionless::dimensionless(-9.0));
+            }
+
+            #[test]
+            fn sub_quantity_reftype() {
+                let x = Dimensionless::dimensionless(1.0);
+                let y = &10.0;
+                assert_is_close(x - y, Dimensionless::dimensionless(-9.0));
+            }
+
+            #[test]
+            fn sub_ref_reftype() {
+                let x = &Dimensionless::dimensionless(1.0);
+                let y = &10.0;
+                assert_is_close(x - y, Dimensionless::dimensionless(-9.0));
             }
 
             #[test]
@@ -221,41 +256,6 @@ macro_rules! gen_tests_for_float {
             }
 
             #[test]
-            fn sub_quantity_type() {
-                let x = Dimensionless::dimensionless(1.0);
-                let y = 10.0;
-                assert_is_close(x - y, Dimensionless::dimensionless(-9.0));
-            }
-
-            #[test]
-            fn sub_type_quantity() {
-                let x = Dimensionless::dimensionless(1.0);
-                let y = 10.0;
-                assert_is_close(y - x, Dimensionless::dimensionless(9.0));
-            }
-
-            #[test]
-            fn sub_ref_type() {
-                let x = &Dimensionless::dimensionless(1.0);
-                let y = 10.0;
-                assert_is_close(x - y, Dimensionless::dimensionless(-9.0));
-            }
-
-            #[test]
-            fn sub_quantity_reftype() {
-                let x = Dimensionless::dimensionless(1.0);
-                let y = &10.0;
-                assert_is_close(x - y, Dimensionless::dimensionless(-9.0));
-            }
-
-            #[test]
-            fn sub_ref_reftype() {
-                let x = &Dimensionless::dimensionless(1.0);
-                let y = &10.0;
-                assert_is_close(x - y, Dimensionless::dimensionless(-9.0));
-            }
-
-            #[test]
             fn neg_quantity() {
                 let x = Length::meters(5.0);
                 let y = Length::meters(2.0);
@@ -292,6 +292,41 @@ macro_rules! gen_tests_for_float {
             }
 
             #[test]
+            fn mul_quantity_type() {
+                let x = Force::newtons(2.0);
+                let y = 3.0;
+                assert_is_close(x * y, Force::newtons(6.0));
+            }
+
+            #[test]
+            fn mul_type_quantity() {
+                let x = 3.0;
+                let y = Force::newtons(2.0);
+                assert_is_close(x * y, Force::newtons(6.0));
+            }
+
+            #[test]
+            fn mul_quantity_typeref() {
+                let x = Force::newtons(2.0);
+                let y = &3.0;
+                assert_is_close(x * y, Force::newtons(6.0));
+            }
+
+            #[test]
+            fn mul_ref_type() {
+                let x = &Force::newtons(2.0);
+                let y = 3.0;
+                assert_is_close(x * y, Force::newtons(6.0));
+            }
+
+            #[test]
+            fn mul_ref_typeref() {
+                let x = &Force::newtons(2.0);
+                let y = &3.0;
+                assert_is_close(x * y, Force::newtons(6.0));
+            }
+
+            #[test]
             fn mul_assign_quantity_quantity() {
                 let mut x = Force::newtons(2.0);
                 let y = Dimensionless::dimensionless(3.0);
@@ -324,34 +359,6 @@ macro_rules! gen_tests_for_float {
             }
 
             #[test]
-            fn mul_quantity_typeref() {
-                let x = Force::newtons(2.0);
-                let y = &3.0;
-                assert_is_close(x * y, Force::newtons(6.0));
-            }
-
-            #[test]
-            fn mul_ref_type() {
-                let x = &Force::newtons(2.0);
-                let y = 3.0;
-                assert_is_close(x * y, Force::newtons(6.0));
-            }
-
-            #[test]
-            fn mul_ref_typeref() {
-                let x = &Force::newtons(2.0);
-                let y = &3.0;
-                assert_is_close(x * y, Force::newtons(6.0));
-            }
-
-            #[test]
-            fn mul_quantity_type() {
-                let x = Force::newtons(2.0);
-                let y = 3.0;
-                assert_is_close(x * y, Force::newtons(6.0));
-            }
-
-            #[test]
             fn mul_assign_quantity_type() {
                 let mut x = Force::newtons(2.0);
                 let y = 3.0;
@@ -360,16 +367,17 @@ macro_rules! gen_tests_for_float {
             }
 
             #[test]
-            fn mul_type_quantity() {
-                let x = 3.0;
-                let y = Force::newtons(2.0);
-                assert_is_close(x * y, Force::newtons(6.0));
-            }
-
-            #[test]
             fn mul_assign_type_quantity() {
                 let mut x = 3.0;
                 let y = Dimensionless::dimensionless(2.0);
+                x *= y;
+                assert_is_close_float(x, 6.0);
+            }
+
+            #[test]
+            fn mul_assign_type_ref() {
+                let mut x = 3.0;
+                let y = &Dimensionless::dimensionless(2.0);
                 x *= y;
                 assert_is_close_float(x, 6.0);
             }

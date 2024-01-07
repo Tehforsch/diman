@@ -379,7 +379,7 @@ impl NumericTrait {
         quantity_type: &Ident,
         output_type: &Option<OutputQuantity>,
     ) -> TokenStream {
-        if matches!(self.lhs.storage, StorageType::Generic)
+        let storage_bounds = if matches!(self.lhs.storage, StorageType::Generic)
             || matches!(self.rhs.storage, StorageType::Generic)
         {
             let (lhs_storage, rhs_storage) = self.storage_types();
@@ -395,18 +395,21 @@ impl NumericTrait {
             } else {
                 quote! {}
             };
-            let generic_const_bound = output_type
-                .as_ref()
-                .map(|output_type| output_type.generic_const_bound(&quantity_type))
-                .unwrap_or(quote! {});
             quote! {
                 #lhs_storage: #trait_name :: < #rhs_storage, #output_bound >,
                 #lhs_copy_bound
                 #rhs_copy_bound
-                #generic_const_bound
             }
         } else {
             quote! {}
+        };
+        let generic_const_bound = output_type
+            .as_ref()
+            .map(|output_type| output_type.generic_const_bound(&quantity_type))
+            .unwrap_or(quote! {});
+        quote! {
+            #storage_bounds
+            #generic_const_bound
         }
     }
 
@@ -414,6 +417,12 @@ impl NumericTrait {
         assert!(self.name.has_output_type());
         let trait_name = self.name.name();
         let (lhs, rhs) = self.storage_types();
+        if let StorageType::Concrete(lhs_ty) = &self.lhs.storage {
+            if let StorageType::Concrete(rhs_ty) = &self.rhs.storage {
+                assert_eq!(lhs_ty, rhs_ty);
+                return quote! { #lhs_ty };
+            }
+        }
         quote! { < #lhs as #trait_name<#rhs> >::Output }
     }
 
@@ -595,11 +604,18 @@ impl Defs {
                 add_trait!(traits, t, (&Quantity, Concrete(ty.clone())), (Storage, Concrete(ty.clone())));
                 add_trait!(traits, t, (Quantity, Concrete(ty.clone())), (&Storage, Concrete(ty.clone())));
                 add_trait!(traits, t, (&Quantity, Concrete(ty.clone())), (&Storage, Concrete(ty.clone())));
-                add_trait!(traits, t, (Storage, Concrete(ty.clone())), (Quantity, Generic));
+                add_trait!(traits, t, (Storage, Concrete(ty.clone())), (Quantity, Concrete(ty.clone())));
+                add_trait!(traits, t, (&Storage, Concrete(ty.clone())), (Quantity, Concrete(ty.clone())));
+                add_trait!(traits, t, (Storage, Concrete(ty.clone())), (&Quantity, Concrete(ty.clone())));
+                add_trait!(traits, t, (&Storage, Concrete(ty.clone())), (&Quantity, Concrete(ty.clone())));
             }
             for t in [MulAssign, DivAssign] {
-                add_trait!(traits, t, (Quantity, Generic), (Storage, Concrete(ty.clone())));
-                add_trait!(traits, t, (Storage, Concrete(ty.clone())), (Quantity, Generic));
+                add_trait!(traits, t, (Quantity, Concrete(ty.clone())), (Storage, Concrete(ty.clone())));
+                add_trait!(traits, t, (Quantity, Concrete(ty.clone())), (&Storage, Concrete(ty.clone())));
+                add_trait!(traits, t, (Storage, Concrete(ty.clone())), (Dimensionless, Concrete(ty.clone())));
+                add_trait!(traits, t, (Storage, Concrete(ty.clone())), (&Dimensionless, Concrete(ty.clone())));
+                // Primitive storage types like f32 dont implement &mut f32: MulAssign<f32>, so
+                // we won't either.
             }
             for t in [PartialEq, PartialOrd] {
                 add_trait!(traits, t, (Dimensionless, Generic), (Storage, Concrete(ty.clone())));
