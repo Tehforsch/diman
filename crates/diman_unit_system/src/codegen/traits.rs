@@ -207,8 +207,7 @@ impl NumericTrait {
 
     fn different_storage_types_allowed(&self) -> bool {
         // This restriction could be restricted in principle, in practice however,
-        // if I am too lose here, I run into ICEs which are very hard to track down
-        // and very hard to reproduce. See https://github.com/Tehforsch/diman/issues/2
+        // if I am too lose here, I run into duplicate trait impls
         matches!(
             self.lhs.type_,
             QuantityType::Quantity | QuantityType::Dimensionless
