@@ -6,7 +6,7 @@ use crate::types::Defs;
 
 // Add the default impl for the convenient update syntax on `NumericTrait`,
 // this will never actually be used
-#[derive(Default, Debug)]
+#[derive(Default)]
 enum Trait {
     #[default]
     Add,
@@ -100,19 +100,7 @@ enum StorageType {
     Concrete(Type),
 }
 
-impl std::fmt::Debug for StorageType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            StorageType::Generic => write!(f, "Generic"),
-            StorageType::Concrete(ty) => {
-                let s: String = quote! { #ty }.to_string();
-                write!(f, "Concrete({})", s)
-            }
-        }
-    }
-}
-
-#[derive(Default, Debug)]
+#[derive(Default)]
 enum QuantityType {
     #[default]
     Quantity,
@@ -120,14 +108,14 @@ enum QuantityType {
     Storage,
 }
 
-#[derive(Default, Debug)]
+#[derive(Default)]
 enum ReferenceType {
     #[default]
     Value,
     Reference,
 }
 
-#[derive(Default, Debug)]
+#[derive(Default)]
 struct Operand {
     type_: QuantityType,
     storage: StorageType,
@@ -191,7 +179,7 @@ impl OutputQuantity {
             // https://gist.github.com/rust-play/df60936a9a6bc0f7c29b190545fb7d34
             // Note that this happens on stable rust and doesn't require adt_const_params
             // or generic_const_exprs.
-            //
+            // 
             // Now I realized that the same code had previously compiled with a different
             // trait bound for the const generic and that made me realize I could literally
             // put whatever storage type that I wanted here. I am guessing that this trait
@@ -200,21 +188,13 @@ impl OutputQuantity {
             // However, since this helps with getting the code to compile, I put the
             // most innocent possible storage type here: `()`.
             // (Note that _ is not allowed)
+            //
+            // Not sure how much of a bug this is but I filed
+            // https://github.com/rust-lang/rust/issues/119690
             quote! { #quantity_type < (), #dim >: }
         } else {
             quote! {}
         }
-    }
-}
-
-impl std::fmt::Debug for OutputQuantity {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let Self { storage, dimension } = self;
-        let dimension = dimension.unwrap();
-        write!(f, "StorageType {}", "{")?;
-        write!(f, "  storage: {}", quote! { #storage }.to_string())?;
-        write!(f, "  dimension: {}", quote! { #dimension }.to_string())?;
-        write!(f, "{}", "}")
     }
 }
 
@@ -224,33 +204,6 @@ struct NumericTrait {
     fn_return_expr: TokenStream,
     lhs_operand: Operand,
     rhs_operand: Operand,
-}
-
-impl std::fmt::Debug for NumericTrait {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Trait {}\n", "{")?;
-        write!(f, "  name: {:?}\n", self.name)?;
-        write!(f, "  fn_return_expr: {}\n", self.fn_return_expr)?;
-        write!(f, "  lhs_operand: {:?}\n", self.lhs_operand)?;
-        write!(f, "  rhs_operand: {:?}\n", self.rhs_operand)?;
-        write!(f, "{}", "}")
-    }
-}
-
-impl std::fmt::Display for NumericTrait {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{:?} ({:?} {:?} {:?}) ({:?} {:?} {:?})",
-            self.name,
-            self.lhs_operand.type_,
-            self.lhs_operand.storage,
-            self.lhs_operand.reference,
-            self.rhs_operand.type_,
-            self.rhs_operand.storage,
-            self.rhs_operand.reference
-        )
-    }
 }
 
 impl NumericTrait {
