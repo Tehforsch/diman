@@ -179,7 +179,7 @@ impl OutputQuantity {
             // https://gist.github.com/rust-play/df60936a9a6bc0f7c29b190545fb7d34
             // Note that this happens on stable rust and doesn't require adt_const_params
             // or generic_const_exprs.
-            // 
+            //
             // Now I realized that the same code had previously compiled with a different
             // trait bound for the const generic and that made me realize I could literally
             // put whatever storage type that I wanted here. I am guessing that this trait
@@ -201,7 +201,6 @@ impl OutputQuantity {
 #[derive(Default)]
 struct NumericTrait {
     name: Trait,
-    fn_return_expr: TokenStream,
     lhs_operand: Operand,
     rhs_operand: Operand,
 }
@@ -425,15 +424,45 @@ impl NumericTrait {
         }
     }
 
+    fn rhs_takes_ref(&self) -> bool {
+        if matches!(self.name, PartialOrd | PartialEq) {
+            true
+        } else {
+            matches!(self.rhs_operand.reference, ReferenceType::Reference)
+        }
+    }
+
+    fn fn_return_expr(
+        &self,
+        quantity_type: &Ident,
+        output_type: &Option<OutputQuantity>,
+    ) -> TokenStream {
+        let lhs = match self.lhs_operand.type_ {
+            QuantityType::Quantity | QuantityType::DimensionlessQuantity => quote! { self.0 },
+            QuantityType::Storage => quote! { self },
+        };
+        let rhs = match self.rhs_operand.type_ {
+            QuantityType::Quantity | QuantityType::DimensionlessQuantity => quote! { rhs.0 },
+            QuantityType::Storage => quote! { rhs },
+        };
+        let fn_name = self.name.fn_name();
+        let reference = if self.rhs_takes_ref() {
+            quote! { & }
+        } else {
+            quote! {}
+        };
+        let result = quote! { #lhs.#fn_name(#reference #rhs) };
+        if output_type.is_some() {
+            quote! { #quantity_type ( #result ) }
+        } else {
+            result
+        }
+    }
+
     /// For an impl of Add or Sub between two quantities
-    fn add_or_sub_quantity_quantity(
-        _defs: &Defs,
-        name: Trait,
-        fn_return_expr: TokenStream,
-    ) -> Self {
+    fn add_or_sub_quantity_quantity(_defs: &Defs, name: Trait) -> Self {
         Self {
             name,
-            fn_return_expr,
             lhs_operand: Operand {
                 type_: QuantityType::Quantity,
                 storage: StorageType::Generic,
@@ -449,14 +478,9 @@ impl NumericTrait {
     }
 
     /// For an impl of Add or Sub between a quantity and a reference to a quantity
-    fn add_or_sub_quantity_refquantity(
-        _defs: &Defs,
-        name: Trait,
-        fn_return_expr: TokenStream,
-    ) -> Self {
+    fn add_or_sub_quantity_refquantity(_defs: &Defs, name: Trait) -> Self {
         Self {
             name,
-            fn_return_expr,
             lhs_operand: Operand {
                 type_: QuantityType::Quantity,
                 storage: StorageType::Generic,
@@ -472,27 +496,17 @@ impl NumericTrait {
     }
 
     /// For an impl of AddAssign or SubAssign between two quantities
-    fn add_or_sub_assign_quantity_quantity(
-        _defs: &Defs,
-        name: Trait,
-        fn_return_expr: TokenStream,
-    ) -> Self {
+    fn add_or_sub_assign_quantity_quantity(_defs: &Defs, name: Trait) -> Self {
         Self {
             name,
-            fn_return_expr,
             ..Default::default()
         }
     }
 
     /// For an impl of AddAssign or SubAssign between a quantity and a reference to a quantity
-    fn add_or_sub_assign_quantity_refquantity(
-        _defs: &Defs,
-        name: Trait,
-        fn_return_expr: TokenStream,
-    ) -> Self {
+    fn add_or_sub_assign_quantity_refquantity(_defs: &Defs, name: Trait) -> Self {
         Self {
             name,
-            fn_return_expr,
             lhs_operand: Operand {
                 type_: QuantityType::Quantity,
                 storage: StorageType::Generic,
@@ -508,7 +522,7 @@ impl NumericTrait {
     }
 
     /// For an impl of Add or Sub between a dimensionless quantity and a storage type
-    fn add_or_sub_quantity_type(defs: &Defs, name: Trait, fn_return_expr: TokenStream) -> Self {
+    fn add_or_sub_quantity_type(defs: &Defs, name: Trait) -> Self {
         Self {
             lhs_operand: Operand {
                 type_: QuantityType::DimensionlessQuantity,
@@ -520,16 +534,12 @@ impl NumericTrait {
                 storage: StorageType::Generic,
                 reference: ReferenceType::Value,
             },
-            ..Self::add_or_sub_quantity_quantity(defs, name, fn_return_expr)
+            ..Self::add_or_sub_quantity_quantity(defs, name)
         }
     }
 
     /// For an impl of AddAssign or SubAssign between a dimensionless quantity and a storage type
-    fn add_or_sub_assign_quantity_type(
-        defs: &Defs,
-        name: Trait,
-        fn_return_expr: TokenStream,
-    ) -> Self {
+    fn add_or_sub_assign_quantity_type(defs: &Defs, name: Trait) -> Self {
         Self {
             lhs_operand: Operand {
                 type_: QuantityType::DimensionlessQuantity,
@@ -541,29 +551,14 @@ impl NumericTrait {
                 storage: StorageType::Generic,
                 reference: ReferenceType::Value,
             },
-            ..Self::add_or_sub_assign_quantity_quantity(defs, name, fn_return_expr)
+            ..Self::add_or_sub_assign_quantity_quantity(defs, name)
         }
     }
 
     /// For an impl of Add or Sub between a storage type and a dimensionless quantity
-    fn add_or_sub_type_quantity(
-        defs: &Defs,
-        name: Trait,
-        fn_inner_return_expr: TokenStream,
-        storage_type: &Type,
-    ) -> Self {
-        let Defs {
-            quantity_type,
-            dimension_type,
-            ..
-        } = defs;
-        let span = defs.span();
-        let quantity =
-            quote_spanned! {span=> #quantity_type::<#storage_type, { #dimension_type::none() }> };
-        let fn_return_expr = quote! { #quantity( #fn_inner_return_expr ) };
+    fn add_or_sub_type_quantity(_defs: &Defs, name: Trait, storage_type: &Type) -> Self {
         Self {
             name,
-            fn_return_expr,
             lhs_operand: Operand {
                 type_: QuantityType::Storage,
                 storage: StorageType::Concrete(storage_type.clone()),
@@ -578,15 +573,9 @@ impl NumericTrait {
     }
 
     /// For an impl of AddAssign or SubAssign between a storage type and a dimensionless quantity
-    fn add_or_sub_assign_type_quantity(
-        _defs: &Defs,
-        name: Trait,
-        fn_return_expr: TokenStream,
-        storage_type: &Type,
-    ) -> Self {
+    fn add_or_sub_assign_type_quantity(_defs: &Defs, name: Trait, storage_type: &Type) -> Self {
         Self {
             name,
-            fn_return_expr,
             lhs_operand: Operand {
                 type_: QuantityType::Storage,
                 storage: StorageType::Concrete(storage_type.clone()),
@@ -601,14 +590,9 @@ impl NumericTrait {
     }
 
     /// For an impl of Mul or Div between two quantities
-    fn mul_or_div_quantity_quantity(
-        _defs: &Defs,
-        name: Trait,
-        fn_return_expr: TokenStream,
-    ) -> Self {
+    fn mul_or_div_quantity_quantity(_defs: &Defs, name: Trait) -> Self {
         Self {
             name,
-            fn_return_expr,
             lhs_operand: Operand {
                 type_: QuantityType::Quantity,
                 storage: StorageType::Generic,
@@ -623,15 +607,9 @@ impl NumericTrait {
     }
 
     /// For an impl of Mul or Div between a quantity and a concrete storage type
-    fn mul_or_div_quantity_type(
-        _defs: &Defs,
-        name: Trait,
-        fn_return_expr: TokenStream,
-        storage_type: &Type,
-    ) -> NumericTrait {
+    fn mul_or_div_quantity_type(_defs: &Defs, name: Trait, storage_type: &Type) -> NumericTrait {
         Self {
             name,
-            fn_return_expr,
             lhs_operand: Operand {
                 type_: QuantityType::Quantity,
                 storage: StorageType::Generic,
@@ -646,15 +624,9 @@ impl NumericTrait {
     }
 
     /// For an impl of Mul or Div between a concrete storage type and a quantity
-    fn mul_type_quantity(
-        _defs: &Defs,
-        name: Trait,
-        fn_return_expr: TokenStream,
-        storage_type: &Type,
-    ) -> NumericTrait {
+    fn mul_type_quantity(_defs: &Defs, name: Trait, storage_type: &Type) -> NumericTrait {
         Self {
             name,
-            fn_return_expr,
             lhs_operand: Operand {
                 type_: QuantityType::Storage,
                 storage: StorageType::Concrete(storage_type.clone()),
@@ -670,14 +642,9 @@ impl NumericTrait {
 
     /// For an impl of MulAssign or DivAssign between two quantities (only for
     /// dimensionless right hand side)
-    fn mul_or_div_assign_quantity_quantity(
-        _defs: &Defs,
-        name: Trait,
-        fn_return_expr: TokenStream,
-    ) -> Self {
+    fn mul_or_div_assign_quantity_quantity(_defs: &Defs, name: Trait) -> Self {
         Self {
             name,
-            fn_return_expr,
             lhs_operand: Operand {
                 type_: QuantityType::Quantity,
                 storage: StorageType::Generic,
@@ -692,15 +659,9 @@ impl NumericTrait {
     }
 
     /// For an impl of MulAssign or DivAssign between a quantity and a storage type
-    fn mul_or_div_assign_quantity_type(
-        _defs: &Defs,
-        name: Trait,
-        fn_return_expr: TokenStream,
-        rhs: &Type,
-    ) -> Self {
+    fn mul_or_div_assign_quantity_type(_defs: &Defs, name: Trait, rhs: &Type) -> Self {
         Self {
             name,
-            fn_return_expr,
             lhs_operand: Operand {
                 type_: QuantityType::Quantity,
                 storage: StorageType::Generic,
@@ -715,15 +676,9 @@ impl NumericTrait {
     }
 
     /// For an impl of MulAssign or DivAssign between a quantity and a storage type
-    fn mul_or_div_assign_type_quantity(
-        _defs: &Defs,
-        name: Trait,
-        fn_return_expr: TokenStream,
-        lhs: &Type,
-    ) -> Self {
+    fn mul_or_div_assign_type_quantity(_defs: &Defs, name: Trait, lhs: &Type) -> Self {
         Self {
             name,
-            fn_return_expr,
             lhs_operand: Operand {
                 type_: QuantityType::Storage,
                 storage: StorageType::Concrete(lhs.clone()),
@@ -738,10 +693,8 @@ impl NumericTrait {
     }
 
     fn cmp_trait_quantity_type(_defs: &Defs, rhs: &Type, name: Trait) -> Self {
-        let fn_name = name.fn_name();
         Self {
             name,
-            fn_return_expr: quote! { self.0.#fn_name(rhs) },
             lhs_operand: Operand {
                 type_: QuantityType::DimensionlessQuantity,
                 storage: StorageType::Generic,
@@ -756,10 +709,8 @@ impl NumericTrait {
     }
 
     fn cmp_trait_type_quantity(_defs: &Defs, lhs: &Type, name: Trait) -> Self {
-        let fn_name = name.fn_name();
         Self {
             name,
-            fn_return_expr: quote! { self.#fn_name(&rhs.0) },
             lhs_operand: Operand {
                 type_: QuantityType::Storage,
                 storage: StorageType::Concrete(lhs.clone()),
@@ -775,10 +726,6 @@ impl NumericTrait {
 }
 
 impl Defs {
-    pub fn span(&self) -> proc_macro2::Span {
-        self.dimension_type.span()
-    }
-
     pub(crate) fn qproduct_trait(&self) -> TokenStream {
         let Self {
             quantity_type,
@@ -793,80 +740,23 @@ impl Defs {
     }
 
     fn iter_numeric_traits(&self) -> impl Iterator<Item = NumericTrait> + '_ {
-        let Self { quantity_type, .. } = self;
         vec![
-            NumericTrait::add_or_sub_quantity_quantity(
-                self,
-                Add,
-                quote! { Quantity(self.0 + rhs.0) },
-            ),
-            NumericTrait::add_or_sub_quantity_quantity(
-                self,
-                Sub,
-                quote! { Quantity(self.0 - rhs.0) },
-            ),
-            NumericTrait::add_or_sub_quantity_refquantity(
-                self,
-                Add,
-                quote! { Quantity(self.0 + &rhs.0) },
-            ),
-            NumericTrait::add_or_sub_quantity_refquantity(
-                self,
-                Sub,
-                quote! { Quantity(self.0 - &rhs.0) },
-            ),
-            NumericTrait::add_or_sub_assign_quantity_quantity(
-                self,
-                AddAssign,
-                quote! { self.0 += rhs.0; },
-            ),
-            NumericTrait::add_or_sub_assign_quantity_quantity(
-                self,
-                SubAssign,
-                quote! { self.0 -= rhs.0; },
-            ),
-            NumericTrait::add_or_sub_assign_quantity_refquantity(
-                self,
-                AddAssign,
-                quote! { self.0 += &rhs.0; },
-            ),
-            NumericTrait::add_or_sub_assign_quantity_refquantity(
-                self,
-                SubAssign,
-                quote! { self.0 -= &rhs.0; },
-            ),
-            NumericTrait::add_or_sub_quantity_type(self, Add, quote! { Quantity(self.0 + rhs) }),
-            NumericTrait::add_or_sub_quantity_type(self, Sub, quote! { Quantity(self.0 - rhs) }),
-            NumericTrait::add_or_sub_assign_quantity_type(
-                self,
-                AddAssign,
-                quote! { self.0 += rhs; },
-            ),
-            NumericTrait::add_or_sub_assign_quantity_type(
-                self,
-                SubAssign,
-                quote! { self.0 -= rhs; },
-            ),
-            NumericTrait::mul_or_div_quantity_quantity(
-                self,
-                Mul,
-                quote! { #quantity_type(self.0 * rhs.0) },
-            ),
-            NumericTrait::mul_or_div_quantity_quantity(
-                self,
-                Div,
-                quote! { #quantity_type(self.0 / rhs.0) },
-            ),
-            NumericTrait::mul_or_div_assign_quantity_quantity(
-                self,
-                MulAssign,
-                quote! { self.0 *= rhs.0; },
-            ),
-            NumericTrait::mul_or_div_assign_quantity_quantity(
-                self,
-                DivAssign,
-                quote! { self.0 /= rhs.0; },
-            ),
+            NumericTrait::add_or_sub_quantity_quantity(self, Add),
+            NumericTrait::add_or_sub_quantity_quantity(self, Sub),
+            NumericTrait::add_or_sub_quantity_refquantity(self, Add),
+            NumericTrait::add_or_sub_quantity_refquantity(self, Sub),
+            NumericTrait::add_or_sub_assign_quantity_quantity(self, AddAssign),
+            NumericTrait::add_or_sub_assign_quantity_quantity(self, SubAssign),
+            NumericTrait::add_or_sub_assign_quantity_refquantity(self, AddAssign),
+            NumericTrait::add_or_sub_assign_quantity_refquantity(self, SubAssign),
+            NumericTrait::add_or_sub_quantity_type(self, Add),
+            NumericTrait::add_or_sub_quantity_type(self, Sub),
+            NumericTrait::add_or_sub_assign_quantity_type(self, AddAssign),
+            NumericTrait::add_or_sub_assign_quantity_type(self, SubAssign),
+            NumericTrait::mul_or_div_quantity_quantity(self, Mul),
+            NumericTrait::mul_or_div_quantity_quantity(self, Div),
+            NumericTrait::mul_or_div_assign_quantity_quantity(self, MulAssign),
+            NumericTrait::mul_or_div_assign_quantity_quantity(self, DivAssign),
         ]
         .into_iter()
         .chain(
@@ -874,76 +764,40 @@ impl Defs {
                 .into_iter()
                 .flat_map(move |storage_type| {
                     [
-                        NumericTrait::mul_or_div_quantity_type(
-                            self,
-                            Mul,
-                            quote! { #quantity_type(self.0 * rhs) },
-                            &storage_type,
-                        ),
-                        NumericTrait::mul_or_div_quantity_type(
-                            self,
-                            Div,
-                            quote! { #quantity_type(self.0 / rhs) },
-                            &storage_type,
-                        ),
+                        NumericTrait::mul_or_div_quantity_type(self, Mul, &storage_type),
+                        NumericTrait::mul_or_div_quantity_type(self, Div, &storage_type),
                         NumericTrait::mul_or_div_assign_quantity_type(
                             self,
                             MulAssign,
-                            quote! { self.0 *= rhs; },
                             &storage_type,
                         ),
                         NumericTrait::mul_or_div_assign_quantity_type(
                             self,
                             DivAssign,
-                            quote! { self.0 /= rhs; },
                             &storage_type,
                         ),
                         NumericTrait::mul_or_div_assign_type_quantity(
                             self,
                             MulAssign,
-                            quote! { *self *= rhs.0; },
                             &storage_type,
                         ),
                         NumericTrait::mul_or_div_assign_type_quantity(
                             self,
                             DivAssign,
-                            quote! { *self /= rhs.0; },
                             &storage_type,
                         ),
-                        NumericTrait::mul_type_quantity(
-                            self,
-                            Mul,
-                            quote! { #quantity_type(self * rhs.0) },
-                            &storage_type,
-                        ),
-                        NumericTrait::mul_type_quantity(
-                            self,
-                            Div,
-                            quote! { #quantity_type(self / rhs.0) },
-                            &storage_type,
-                        ),
-                        NumericTrait::add_or_sub_type_quantity(
-                            self,
-                            Add,
-                            quote! { self + rhs.0 },
-                            &storage_type,
-                        ),
-                        NumericTrait::add_or_sub_type_quantity(
-                            self,
-                            Sub,
-                            quote! { self - rhs.0 },
-                            &storage_type,
-                        ),
+                        NumericTrait::mul_type_quantity(self, Mul, &storage_type),
+                        NumericTrait::mul_type_quantity(self, Div, &storage_type),
+                        NumericTrait::add_or_sub_type_quantity(self, Add, &storage_type),
+                        NumericTrait::add_or_sub_type_quantity(self, Sub, &storage_type),
                         NumericTrait::add_or_sub_assign_type_quantity(
                             self,
                             AddAssign,
-                            quote! { *self += rhs.0; },
                             &storage_type,
                         ),
                         NumericTrait::add_or_sub_assign_type_quantity(
                             self,
                             SubAssign,
-                            quote! { *self -= rhs.0; },
                             &storage_type,
                         ),
                         NumericTrait::cmp_trait_quantity_type(self, &storage_type, PartialEq),
@@ -975,7 +829,6 @@ impl Defs {
     fn generic_numeric_trait_impl(&self, numeric_trait: NumericTrait) -> TokenStream {
         let NumericTrait {
             name,
-            fn_return_expr,
             rhs_operand: _,
             lhs_operand: _,
         } = &numeric_trait;
@@ -994,8 +847,8 @@ impl Defs {
             .as_ref()
             .map(|output_type| output_type.output_type_def(&self.quantity_type));
 
-        let trait_bounds =
-            numeric_trait.trait_bounds(&self.quantity_type, &output_type);
+        let trait_bounds = numeric_trait.trait_bounds(&self.quantity_type, &output_type);
+        let fn_return_expr = numeric_trait.fn_return_expr(&self.quantity_type, &output_type);
         quote! {
             impl #impl_generics #trait_name::<#rhs> for #lhs
             where
