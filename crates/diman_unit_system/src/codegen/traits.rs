@@ -83,10 +83,7 @@ impl Trait {
     }
 
     fn has_output_type(&self) -> bool {
-        match self {
-            Add | Sub | Mul | Div => true,
-            _ => false,
-        }
+        matches!(self, Add | Sub | Mul | Div)
     }
 }
 
@@ -147,8 +144,8 @@ enum OutputQuantityDimension {
 impl OutputQuantityDimension {
     fn unwrap(&self) -> &TokenStream {
         match self {
-            OutputQuantityDimension::Existing(t) => &t,
-            OutputQuantityDimension::New(t) => &t,
+            OutputQuantityDimension::Existing(t) => t,
+            OutputQuantityDimension::New(t) => t,
         }
     }
 }
@@ -405,8 +402,8 @@ impl NumericTrait {
         };
         let generic_const_bound = output_type
             .as_ref()
-            .map(|output_type| output_type.generic_const_bound(&quantity_type))
-            .unwrap_or(quote! {});
+            .map(|output_type| output_type.generic_const_bound(quantity_type))
+            .unwrap_or_default();
         quote! {
             #storage_bounds
             #generic_const_bound
@@ -490,12 +487,10 @@ impl NumericTrait {
         let fn_name = self.name.fn_name();
         let deref_or_ref = if self.rhs_takes_ref() {
             quote! { & }
+        } else if self.rhs.reference.is_ref() && self.rhs.is_storage() {
+            quote! {*}
         } else {
-            if self.rhs.reference.is_ref() && self.rhs.is_storage() {
-                quote! {*}
-            } else {
-                quote! {}
-            }
+            quote! {}
         };
         let lhs = if self.lhs.reference.is_ref() && self.lhs.is_storage() {
             quote! {(*#lhs)}
