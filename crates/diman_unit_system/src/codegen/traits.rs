@@ -190,8 +190,8 @@ impl OutputQuantity {
 
 struct NumericTrait {
     name: Trait,
-    lhs_operand: Operand,
-    rhs_operand: Operand,
+    lhs: Operand,
+    rhs: Operand,
 }
 
 impl NumericTrait {
@@ -210,17 +210,17 @@ impl NumericTrait {
         // if I am too lose here, I run into ICEs which are very hard to track down
         // and very hard to reproduce. See https://github.com/Tehforsch/diman/issues/2
         matches!(
-            self.lhs_operand.type_,
+            self.lhs.type_,
             QuantityType::Quantity | QuantityType::Dimensionless
         ) && matches!(
-            self.rhs_operand.type_,
+            self.rhs.type_,
             QuantityType::Quantity | QuantityType::Dimensionless
         )
     }
 
     fn dimension_types(&self) -> (Option<TokenStream>, Option<TokenStream>) {
         use QuantityType::*;
-        match (&self.lhs_operand.type_, &self.rhs_operand.type_) {
+        match (&self.lhs.type_, &self.rhs.type_) {
             (Quantity, Quantity) => {
                 if self.different_dimensions_allowed() {
                     (Some(quote! { DL }), Some(quote! { DR }))
@@ -237,7 +237,7 @@ impl NumericTrait {
     fn storage_types(&self) -> (TokenStream, TokenStream) {
         use StorageType::*;
         let different_storage_types_allowed = self.different_storage_types_allowed();
-        match (&self.lhs_operand.storage, &self.rhs_operand.storage) {
+        match (&self.lhs.storage, &self.rhs.storage) {
             (Generic, Generic) => {
                 if different_storage_types_allowed {
                     (quote! { LHS }, quote! { RHS })
@@ -253,10 +253,10 @@ impl NumericTrait {
 
     fn generics(&self, dimension_type: &Ident) -> Vec<TokenStream> {
         let mut num_lifetimes = 0;
-        if let ReferenceType::Reference = self.lhs_operand.reference {
+        if let ReferenceType::Reference = self.lhs.reference {
             num_lifetimes += 1
         }
-        if let ReferenceType::Reference = self.rhs_operand.reference {
+        if let ReferenceType::Reference = self.rhs.reference {
             num_lifetimes += 1
         }
         let mut types = vec![];
@@ -274,12 +274,12 @@ impl NumericTrait {
             types.extend(rhs_dimension.into_iter().map(make_dim_expr_from_name));
         }
         let (lhs_storage, rhs_storage) = self.storage_types();
-        if matches!(self.lhs_operand.storage, StorageType::Generic) {
+        if matches!(self.lhs.storage, StorageType::Generic) {
             types.push(lhs_storage);
         }
         // Make sure we don't declare the storage type twice if it is the same
-        if matches!(self.rhs_operand.storage, StorageType::Generic)
-            && (!matches!(self.lhs_operand.storage, StorageType::Generic)
+        if matches!(self.rhs.storage, StorageType::Generic)
+            && (!matches!(self.lhs.storage, StorageType::Generic)
                 || self.different_storage_types_allowed())
         {
             types.push(rhs_storage);
@@ -297,25 +297,13 @@ impl NumericTrait {
     fn rhs_type(&self, quantity_type: &Ident, dimension_type: &Ident) -> TokenStream {
         let storage = self.storage_types().1;
         let dimension = self.dimension_types().1;
-        self.type_for_operand(
-            &self.rhs_operand,
-            quantity_type,
-            dimension_type,
-            storage,
-            dimension,
-        )
+        self.type_for_operand(&self.rhs, quantity_type, dimension_type, storage, dimension)
     }
 
     fn lhs_type(&self, quantity_type: &Ident, dimension_type: &Ident) -> TokenStream {
         let storage = self.storage_types().0;
         let dimension = self.dimension_types().0;
-        self.type_for_operand(
-            &self.lhs_operand,
-            quantity_type,
-            dimension_type,
-            storage,
-            dimension,
-        )
+        self.type_for_operand(&self.lhs, quantity_type, dimension_type, storage, dimension)
     }
 
     fn type_for_operand(
@@ -342,11 +330,11 @@ impl NumericTrait {
         quantity_type: &Ident,
         output_type: &Option<OutputQuantity>,
     ) -> TokenStream {
-        if matches!(self.lhs_operand.storage, StorageType::Generic)
-            || matches!(self.rhs_operand.storage, StorageType::Generic)
+        if matches!(self.lhs.storage, StorageType::Generic)
+            || matches!(self.rhs.storage, StorageType::Generic)
         {
             let (lhs_storage, rhs_storage) = self.storage_types();
-            let ref_sign = self.rhs_operand.ref_sign();
+            let ref_sign = self.rhs.ref_sign();
             let trait_name = self.name.name();
             let output_bound = quote! {};
             let generic_const_bound = output_type
@@ -366,11 +354,11 @@ impl NumericTrait {
         assert!(self.name.has_output_type());
         let trait_name = self.name.name();
         let (lhs, rhs) = self.storage_types();
-        let lhs = match self.lhs_operand.reference {
+        let lhs = match self.lhs.reference {
             ReferenceType::Value => lhs,
             ReferenceType::Reference => quote! { &'a #lhs },
         };
-        let rhs = match self.rhs_operand.reference {
+        let rhs = match self.rhs.reference {
             ReferenceType::Value => rhs,
             ReferenceType::Reference => quote! { &'a #rhs },
         };
@@ -383,7 +371,7 @@ impl NumericTrait {
         use OutputQuantityDimension::*;
         use QuantityType::*;
         let existing = Existing(quote_spanned! { span=> D });
-        match (&self.lhs_operand.type_, &self.rhs_operand.type_) {
+        match (&self.lhs.type_, &self.rhs.type_) {
             (Quantity, Quantity) => match self.name {
                 Mul => New(quote_spanned! {span=> { DL.dimension_mul(DR) } }),
                 Div => New(quote_spanned! {span=> { DL.dimension_div(DR) } }),
@@ -417,7 +405,7 @@ impl NumericTrait {
         if matches!(self.name, PartialOrd | PartialEq) {
             true
         } else {
-            matches!(self.rhs_operand.reference, ReferenceType::Reference)
+            matches!(self.rhs.reference, ReferenceType::Reference)
         }
     }
 
@@ -426,11 +414,11 @@ impl NumericTrait {
         quantity_type: &Ident,
         output_type: &Option<OutputQuantity>,
     ) -> TokenStream {
-        let lhs = match self.lhs_operand.type_ {
+        let lhs = match self.lhs.type_ {
             QuantityType::Quantity | QuantityType::Dimensionless => quote! { self.0 },
             QuantityType::Storage => quote! { self },
         };
-        let rhs = match self.rhs_operand.type_ {
+        let rhs = match self.rhs.type_ {
             QuantityType::Quantity | QuantityType::Dimensionless => quote! { rhs.0 },
             QuantityType::Storage => quote! { rhs },
         };
@@ -473,8 +461,8 @@ macro_rules! add_trait {
      ($($lhs:tt)*), ($($rhs:tt)*)) => {
         $traits.push(NumericTrait {
             name: $name,
-            lhs_operand: def_operand!($($lhs)*),
-            rhs_operand: def_operand!($($rhs)*),
+            lhs: def_operand!($($lhs)*),
+            rhs: def_operand!($($rhs)*),
         })
     }
 }
@@ -563,11 +551,7 @@ impl Defs {
     }
 
     fn generic_numeric_trait_impl(&self, numeric_trait: NumericTrait) -> TokenStream {
-        let NumericTrait {
-            name,
-            rhs_operand: _,
-            lhs_operand: _,
-        } = &numeric_trait;
+        let name = numeric_trait.name;
         let fn_name = name.fn_name();
         let trait_name = name.name();
         let fn_return_type = name.fn_return_type();
