@@ -90,6 +90,14 @@ macro_rules! gen_tests_for_float {
             }
 
             #[test]
+            fn add_assign_ref_type() {
+                let mut x = &mut Dimensionless::dimensionless(1.0);
+                let y = 10.0;
+                x += y;
+                assert_is_close(*x, Dimensionless::dimensionless(11.0));
+            }
+
+            #[test]
             fn add_quantity_type() {
                 let x = Dimensionless::dimensionless(1.0);
                 let y = 10.0;
@@ -101,6 +109,27 @@ macro_rules! gen_tests_for_float {
                 let x = Dimensionless::dimensionless(1.0);
                 let y = 10.0;
                 assert_is_close(y + x, Dimensionless::dimensionless(11.0));
+            }
+
+            #[test]
+            fn add_ref_type() {
+                let x = &Dimensionless::dimensionless(1.0);
+                let y = 10.0;
+                assert_is_close(x + y, Dimensionless::dimensionless(11.0));
+            }
+
+            #[test]
+            fn add_quantity_reftype() {
+                let x = Dimensionless::dimensionless(1.0);
+                let y = &10.0;
+                assert_is_close(x + y, Dimensionless::dimensionless(11.0));
+            }
+
+            #[test]
+            fn add_ref_reftype() {
+                let x = &Dimensionless::dimensionless(1.0);
+                let y = &10.0;
+                assert_is_close(x + y, Dimensionless::dimensionless(11.0));
             }
 
             #[test]
@@ -184,6 +213,14 @@ macro_rules! gen_tests_for_float {
             }
 
             #[test]
+            fn sub_assign_ref_type() {
+                let mut x = &mut Dimensionless::dimensionless(1.0);
+                let y = 10.0;
+                x -= y;
+                assert_is_close(*x, Dimensionless::dimensionless(-9.0));
+            }
+
+            #[test]
             fn sub_quantity_type() {
                 let x = Dimensionless::dimensionless(1.0);
                 let y = 10.0;
@@ -195,6 +232,27 @@ macro_rules! gen_tests_for_float {
                 let x = Dimensionless::dimensionless(1.0);
                 let y = 10.0;
                 assert_is_close(y - x, Dimensionless::dimensionless(9.0));
+            }
+
+            #[test]
+            fn sub_ref_type() {
+                let x = &Dimensionless::dimensionless(1.0);
+                let y = 10.0;
+                assert_is_close(x - y, Dimensionless::dimensionless(-9.0));
+            }
+
+            #[test]
+            fn sub_quantity_reftype() {
+                let x = Dimensionless::dimensionless(1.0);
+                let y = &10.0;
+                assert_is_close(x - y, Dimensionless::dimensionless(-9.0));
+            }
+
+            #[test]
+            fn sub_ref_reftype() {
+                let x = &Dimensionless::dimensionless(1.0);
+                let y = &10.0;
+                assert_is_close(x - y, Dimensionless::dimensionless(-9.0));
             }
 
             #[test]

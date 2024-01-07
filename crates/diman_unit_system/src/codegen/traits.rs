@@ -130,6 +130,13 @@ impl Operand {
             ReferenceType::MutableReference => quote_spanned! {span=>&'a mut },
         }
     }
+
+    fn is_storage(&self) -> bool {
+        !matches!(
+            self.type_,
+            QuantityType::Quantity | QuantityType::Dimensionless
+        )
+    }
 }
 
 enum OutputQuantityDimension {
@@ -472,12 +479,16 @@ impl NumericTrait {
             QuantityType::Storage => quote! { rhs },
         };
         let fn_name = self.name.fn_name();
-        let reference = if self.rhs_takes_ref() {
+        let deref_or_ref = if self.rhs_takes_ref() {
             quote! { & }
         } else {
-            quote! {}
+            if self.rhs.reference.is_ref() && self.rhs.is_storage() {
+                quote! {*}
+            } else {
+                quote! {}
+            }
         };
-        let result = quote! { #lhs.#fn_name(#reference #rhs) };
+        let result = quote! { #lhs.#fn_name(#deref_or_ref #rhs) };
         if output_type.is_some() {
             quote! { #quantity_type ( #result ) }
         } else {
@@ -540,9 +551,6 @@ impl Defs {
             add_trait!(traits, t, (&mut Quantity, Generic), (Quantity, Generic));
             add_trait!(traits, t, (&mut Quantity, Generic), (&Quantity, Generic));
         }
-        for t in [Add, Sub, AddAssign, SubAssign] {
-            add_trait!(traits, t, (Dimensionless, Generic), (Storage, Generic));
-        }
         for t in [MulAssign, DivAssign] {
             add_trait!(traits, t, (Quantity, Generic), (Dimensionless, Generic));
             add_trait!(traits, t, (Quantity, Generic), (&Dimensionless, Generic));
@@ -557,21 +565,42 @@ impl Defs {
             // for all A and B that implement it automatically, so we add no
             // &Quantity / &Quantity impl here.
         }
-        for storage_type in self.storage_type_names() {
-            for t in [Add, Sub, AddAssign, SubAssign] {
-                add_trait!(traits, t, (Storage, Concrete(storage_type.clone())), (Dimensionless, Concrete(storage_type.clone())));
+        for t in [Add, Sub] {
+            add_trait!(traits, t, (Dimensionless, Generic), (Storage, Generic));
+            add_trait!(traits, t, (Dimensionless, Generic), (&Storage, Generic));
+            add_trait!(traits, t, (&Dimensionless, Generic), (Storage, Generic));
+            add_trait!(traits, t, (&Dimensionless, Generic), (&Storage, Generic));
+        }
+        for t in [AddAssign, SubAssign] {
+            add_trait!(traits, t, (Dimensionless, Generic), (Storage, Generic));
+            add_trait!(traits, t, (Dimensionless, Generic), (&Storage, Generic));
+            add_trait!(traits, t, (&mut Dimensionless, Generic), (Storage, Generic));
+            add_trait!(traits, t, (&mut Dimensionless, Generic), (&Storage, Generic));
+        }
+        for ty in self.storage_type_names() {
+            for t in [Add, Sub] {
+                add_trait!(traits, t, (Storage, Concrete(ty.clone())), (Dimensionless, Concrete(ty.clone())));
+                add_trait!(traits, t, (Storage, Concrete(ty.clone())), (&Dimensionless, Concrete(ty.clone())));
+                add_trait!(traits, t, (&Storage, Concrete(ty.clone())), (Dimensionless, Concrete(ty.clone())));
+                add_trait!(traits, t, (&Storage, Concrete(ty.clone())), (&Dimensionless, Concrete(ty.clone())));
+            }
+            for t in [AddAssign, SubAssign] {
+                add_trait!(traits, t, (Storage, Concrete(ty.clone())), (Dimensionless, Concrete(ty.clone())));
+                add_trait!(traits, t, (Storage, Concrete(ty.clone())), (&Dimensionless, Concrete(ty.clone())));
+                // Primitive storage types like f32 dont implement &mut f32: AddAssign<f32>, so
+                // we won't either.
             }
             for t in [Mul, Div] {
-                add_trait!(traits, t, (Quantity, Concrete(storage_type.clone())), (Storage, Concrete(storage_type.clone())));
-                add_trait!(traits, t, (Storage, Concrete(storage_type.clone())), (Quantity, Generic));
+                add_trait!(traits, t, (Quantity, Concrete(ty.clone())), (Storage, Concrete(ty.clone())));
+                add_trait!(traits, t, (Storage, Concrete(ty.clone())), (Quantity, Generic));
             }
             for t in [MulAssign, DivAssign] {
-                add_trait!(traits, t, (Quantity, Generic), (Storage, Concrete(storage_type.clone())));
-                add_trait!(traits, t, (Storage, Concrete(storage_type.clone())), (Quantity, Generic));
+                add_trait!(traits, t, (Quantity, Generic), (Storage, Concrete(ty.clone())));
+                add_trait!(traits, t, (Storage, Concrete(ty.clone())), (Quantity, Generic));
             }
             for t in [PartialEq, PartialOrd] {
-                add_trait!(traits, t, (Dimensionless, Generic), (Storage, Concrete(storage_type.clone())));
-                add_trait!(traits, t, (Storage, Concrete(storage_type.clone())), (Dimensionless, Generic));
+                add_trait!(traits, t, (Dimensionless, Generic), (Storage, Concrete(ty.clone())));
+                add_trait!(traits, t, (Storage, Concrete(ty.clone())), (Dimensionless, Generic));
             }
         }
         traits.into_iter()
