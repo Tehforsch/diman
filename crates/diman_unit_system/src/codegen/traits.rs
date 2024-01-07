@@ -592,6 +592,9 @@ impl Defs {
             }
             for t in [Mul, Div] {
                 add_trait!(traits, t, (Quantity, Concrete(ty.clone())), (Storage, Concrete(ty.clone())));
+                add_trait!(traits, t, (&Quantity, Concrete(ty.clone())), (Storage, Concrete(ty.clone())));
+                add_trait!(traits, t, (Quantity, Concrete(ty.clone())), (&Storage, Concrete(ty.clone())));
+                add_trait!(traits, t, (&Quantity, Concrete(ty.clone())), (&Storage, Concrete(ty.clone())));
                 add_trait!(traits, t, (Storage, Concrete(ty.clone())), (Quantity, Generic));
             }
             for t in [MulAssign, DivAssign] {
