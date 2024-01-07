@@ -100,6 +100,18 @@ enum StorageType {
     Concrete(Type),
 }
 
+impl std::fmt::Debug for StorageType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            StorageType::Generic => write!(f, "Generic"),
+            StorageType::Concrete(ty) => {
+                let s: String = quote! { #ty }.to_string();
+                write!(f, "Concrete({})", s)
+            }
+        }
+    }
+}
+
 #[derive(Default, Debug)]
 enum QuantityType {
     #[default]
@@ -121,10 +133,36 @@ struct Operand {
     storage: StorageType,
     reference: ReferenceType,
 }
+impl Operand {
+    fn ref_sign(&self) -> TokenStream {
+        match self.reference {
+            ReferenceType::Value => quote! {},
+            ReferenceType::Reference => quote! {&'a },
+        }
+    }
+}
 
 struct OutputQuantity {
     storage: TokenStream,
     dimension: TokenStream,
+}
+
+impl OutputQuantity {
+    fn output_type_def(&self, quantity_type: &Ident) -> TokenStream {
+        let OutputQuantity { storage, dimension } = self;
+        let out = quote! { type Output = #quantity_type < #storage, #dimension >; };
+        out
+    }
+}
+
+impl std::fmt::Debug for OutputQuantity {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let Self { storage, dimension } = self;
+        write!(f, "StorageType {}", "{")?;
+        write!(f, "  storage: {}", quote! { #storage }.to_string())?;
+        write!(f, "  dimension: {}", quote! { #dimension }.to_string())?;
+        write!(f, "{}", "}")
+    }
 }
 
 #[derive(Default)]
@@ -145,6 +183,22 @@ impl std::fmt::Debug for NumericTrait {
         write!(f, "  lhs_operand: {:?}\n", self.lhs_operand)?;
         write!(f, "  rhs_operand: {:?}\n", self.rhs_operand)?;
         write!(f, "{}", "}")
+    }
+}
+
+impl std::fmt::Display for NumericTrait {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{:?} ({:?} {:?} {:?}) ({:?} {:?} {:?})",
+            self.name,
+            self.lhs_operand.type_,
+            self.lhs_operand.storage,
+            self.lhs_operand.reference,
+            self.rhs_operand.type_,
+            self.rhs_operand.storage,
+            self.rhs_operand.reference
+        )
     }
 }
 
@@ -280,10 +334,7 @@ impl NumericTrait {
         storage: TokenStream,
         dimension: Option<TokenStream>,
     ) -> TokenStream {
-        let ref_sign = match operand.reference {
-            ReferenceType::Value => quote! {},
-            ReferenceType::Reference => quote! {&'a },
-        };
+        let ref_sign = operand.ref_sign();
         let type_name = match operand.type_ {
             QuantityType::Quantity => quote! { #quantity_type < #storage, #dimension > },
             QuantityType::DimensionlessQuantity => {
@@ -292,6 +343,31 @@ impl NumericTrait {
             QuantityType::Storage => quote! {#storage},
         };
         quote! {#ref_sign #type_name}
+    }
+
+    fn trait_bound_impl(
+        &self,
+        _dimension_type: &Ident,
+        _quantity_type: &Ident,
+        output_type: &Option<OutputQuantity>,
+    ) -> TokenStream {
+        if matches!(self.lhs_operand.storage, StorageType::Generic)
+            || matches!(self.rhs_operand.storage, StorageType::Generic)
+        {
+            let (lhs_storage, rhs_storage) = self.storage_types();
+            let ref_sign = self.rhs_operand.ref_sign();
+            let trait_name = self.name.name();
+            let output_bound = quote! {};
+            // let output_bound = match output_type {
+            //     Some(output) => quote! { Output = #ty },
+            //     None => quote! {},
+            // };
+            quote! {
+                #lhs_storage: #trait_name :: < #ref_sign #rhs_storage, #output_bound >
+            }
+        } else {
+            quote! {}
+        }
     }
 
     fn output_quantity_storage(&self) -> TokenStream {
@@ -973,18 +1049,19 @@ impl Defs {
         let fn_args = quote! { #lhs_arg, rhs: #rhs_arg };
         let impl_generics = numeric_trait.generics_gen(&self.dimension_type);
 
-        let derived_output_type = numeric_trait.output_type(&self.dimension_type);
-        let output_type = derived_output_type.map(|derived_output_type| {
-            let OutputQuantity { storage, dimension } = derived_output_type;
-            let quantity_type = &self.quantity_type;
-            let out = quote! { #quantity_type < #storage, #dimension > };
-            out
-        });
+        let output_type = numeric_trait.output_type(&self.dimension_type);
+        let output_type_def = output_type
+            .as_ref()
+            .map(|output_type| output_type.output_type_def(&self.quantity_type));
 
-        let output_type_def = match output_type {
-            Some(output_type) => quote! { type Output = #output_type; },
-            None => quote! {},
+        let derived_trait_bound_impl =
+            numeric_trait.trait_bound_impl(&self.dimension_type, &self.quantity_type, &output_type);
+
+        let trait_bound_impl = match name {
+            Mul | Div | MulAssign | DivAssign => trait_bound_impl,
+            _ => &derived_trait_bound_impl,
         };
+
         quote! {
             impl #impl_generics #trait_name::<#rhs> for #lhs
             where
