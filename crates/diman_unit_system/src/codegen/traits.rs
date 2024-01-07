@@ -547,6 +547,9 @@ impl Defs {
         }
         for t in [MulAssign, DivAssign] {
             add_trait!(traits, t, (Quantity, Generic), (Dimensionless, Generic));
+            add_trait!(traits, t, (Quantity, Generic), (&Dimensionless, Generic));
+            add_trait!(traits, t, (&mut Quantity, Generic), (Dimensionless, Generic));
+            add_trait!(traits, t, (&mut Quantity, Generic), (&Dimensionless, Generic));
         }
         for storage_type in self.storage_type_names() {
             for t in [Add, Sub, AddAssign, SubAssign] {

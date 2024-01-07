@@ -242,6 +242,30 @@ macro_rules! gen_tests_for_float {
             }
 
             #[test]
+            fn mul_assign_quantity_ref() {
+                let mut x = Force::newtons(2.0);
+                let y = Dimensionless::dimensionless(3.0);
+                x *= &y;
+                assert_is_close(x, Force::newtons(6.0));
+            }
+
+            #[test]
+            fn mul_assign_ref_quantity() {
+                let mut x = &mut Force::newtons(2.0);
+                let y = Dimensionless::dimensionless(3.0);
+                x *= y;
+                assert_is_close(*x, Force::newtons(6.0));
+            }
+
+            #[test]
+            fn mul_assign_ref_ref() {
+                let mut x = &mut Force::newtons(2.0);
+                let y = Dimensionless::dimensionless(3.0);
+                x *= &y;
+                assert_is_close(*x, Force::newtons(6.0));
+            }
+
+            #[test]
             fn mul_quantity_float() {
                 let x = Force::newtons(2.0);
                 let y = 3.0;
@@ -305,6 +329,30 @@ macro_rules! gen_tests_for_float {
                 let y = Dimensionless::dimensionless(4.0);
                 x /= y;
                 assert_is_close(x, Force::newtons(0.5));
+            }
+
+            #[test]
+            fn div_assign_quantity_ref() {
+                let mut x = Force::newtons(2.0);
+                let y = Dimensionless::dimensionless(4.0);
+                x /= &y;
+                assert_is_close(x, Force::newtons(0.5));
+            }
+
+            #[test]
+            fn div_assign_ref_quantity() {
+                let mut x = &mut Force::newtons(2.0);
+                let y = Dimensionless::dimensionless(4.0);
+                x /= y;
+                assert_is_close(*x, Force::newtons(0.5));
+            }
+
+            #[test]
+            fn div_assign_ref_ref() {
+                let mut x = &mut Force::newtons(2.0);
+                let y = Dimensionless::dimensionless(4.0);
+                x /= &y;
+                assert_is_close(*x, Force::newtons(0.5));
             }
 
             #[test]
