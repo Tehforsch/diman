@@ -4,11 +4,8 @@ use syn::Type;
 
 use crate::types::Defs;
 
-// Add the default impl for the convenient update syntax on `NumericTrait`,
-// this will never actually be used
-#[derive(Default, Clone, Copy)]
+#[derive(Clone, Copy)]
 enum Trait {
-    #[default]
     Add,
     Sub,
     Mul,
@@ -93,29 +90,22 @@ impl Trait {
     }
 }
 
-#[derive(Default)]
 enum StorageType {
-    #[default]
     Generic,
     Concrete(Type),
 }
 
-#[derive(Default)]
 enum QuantityType {
-    #[default]
     Quantity,
     Dimensionless,
     Storage,
 }
 
-#[derive(Default)]
 enum ReferenceType {
-    #[default]
     Value,
     Reference,
 }
 
-#[derive(Default)]
 struct Operand {
     type_: QuantityType,
     storage: StorageType,
@@ -198,7 +188,6 @@ impl OutputQuantity {
     }
 }
 
-#[derive(Default)]
 struct NumericTrait {
     name: Trait,
     lhs_operand: Operand,
