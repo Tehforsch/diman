@@ -426,6 +426,27 @@ macro_rules! gen_tests_for_float {
             }
 
             #[test]
+            fn partial_eq_quantity_ref() {
+                let x = Length::meters(50.0);
+                let y = Length::meters(50.0);
+                assert!(x == &y);
+            }
+
+            #[test]
+            fn partial_eq_ref_quantity() {
+                let x = Length::meters(50.0);
+                let y = Length::meters(50.0);
+                assert!(&x == y);
+            }
+
+            #[test]
+            fn partial_eq_ref_ref() {
+                let x = Length::meters(50.0);
+                let y = Length::meters(50.0);
+                assert!(&x == &y);
+            }
+
+            #[test]
             fn partial_eq_quantity_type() {
                 let x = Dimensionless::dimensionless(50.0);
                 let y = 50.0;

@@ -549,6 +549,14 @@ impl Defs {
             add_trait!(traits, t, (&mut Quantity, Generic), (Dimensionless, Generic));
             add_trait!(traits, t, (&mut Quantity, Generic), (&Dimensionless, Generic));
         }
+        for t in [PartialOrd, PartialEq] {
+            add_trait!(traits, t, (Quantity, Generic), (Quantity, Generic));
+            add_trait!(traits, t, (Quantity, Generic), (&Quantity, Generic));
+            add_trait!(traits, t, (&Quantity, Generic), (Quantity, Generic));
+            // Note that core already implements PartialEq(/Ord) for &A <-> &B
+            // for all A and B that implement it automatically, so we add no
+            // &Quantity / &Quantity impl here.
+        }
         for storage_type in self.storage_type_names() {
             for t in [Add, Sub, AddAssign, SubAssign] {
                 add_trait!(traits, t, (Storage, Concrete(storage_type.clone())), (Dimensionless, Concrete(storage_type.clone())));
@@ -562,8 +570,6 @@ impl Defs {
                 add_trait!(traits, t, (Storage, Concrete(storage_type.clone())), (Quantity, Generic));
             }
             for t in [PartialEq, PartialOrd] {
-                // Note that we have no Quantity / Quantity implementation here, because that one
-                // is automatically derived.
                 add_trait!(traits, t, (Dimensionless, Generic), (Storage, Concrete(storage_type.clone())));
                 add_trait!(traits, t, (Storage, Concrete(storage_type.clone())), (Dimensionless, Generic));
             }
