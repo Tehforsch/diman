@@ -525,25 +525,20 @@ impl Defs {
     fn iter_numeric_traits(&self) -> impl Iterator<Item = NumericTrait> + '_ {
         let mut traits = vec![];
         use StorageType::*;
-        for t in [Add, Sub] {
+        for t in [Add, Sub, Mul, Div] {
             add_trait!(traits, t, (Quantity, Generic), (Quantity, Generic));
             add_trait!(traits, t, (Quantity, Generic), (&Quantity, Generic));
             add_trait!(traits, t, (&Quantity, Generic), (Quantity, Generic));
             add_trait!(traits, t, (&Quantity, Generic), (&Quantity, Generic));
-            add_trait!(traits, t, (Dimensionless, Generic), (Storage, Generic));
         }
         for t in [AddAssign, SubAssign] {
             add_trait!(traits, t, (Quantity, Generic), (Quantity, Generic));
             add_trait!(traits, t, (Quantity, Generic), (&Quantity, Generic));
             add_trait!(traits, t, (&mut Quantity, Generic), (Quantity, Generic));
             add_trait!(traits, t, (&mut Quantity, Generic), (&Quantity, Generic));
-            add_trait!(traits, t, (Dimensionless, Generic), (Storage, Generic));
         }
-        for t in [Mul, Div] {
-            add_trait!(traits, t, (Quantity, Generic), (Quantity, Generic));
-            add_trait!(traits, t, (&Quantity, Generic), (Quantity, Generic));
-            add_trait!(traits, t, (Quantity, Generic), (&Quantity, Generic));
-            add_trait!(traits, t, (&Quantity, Generic), (&Quantity, Generic));
+        for t in [Add, Sub, AddAssign, SubAssign] {
+            add_trait!(traits, t, (Dimensionless, Generic), (Storage, Generic));
         }
         for t in [MulAssign, DivAssign] {
             add_trait!(traits, t, (Quantity, Generic), (Dimensionless, Generic));
