@@ -171,9 +171,36 @@ impl OutputQuantity {
 
     fn generic_const_bound(&self, quantity_type: &Ident) -> TokenStream {
         if let OutputQuantityDimension::New(dim) = &self.dimension {
-            // let storage = &self.storage;
-            // TODO(major): Holy shit, this compiles?
-            quote! { #quantity_type < f32, #dim >: }
+            //
+            // TODO(minor): This compiles?
+            // A very weird sequence of events has led me to this
+            // code. For context: this 'trait' bound is needed whenever
+            // generic_const_exprs are used in return types of functions (as
+            // far as I understand it it has to do with making sure the const
+            // expr evaluates without panicking.). Now it seemed to me that
+            // you would write `Quantity< STORAGE, DIM >:` where STORAGE is the
+            // storage type of the return type and DIM is the dimension of the
+            // return type.
+            // This works for almost all of the trait impls, but the one for
+            // concrete storage types (such as f32) run into
+            // error[E0275]: overflow evaluating the requirement `f32: Mul<Quantity<_, _>>`
+            //
+            // It seems that this problem is somewhat similar to this one:
+            // https://github.com/rust-lang/rust/issues/79807
+            // I've reproduced a minimal example of this here:
+            // https://gist.github.com/rust-play/df60936a9a6bc0f7c29b190545fb7d34
+            // Note that this happens on stable rust and doesn't require adt_const_params
+            // or generic_const_exprs.
+            //
+            // Now I realized that the same code had previously compiled with a different
+            // trait bound for the const generic and that made me realize I could literally
+            // put whatever storage type that I wanted here. I am guessing that this trait
+            // bound is really only used to evaluate the const generic expression and
+            // doesn't care about the storage type. Still, this seems very confusing.
+            // However, since this helps with getting the code to compile, I put the
+            // most innocent possible storage type here: `()`.
+            // (Note that _ is not allowed)
+            quote! { #quantity_type < (), #dim >: }
         } else {
             quote! {}
         }
