@@ -396,7 +396,7 @@ impl NumericTrait {
         quote! {#ref_sign #type_name}
     }
 
-    fn trait_bound_impl(
+    fn trait_bounds(
         &self,
         quantity_type: &Ident,
         output_type: &Option<OutputQuantity>,
@@ -1041,14 +1041,12 @@ impl Defs {
             .as_ref()
             .map(|output_type| output_type.output_type_def(&self.quantity_type));
 
-        let derived_trait_bound_impl =
-            numeric_trait.trait_bound_impl(&self.quantity_type, &output_type);
-
-        let trait_bound_impl = derived_trait_bound_impl;
+        let trait_bounds =
+            numeric_trait.trait_bounds(&self.quantity_type, &output_type);
         quote! {
             impl #impl_generics #trait_name::<#rhs> for #lhs
             where
-                #trait_bound_impl
+                #trait_bounds
             {
                 #output_type_def
                 fn #fn_name(#fn_args) -> #fn_return_type {
