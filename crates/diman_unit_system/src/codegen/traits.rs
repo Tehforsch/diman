@@ -458,167 +458,35 @@ impl NumericTrait {
             result
         }
     }
-
-    /// For an impl of Add or Sub between a storage type and a dimensionless quantity
-    fn add_or_sub_type_quantity(_defs: &Defs, name: Trait, storage_type: &Type) -> Self {
-        Self {
-            name,
-            lhs_operand: Operand {
-                type_: QuantityType::Storage,
-                storage: StorageType::Concrete(storage_type.clone()),
-                reference: ReferenceType::Value,
-            },
-            rhs_operand: Operand {
-                type_: QuantityType::Dimensionless,
-                storage: StorageType::Concrete(storage_type.clone()),
-                reference: ReferenceType::Value,
-            },
-        }
-    }
-
-    /// For an impl of AddAssign or SubAssign between a storage type and a dimensionless quantity
-    fn add_or_sub_assign_type_quantity(_defs: &Defs, name: Trait, storage_type: &Type) -> Self {
-        Self {
-            name,
-            lhs_operand: Operand {
-                type_: QuantityType::Storage,
-                storage: StorageType::Concrete(storage_type.clone()),
-                reference: ReferenceType::Value,
-            },
-            rhs_operand: Operand {
-                type_: QuantityType::Dimensionless,
-                storage: StorageType::Concrete(storage_type.clone()),
-                reference: ReferenceType::Value,
-            },
-        }
-    }
-
-    /// For an impl of Mul or Div between a quantity and a concrete storage type
-    fn mul_or_div_quantity_type(_defs: &Defs, name: Trait, storage_type: &Type) -> NumericTrait {
-        Self {
-            name,
-            lhs_operand: Operand {
-                type_: QuantityType::Quantity,
-                storage: StorageType::Generic,
-                reference: ReferenceType::Value,
-            },
-            rhs_operand: Operand {
-                type_: QuantityType::Storage,
-                storage: StorageType::Concrete(storage_type.clone()),
-                reference: ReferenceType::Value,
-            },
-        }
-    }
-
-    /// For an impl of Mul or Div between a concrete storage type and a quantity
-    fn mul_type_quantity(_defs: &Defs, name: Trait, storage_type: &Type) -> NumericTrait {
-        Self {
-            name,
-            lhs_operand: Operand {
-                type_: QuantityType::Storage,
-                storage: StorageType::Concrete(storage_type.clone()),
-                reference: ReferenceType::Value,
-            },
-            rhs_operand: Operand {
-                type_: QuantityType::Quantity,
-                storage: StorageType::Generic,
-                reference: ReferenceType::Value,
-            },
-        }
-    }
-
-    /// For an impl of MulAssign or DivAssign between a quantity and a storage type
-    fn mul_or_div_assign_quantity_type(_defs: &Defs, name: Trait, rhs: &Type) -> Self {
-        Self {
-            name,
-            lhs_operand: Operand {
-                type_: QuantityType::Quantity,
-                storage: StorageType::Generic,
-                reference: ReferenceType::Value,
-            },
-            rhs_operand: Operand {
-                type_: QuantityType::Storage,
-                storage: StorageType::Concrete(rhs.clone()),
-                reference: ReferenceType::Value,
-            },
-        }
-    }
-
-    /// For an impl of MulAssign or DivAssign between a quantity and a storage type
-    fn mul_or_div_assign_type_quantity(_defs: &Defs, name: Trait, lhs: &Type) -> Self {
-        Self {
-            name,
-            lhs_operand: Operand {
-                type_: QuantityType::Storage,
-                storage: StorageType::Concrete(lhs.clone()),
-                reference: ReferenceType::Value,
-            },
-            rhs_operand: Operand {
-                type_: QuantityType::Quantity,
-                storage: StorageType::Generic,
-                reference: ReferenceType::Value,
-            },
-        }
-    }
-
-    fn cmp_trait_quantity_type(_defs: &Defs, rhs: &Type, name: Trait) -> Self {
-        Self {
-            name,
-            lhs_operand: Operand {
-                type_: QuantityType::Dimensionless,
-                storage: StorageType::Generic,
-                reference: ReferenceType::Value,
-            },
-            rhs_operand: Operand {
-                type_: QuantityType::Storage,
-                storage: StorageType::Concrete(rhs.clone()),
-                reference: ReferenceType::Value,
-            },
-        }
-    }
-
-    fn cmp_trait_type_quantity(_defs: &Defs, lhs: &Type, name: Trait) -> Self {
-        Self {
-            name,
-            lhs_operand: Operand {
-                type_: QuantityType::Storage,
-                storage: StorageType::Concrete(lhs.clone()),
-                reference: ReferenceType::Value,
-            },
-            rhs_operand: Operand {
-                type_: QuantityType::Dimensionless,
-                storage: StorageType::Generic,
-                reference: ReferenceType::Value,
-            },
-        }
-    }
 }
 
 macro_rules! def_operand {
-    (& $quantity: ident < $storage: ident >) => {
+    (& $quantity: ident, $storage: expr) => {
         Operand {
             reference: ReferenceType::Reference,
             type_: QuantityType::$quantity,
-            storage: StorageType::$storage,
+            storage: $storage,
         }
     };
-    ($quantity: ident < $storage: ident >) => {
+    ($quantity: ident, $storage: expr) => {
         Operand {
             reference: ReferenceType::Value,
             type_: QuantityType::$quantity,
-            storage: StorageType::$storage,
+            storage: $storage,
         }
     };
 }
 
-macro_rules! def_trait {
-    ($name: path,
+macro_rules! add_trait {
+    (
+        $traits: ident,
+        $name: path,
      ($($lhs:tt)*), ($($rhs:tt)*)) => {
-        NumericTrait {
+        $traits.push(NumericTrait {
             name: $name,
             lhs_operand: def_operand!($($lhs)*),
             rhs_operand: def_operand!($($rhs)*),
-        }
+        })
     }
 }
 
@@ -638,77 +506,71 @@ impl Defs {
 
     fn iter_numeric_traits(&self) -> impl Iterator<Item = NumericTrait> + '_ {
         let mut traits = vec![];
+        use StorageType::*;
         for t in [Add, AddAssign, Sub, SubAssign] {
-            traits.push(def_trait!(t, (Quantity<Generic>), (Quantity<Generic>)));
-            traits.push(def_trait!(t, (Quantity<Generic>), (&Quantity<Generic>)));
-            traits.push(def_trait!(
-                t,
-                (Dimensionless<Generic>),
-                (Storage<Generic>)
-            ));
+            add_trait!(traits, t, (Quantity, Generic), (Quantity, Generic));
+            add_trait!(traits, t, (Quantity, Generic), (&Quantity, Generic));
+            add_trait!(traits, t, (Dimensionless, Generic), (Storage, Generic));
         }
         for t in [Mul, Div] {
-            traits.push(def_trait!(t, (Quantity<Generic>), (Quantity<Generic>)));
-            // traits.push(def_trait!(t, (Quantity<Generic>), (&Quantity<Generic>)));
+            add_trait!(traits, t, (Quantity, Generic), (Quantity, Generic));
         }
         for t in [MulAssign, DivAssign] {
-            traits.push(def_trait!(
-                t,
-                (Quantity<Generic>),
-                (Dimensionless<Generic>)
-            ));
+            add_trait!(traits, t, (Quantity, Generic), (Dimensionless, Generic));
         }
-        traits
-            .into_iter()
-            .chain(
-                self.storage_type_names()
-                    .into_iter()
-                    .flat_map(move |storage_type| {
-                        [
-                            NumericTrait::mul_or_div_quantity_type(self, Mul, &storage_type),
-                            NumericTrait::mul_or_div_quantity_type(self, Div, &storage_type),
-                            NumericTrait::mul_or_div_assign_quantity_type(
-                                self,
-                                MulAssign,
-                                &storage_type,
-                            ),
-                            NumericTrait::mul_or_div_assign_quantity_type(
-                                self,
-                                DivAssign,
-                                &storage_type,
-                            ),
-                            NumericTrait::mul_or_div_assign_type_quantity(
-                                self,
-                                MulAssign,
-                                &storage_type,
-                            ),
-                            NumericTrait::mul_or_div_assign_type_quantity(
-                                self,
-                                DivAssign,
-                                &storage_type,
-                            ),
-                            NumericTrait::mul_type_quantity(self, Mul, &storage_type),
-                            NumericTrait::mul_type_quantity(self, Div, &storage_type),
-                            NumericTrait::add_or_sub_type_quantity(self, Add, &storage_type),
-                            NumericTrait::add_or_sub_type_quantity(self, Sub, &storage_type),
-                            NumericTrait::add_or_sub_assign_type_quantity(
-                                self,
-                                AddAssign,
-                                &storage_type,
-                            ),
-                            NumericTrait::add_or_sub_assign_type_quantity(
-                                self,
-                                SubAssign,
-                                &storage_type,
-                            ),
-                            NumericTrait::cmp_trait_quantity_type(self, &storage_type, PartialEq),
-                            NumericTrait::cmp_trait_type_quantity(self, &storage_type, PartialEq),
-                            NumericTrait::cmp_trait_quantity_type(self, &storage_type, PartialOrd),
-                            NumericTrait::cmp_trait_type_quantity(self, &storage_type, PartialOrd),
-                        ]
-                        .into_iter()
-                    }),
-            )
+        for storage_type in self.storage_type_names() {
+            for t in [Add, Sub, AddAssign, SubAssign] {
+                add_trait!(
+                    traits,
+                    t,
+                    (Storage, Concrete(storage_type.clone())),
+                    (Dimensionless, Concrete(storage_type.clone()))
+                );
+            }
+            for t in [Mul, Div] {
+                add_trait!(
+                    traits,
+                    t,
+                    (Quantity, Concrete(storage_type.clone())),
+                    (Storage, Concrete(storage_type.clone()))
+                );
+                add_trait!(
+                    traits,
+                    t,
+                    (Storage, Concrete(storage_type.clone())),
+                    (Quantity, Generic)
+                );
+            }
+            for t in [MulAssign, DivAssign] {
+                add_trait!(
+                    traits,
+                    t,
+                    (Quantity, Generic),
+                    (Storage, Concrete(storage_type.clone()))
+                );
+                add_trait!(
+                    traits,
+                    t,
+                    (Storage, Concrete(storage_type.clone())),
+                    (Quantity, Generic)
+                );
+            }
+            for t in [PartialEq, PartialOrd] {
+                add_trait!(
+                    traits,
+                    t,
+                    (Dimensionless, Generic),
+                    (Storage, Concrete(storage_type.clone()))
+                );
+                add_trait!(
+                    traits,
+                    t,
+                    (Storage, Concrete(storage_type.clone())),
+                    (Dimensionless, Generic)
+                );
+            }
+        }
+        traits.into_iter()
     }
 
     pub fn numeric_traits(&self) -> TokenStream {
