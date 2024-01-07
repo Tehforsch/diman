@@ -195,6 +195,11 @@ struct NumericTrait {
 }
 
 impl NumericTrait {
+    /// Whether the trait allows for different dimensions on the
+    /// left-hand and right-hand sides. Only Mul and Div allow this,
+    /// every other trait requires the same dimension on both sides
+    /// (or, in the case of MulAssign/DivAssign, a dimensionless
+    /// expression on the rhs)
     fn different_dimensions_allowed(&self) -> bool {
         use Trait::*;
         match self.name {
@@ -205,6 +210,10 @@ impl NumericTrait {
         }
     }
 
+    /// Whether the trait allows different generic storage types on the left-hand and
+    /// right-hand sides as opposed to the same generic storage types on both sides.
+    /// This is finicky because relaxing the requirements too much will result in duplicate
+    /// trait impls.
     fn different_storage_types_allowed(&self) -> bool {
         // This restriction could be restricted in principle, in practice however,
         // if I am too lose here, I run into duplicate trait impls
@@ -217,6 +226,10 @@ impl NumericTrait {
         )
     }
 
+    /// The two names of the generic dimension types on LHS and RHS
+    /// respectively.  Each return value is an Option because if the
+    /// operand on a side is either a storage type or a dimensionless
+    /// quantity, it will not have a named dimension.
     fn dimension_types(&self) -> (Option<TokenStream>, Option<TokenStream>) {
         use QuantityType::*;
         match (&self.lhs.type_, &self.rhs.type_) {
@@ -233,6 +246,9 @@ impl NumericTrait {
         }
     }
 
+    /// The two names of the storage types on LHS and RHS respectively.
+    /// Each type is either a concrete storage type or a generic storage type.
+    /// The two generic types can be different if the trait allows it.
     fn storage_types(&self) -> (TokenStream, TokenStream) {
         use StorageType::*;
         let different_storage_types_allowed = self.different_storage_types_allowed();
@@ -286,6 +302,9 @@ impl NumericTrait {
         types
     }
 
+    /// Generates all the generics, i.e. the <...> in `impl<...> Trait for`.
+    /// Adds the appropriate amount of required lifetimes, const generics and
+    /// generic storage types for the impl.
     fn generics_gen(&self, dimension_type: &Ident) -> TokenStream {
         let types = self.generics(dimension_type);
         quote! {
@@ -293,16 +312,18 @@ impl NumericTrait {
         }
     }
 
-    fn rhs_type(&self, quantity_type: &Ident, dimension_type: &Ident) -> TokenStream {
-        let storage = self.storage_types().1;
-        let dimension = self.dimension_types().1;
-        self.type_for_operand(&self.rhs, quantity_type, dimension_type, storage, dimension)
-    }
-
+    /// Returns the expression for the left-hand side type
     fn lhs_type(&self, quantity_type: &Ident, dimension_type: &Ident) -> TokenStream {
         let storage = self.storage_types().0;
         let dimension = self.dimension_types().0;
         self.type_for_operand(&self.lhs, quantity_type, dimension_type, storage, dimension)
+    }
+
+    /// Returns the expression for the right-hand side type
+    fn rhs_type(&self, quantity_type: &Ident, dimension_type: &Ident) -> TokenStream {
+        let storage = self.storage_types().1;
+        let dimension = self.dimension_types().1;
+        self.type_for_operand(&self.rhs, quantity_type, dimension_type, storage, dimension)
     }
 
     fn type_for_operand(
@@ -324,6 +345,10 @@ impl NumericTrait {
         quote! {#ref_sign #type_name}
     }
 
+    /// Generates the trait bounds for a concrete implementation.
+    /// This consists of a trait bound for the underlying storage types
+    /// and, if necessary, a bound on the const generic expression for
+    /// mul/div-type traits, where a new dimension is created.
     fn trait_bounds(
         &self,
         quantity_type: &Ident,
@@ -389,6 +414,9 @@ impl NumericTrait {
         }
     }
 
+    /// A representation of the output type of the trait function.
+    /// If an output type exists (for Add, Sub, Mul and Div), it is
+    /// always a quantity and is defined by its storage type and its dimension.
     fn output_type(&self, dimension_type: &Ident) -> Option<OutputQuantity> {
         if !self.name.has_output_type() {
             None
@@ -400,6 +428,7 @@ impl NumericTrait {
         }
     }
 
+    /// Whether the trait function takes its argument by reference.
     fn rhs_takes_ref(&self) -> bool {
         if matches!(self.name, PartialOrd | PartialEq) {
             true
@@ -408,6 +437,10 @@ impl NumericTrait {
         }
     }
 
+    /// The returned expression from the trait function.
+    /// If an output type exists, the returned object is
+    /// a quantity, so we wrap the underlying storage-type-level
+    /// expression in Quantity(...).
     fn fn_return_expr(
         &self,
         quantity_type: &Ident,
