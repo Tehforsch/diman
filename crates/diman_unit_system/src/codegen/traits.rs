@@ -123,11 +123,11 @@ struct Operand {
     reference: ReferenceType,
 }
 impl Operand {
-    fn ref_sign(&self) -> TokenStream {
+    fn ref_sign(&self, span: proc_macro2::Span) -> TokenStream {
         match self.reference {
-            ReferenceType::Value => quote! {},
-            ReferenceType::Reference => quote! {&'a },
-            ReferenceType::MutableReference => quote! {&'a mut },
+            ReferenceType::Value => quote_spanned! {span=>},
+            ReferenceType::Reference => quote_spanned! {span=>&'a },
+            ReferenceType::MutableReference => quote_spanned! {span=>&'a mut },
         }
     }
 }
@@ -346,15 +346,18 @@ impl NumericTrait {
         storage: TokenStream,
         dimension: Option<TokenStream>,
     ) -> TokenStream {
-        let ref_sign = operand.ref_sign();
+        let span = dimension_type.span();
+        let ref_sign = operand.ref_sign(span);
         let type_name = match operand.type_ {
-            QuantityType::Quantity => quote! { #quantity_type < #storage, #dimension > },
-            QuantityType::Dimensionless => {
-                quote! {#quantity_type < #storage, { #dimension_type :: none() } >}
+            QuantityType::Quantity => {
+                quote_spanned! {span=> #quantity_type < #storage, #dimension > }
             }
-            QuantityType::Storage => quote! {#storage},
+            QuantityType::Dimensionless => {
+                quote_spanned! {span=>#quantity_type < #storage, { #dimension_type :: none() } >}
+            }
+            QuantityType::Storage => quote_spanned! {span=>#storage},
         };
-        quote! {#ref_sign #type_name}
+        quote_spanned! {span=>#ref_sign #type_name}
     }
 
     /// Generates the trait bounds for a concrete implementation.
