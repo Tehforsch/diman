@@ -497,6 +497,11 @@ impl NumericTrait {
                 quote! {}
             }
         };
+        let lhs = if self.lhs.reference.is_ref() && self.lhs.is_storage() {
+            quote! {(*#lhs)}
+        } else {
+            lhs
+        };
         let result = quote! { #lhs.#fn_name(#deref_or_ref #rhs) };
         if output_type.is_some() {
             quote! { #quantity_type ( #result ) }
@@ -600,14 +605,14 @@ impl Defs {
                 // we won't either.
             }
             for t in [Mul, Div] {
-                add_trait!(traits, t, (Quantity, Concrete(ty.clone())), (Storage, Concrete(ty.clone())));
-                add_trait!(traits, t, (&Quantity, Concrete(ty.clone())), (Storage, Concrete(ty.clone())));
-                add_trait!(traits, t, (Quantity, Concrete(ty.clone())), (&Storage, Concrete(ty.clone())));
-                add_trait!(traits, t, (&Quantity, Concrete(ty.clone())), (&Storage, Concrete(ty.clone())));
-                add_trait!(traits, t, (Storage, Concrete(ty.clone())), (Quantity, Concrete(ty.clone())));
-                add_trait!(traits, t, (&Storage, Concrete(ty.clone())), (Quantity, Concrete(ty.clone())));
-                add_trait!(traits, t, (Storage, Concrete(ty.clone())), (&Quantity, Concrete(ty.clone())));
-                add_trait!(traits, t, (&Storage, Concrete(ty.clone())), (&Quantity, Concrete(ty.clone())));
+                add_trait!(traits, t, (Quantity, Generic), (Storage, Concrete(ty.clone())));
+                add_trait!(traits, t, (&Quantity, Generic), (Storage, Concrete(ty.clone())));
+                add_trait!(traits, t, (Quantity, Generic), (&Storage, Concrete(ty.clone())));
+                add_trait!(traits, t, (&Quantity, Generic), (&Storage, Concrete(ty.clone())));
+                add_trait!(traits, t, (Storage, Concrete(ty.clone())), (Quantity, Generic));
+                add_trait!(traits, t, (&Storage, Concrete(ty.clone())), (Quantity, Generic));
+                add_trait!(traits, t, (Storage, Concrete(ty.clone())), (&Quantity, Generic));
+                add_trait!(traits, t, (&Storage, Concrete(ty.clone())), (&Quantity, Generic));
             }
             for t in [MulAssign, DivAssign] {
                 add_trait!(traits, t, (Quantity, Concrete(ty.clone())), (Storage, Concrete(ty.clone())));
