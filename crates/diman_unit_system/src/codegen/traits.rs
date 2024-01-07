@@ -528,6 +528,8 @@ impl Defs {
                 add_trait!(traits, t, (Storage, Concrete(storage_type.clone())), (Quantity, Generic));
             }
             for t in [PartialEq, PartialOrd] {
+                // Note that we have no Quantity / Quantity implementation here, because that one
+                // is automatically derived.
                 add_trait!(traits, t, (Dimensionless, Generic), (Storage, Concrete(storage_type.clone())));
                 add_trait!(traits, t, (Storage, Concrete(storage_type.clone())), (Dimensionless, Generic));
             }
