@@ -541,6 +541,9 @@ impl Defs {
         }
         for t in [Mul, Div] {
             add_trait!(traits, t, (Quantity, Generic), (Quantity, Generic));
+            add_trait!(traits, t, (&Quantity, Generic), (Quantity, Generic));
+            add_trait!(traits, t, (Quantity, Generic), (&Quantity, Generic));
+            add_trait!(traits, t, (&Quantity, Generic), (&Quantity, Generic));
         }
         for t in [MulAssign, DivAssign] {
             add_trait!(traits, t, (Quantity, Generic), (Dimensionless, Generic));

@@ -213,6 +213,27 @@ macro_rules! gen_tests_for_float {
             }
 
             #[test]
+            fn mul_quantity_ref() {
+                let x = Force::newtons(2.0);
+                let y = Length::meters(3.0);
+                assert_is_close(x * &y, Energy::joules(6.0));
+            }
+
+            #[test]
+            fn mul_ref_quantity() {
+                let x = Force::newtons(2.0);
+                let y = Length::meters(3.0);
+                assert_is_close(&x * y, Energy::joules(6.0));
+            }
+
+            #[test]
+            fn mul_ref_ref() {
+                let x = Force::newtons(2.0);
+                let y = Length::meters(3.0);
+                assert_is_close(&x * &y, Energy::joules(6.0));
+            }
+
+            #[test]
             fn mul_assign_quantity_quantity() {
                 let mut x = Force::newtons(2.0);
                 let y = Dimensionless::dimensionless(3.0);
@@ -255,6 +276,27 @@ macro_rules! gen_tests_for_float {
                 let x = Length::meters(6.0);
                 let y = Time::seconds(2.0);
                 assert_is_close(x / y, Velocity::meters_per_second(3.0));
+            }
+
+            #[test]
+            fn div_quantity_ref() {
+                let x = Length::meters(6.0);
+                let y = Time::seconds(2.0);
+                assert_is_close(x / &y, Velocity::meters_per_second(3.0));
+            }
+
+            #[test]
+            fn div_ref_quantity() {
+                let x = Length::meters(6.0);
+                let y = Time::seconds(2.0);
+                assert_is_close(&x / y, Velocity::meters_per_second(3.0));
+            }
+
+            #[test]
+            fn div_ref_ref() {
+                let x = Length::meters(6.0);
+                let y = Time::seconds(2.0);
+                assert_is_close(&x / &y, Velocity::meters_per_second(3.0));
             }
 
             #[test]
