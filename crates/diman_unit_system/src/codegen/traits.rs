@@ -104,7 +104,7 @@ enum StorageType {
 enum QuantityType {
     #[default]
     Quantity,
-    DimensionlessQuantity,
+    Dimensionless,
     Storage,
 }
 
@@ -222,10 +222,10 @@ impl NumericTrait {
         // and very hard to reproduce. See https://github.com/Tehforsch/diman/issues/2
         matches!(
             self.lhs_operand.type_,
-            QuantityType::Quantity | QuantityType::DimensionlessQuantity
+            QuantityType::Quantity | QuantityType::Dimensionless
         ) && matches!(
             self.rhs_operand.type_,
-            QuantityType::Quantity | QuantityType::DimensionlessQuantity
+            QuantityType::Quantity | QuantityType::Dimensionless
         )
     }
 
@@ -340,7 +340,7 @@ impl NumericTrait {
         let ref_sign = operand.ref_sign();
         let type_name = match operand.type_ {
             QuantityType::Quantity => quote! { #quantity_type < #storage, #dimension > },
-            QuantityType::DimensionlessQuantity => {
+            QuantityType::Dimensionless => {
                 quote! {#quantity_type < #storage, { #dimension_type :: none() } >}
             }
             QuantityType::Storage => quote! {#storage},
@@ -406,7 +406,7 @@ impl NumericTrait {
                 Div => New(quote_spanned! {span=> { D.dimension_inv() } }),
                 _ => unreachable!(),
             },
-            (DimensionlessQuantity, Storage) | (Storage, DimensionlessQuantity) => {
+            (Dimensionless, Storage) | (Storage, Dimensionless) => {
                 New(quote_spanned! {span=> { #dimension_type :: none() } })
             }
             _ => unreachable!(),
@@ -438,11 +438,11 @@ impl NumericTrait {
         output_type: &Option<OutputQuantity>,
     ) -> TokenStream {
         let lhs = match self.lhs_operand.type_ {
-            QuantityType::Quantity | QuantityType::DimensionlessQuantity => quote! { self.0 },
+            QuantityType::Quantity | QuantityType::Dimensionless => quote! { self.0 },
             QuantityType::Storage => quote! { self },
         };
         let rhs = match self.rhs_operand.type_ {
-            QuantityType::Quantity | QuantityType::DimensionlessQuantity => quote! { rhs.0 },
+            QuantityType::Quantity | QuantityType::Dimensionless => quote! { rhs.0 },
             QuantityType::Storage => quote! { rhs },
         };
         let fn_name = self.name.fn_name();
@@ -469,7 +469,7 @@ impl NumericTrait {
                 reference: ReferenceType::Value,
             },
             rhs_operand: Operand {
-                type_: QuantityType::DimensionlessQuantity,
+                type_: QuantityType::Dimensionless,
                 storage: StorageType::Concrete(storage_type.clone()),
                 reference: ReferenceType::Value,
             },
@@ -486,7 +486,7 @@ impl NumericTrait {
                 reference: ReferenceType::Value,
             },
             rhs_operand: Operand {
-                type_: QuantityType::DimensionlessQuantity,
+                type_: QuantityType::Dimensionless,
                 storage: StorageType::Concrete(storage_type.clone()),
                 reference: ReferenceType::Value,
             },
@@ -565,7 +565,7 @@ impl NumericTrait {
         Self {
             name,
             lhs_operand: Operand {
-                type_: QuantityType::DimensionlessQuantity,
+                type_: QuantityType::Dimensionless,
                 storage: StorageType::Generic,
                 reference: ReferenceType::Value,
             },
@@ -586,7 +586,7 @@ impl NumericTrait {
                 reference: ReferenceType::Value,
             },
             rhs_operand: Operand {
-                type_: QuantityType::DimensionlessQuantity,
+                type_: QuantityType::Dimensionless,
                 storage: StorageType::Generic,
                 reference: ReferenceType::Value,
             },
@@ -643,7 +643,7 @@ impl Defs {
             traits.push(def_trait!(t, (Quantity<Generic>), (&Quantity<Generic>)));
             traits.push(def_trait!(
                 t,
-                (DimensionlessQuantity<Generic>),
+                (Dimensionless<Generic>),
                 (Storage<Generic>)
             ));
         }
@@ -655,7 +655,7 @@ impl Defs {
             traits.push(def_trait!(
                 t,
                 (Quantity<Generic>),
-                (DimensionlessQuantity<Generic>)
+                (Dimensionless<Generic>)
             ));
         }
         traits
