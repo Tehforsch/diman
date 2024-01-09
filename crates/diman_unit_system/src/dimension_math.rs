@@ -28,7 +28,7 @@ impl BaseDimensions {
     }
 }
 
-impl std::ops::Mul for BaseDimensions {
+impl core::ops::Mul for BaseDimensions {
     type Output = Self;
 
     #[allow(clippy::suspicious_arithmetic_impl)]
@@ -55,7 +55,7 @@ impl BaseDimensions {
     }
 }
 
-impl std::ops::Div for BaseDimensions {
+impl core::ops::Div for BaseDimensions {
     type Output = Self;
 
     #[allow(clippy::suspicious_arithmetic_impl)]
@@ -98,7 +98,7 @@ impl DimensionsAndFactor {
     }
 }
 
-impl std::ops::Mul for DimensionsAndFactor {
+impl core::ops::Mul for DimensionsAndFactor {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
@@ -109,7 +109,7 @@ impl std::ops::Mul for DimensionsAndFactor {
     }
 }
 
-impl std::ops::Div for DimensionsAndFactor {
+impl core::ops::Div for DimensionsAndFactor {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self::Output {

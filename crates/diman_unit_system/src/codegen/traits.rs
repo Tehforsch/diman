@@ -23,16 +23,16 @@ use Trait::*;
 impl Trait {
     fn name(&self) -> TokenStream {
         match self {
-            Add => quote! { std::ops::Add },
-            Sub => quote! { std::ops::Sub },
-            Mul => quote! { std::ops::Mul },
-            Div => quote! { std::ops::Div },
-            AddAssign => quote! { std::ops::AddAssign },
-            SubAssign => quote! { std::ops::SubAssign },
-            MulAssign => quote! { std::ops::MulAssign },
-            DivAssign => quote! { std::ops::DivAssign },
-            PartialEq => quote! { std::cmp::PartialEq },
-            PartialOrd => quote! { std::cmp::PartialOrd },
+            Add => quote! { core::ops::Add },
+            Sub => quote! { core::ops::Sub },
+            Mul => quote! { core::ops::Mul },
+            Div => quote! { core::ops::Div },
+            AddAssign => quote! { core::ops::AddAssign },
+            SubAssign => quote! { core::ops::SubAssign },
+            MulAssign => quote! { core::ops::MulAssign },
+            DivAssign => quote! { core::ops::DivAssign },
+            PartialEq => quote! { core::cmp::PartialEq },
+            PartialOrd => quote! { core::cmp::PartialOrd },
         }
     }
 
@@ -58,7 +58,7 @@ impl Trait {
                 quote! { () }
             }
             PartialEq => quote! { bool },
-            PartialOrd => quote! { Option<std::cmp::Ordering> },
+            PartialOrd => quote! { Option<core::cmp::Ordering> },
         }
     }
 
@@ -677,7 +677,7 @@ impl Defs {
             ..
         } = self;
         quote! {
-            impl<const D: #dimension_type, S: Default + std::ops::AddAssign<S>> std::iter::Sum
+            impl<const D: #dimension_type, S: Default + core::ops::AddAssign<S>> core::iter::Sum
                 for #quantity_type<S, D>
             {
                 fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
@@ -699,7 +699,7 @@ impl Defs {
             ..
         } = self;
         quote! {
-            impl<const D: #dimension_type, S: std::ops::Neg<Output=S>> std::ops::Neg for #quantity_type<S, D> {
+            impl<const D: #dimension_type, S: core::ops::Neg<Output=S>> core::ops::Neg for #quantity_type<S, D> {
                 type Output = Self;
 
                 fn neg(self) -> Self::Output {

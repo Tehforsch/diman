@@ -42,8 +42,8 @@ mod reexport {
         }
     }
 
-    impl std::fmt::Display for BaseDimensionExponent {
-        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    impl core::fmt::Display for BaseDimensionExponent {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
             if self.denom == 1 {
                 write!(f, "{}", self.num)
             } else {
@@ -52,7 +52,7 @@ mod reexport {
         }
     }
 
-    impl std::ops::Mul for BaseDimensionExponent {
+    impl core::ops::Mul for BaseDimensionExponent {
         type Output = Self;
 
         fn mul(self, rhs: Self) -> Self::Output {
@@ -60,7 +60,7 @@ mod reexport {
         }
     }
 
-    impl std::ops::AddAssign for BaseDimensionExponent {
+    impl core::ops::AddAssign for BaseDimensionExponent {
         fn add_assign(&mut self, rhs: Self) {
             let num = self.num * rhs.denom + rhs.num * self.denom;
             let denom = self.denom * rhs.denom;
@@ -68,7 +68,7 @@ mod reexport {
         }
     }
 
-    impl std::ops::Neg for BaseDimensionExponent {
+    impl core::ops::Neg for BaseDimensionExponent {
         type Output = Self;
 
         fn neg(self) -> Self::Output {
@@ -99,13 +99,13 @@ mod reexport {
         }
     }
 
-    impl std::fmt::Display for BaseDimensionExponent {
-        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    impl core::fmt::Display for BaseDimensionExponent {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
             write!(f, "{}", self.0)
         }
     }
 
-    impl std::ops::Mul for BaseDimensionExponent {
+    impl core::ops::Mul for BaseDimensionExponent {
         type Output = Self;
 
         fn mul(self, rhs: Self) -> Self::Output {
@@ -113,13 +113,13 @@ mod reexport {
         }
     }
 
-    impl std::ops::AddAssign for BaseDimensionExponent {
+    impl core::ops::AddAssign for BaseDimensionExponent {
         fn add_assign(&mut self, rhs: Self) {
             self.0 += rhs.0
         }
     }
 
-    impl std::ops::Neg for BaseDimensionExponent {
+    impl core::ops::Neg for BaseDimensionExponent {
         type Output = Self;
 
         fn neg(self) -> Self::Output {

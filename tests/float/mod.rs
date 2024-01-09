@@ -493,6 +493,7 @@ macro_rules! gen_tests_for_float {
                 assert_is_close_float(x, 3.0);
             }
 
+            #[cfg(any(feature = "std", feature = "num-traits-libm"))]
             #[test]
             fn sqrt_float_quantity() {
                 let x = Length::meters(6.0).powi::<2>();
@@ -500,6 +501,7 @@ macro_rules! gen_tests_for_float {
                 assert_is_close((x / y).sqrt(), Velocity::meters_per_second(3.0));
             }
 
+            #[cfg(any(feature = "std", feature = "num-traits-libm"))]
             #[test]
             fn cbrt_float_quantity() {
                 let x = Length::meters(4.0).powi::<3>();
@@ -514,6 +516,7 @@ macro_rules! gen_tests_for_float {
                 assert_is_close(SOLAR_MASS_AWKWARD, Mass::kilograms(1.988477e30));
             }
 
+            #[cfg(any(feature = "std", feature = "num-traits-libm"))]
             #[test]
             fn log2() {
                 let x = Dimensionless::dimensionless(128.0);

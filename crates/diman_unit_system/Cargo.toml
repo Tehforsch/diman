@@ -23,6 +23,8 @@ rand = []
 hdf5 = []
 gen-vec-names = [] 
 rational-dimensions = []
+num-traits-libm = []
+std = []
 
 [dependencies]
 syn = { version = "2.0", features = ["full", "extra-traits"] }

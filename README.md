@@ -45,6 +45,8 @@ If you cannot use unstable Rust for your project or require a stable library, co
 * Systems of dimensions and units can be user defined via the `unit_system!` macro. This gives the user complete freedom over the choice of dimensions and makes them part of the user's library, so that arbitrary new methods can be implemented on them.
 * The `rational-dimensions` features allows the usage of quantities and units with rational exponents.
 * `f32` and `f64` float storage types (behind the `f32` and `f64` feature gate respectively).
+* The `std` feature is enabled by default. If disabled, Diman will be a `no_std` crate, thus suitable for use on embedded devices such as GPU device kernels.
+* The `num-traits-libm` feature uses [libm](https://crates.io/crates/libm) to provide math functions in `no_std` environments. While one can use libm in `std`, the libm implementations are generally slower so this is unlikely to be desirable.
 * Vector storage types via [`glam`](https://crates.io/crates/glam/) (behind the `glam-vec2`, `glam-vec3`, `glam-dvec2` and `glam-dvec3` features).
 * Serialization and Deserialization via [`serde`](https://crates.io/crates/serde) (behind the `serde` feature gate, see the official documentation for more info).
 * HDF5 support using [`hdf5-rs`](https://crates.io/crates/hdf5-rs/) (behind the `hdf5` feature gate).

@@ -21,7 +21,7 @@ pub type Product<Q1> = <Q1 as QProduct>::Output;
 /// let x: Quotient<Length, Time> = Length::meters(10.0) / Time::seconds(2.0);
 /// ```
 pub type Quotient<Q1, Q2> =
-    <<Q1 as QProduct>::Output as std::ops::Div<<Q2 as QProduct>::Output>>::Output;
+    <<Q1 as QProduct>::Output as core::ops::Div<<Q2 as QProduct>::Output>>::Output;
 
 macro_rules! impl_qproduct {
     ($f: ident, $($fs: ident),+) => {
@@ -29,10 +29,10 @@ macro_rules! impl_qproduct {
         where
             ($($fs),+): QProduct,
             $f: QProduct,
-            <($($fs),+) as QProduct>::Output: std::ops::Mul<<$f as QProduct>::Output>,
+            <($($fs),+) as QProduct>::Output: core::ops::Mul<<$f as QProduct>::Output>,
         {
             type Output =
-                <<($($fs),+) as QProduct>::Output as std::ops::Mul<<$f as QProduct>::Output>>::Output;
+                <<($($fs),+) as QProduct>::Output as core::ops::Mul<<$f as QProduct>::Output>>::Output;
         }
 
     }
@@ -42,9 +42,9 @@ impl<Q1, Q2> QProduct for (Q1, Q2)
 where
     Q1: QProduct,
     Q2: QProduct,
-    <Q1 as QProduct>::Output: std::ops::Mul<<Q2 as QProduct>::Output>,
+    <Q1 as QProduct>::Output: core::ops::Mul<<Q2 as QProduct>::Output>,
 {
-    type Output = <<Q1 as QProduct>::Output as std::ops::Mul<<Q2 as QProduct>::Output>>::Output;
+    type Output = <<Q1 as QProduct>::Output as core::ops::Mul<<Q2 as QProduct>::Output>>::Output;
 }
 
 impl_qproduct!(Q1, Q2, Q3);

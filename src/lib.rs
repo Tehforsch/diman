@@ -1,9 +1,18 @@
+#![cfg_attr(not(feature = "std"), no_std)]
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs, adt_const_params)]
 #![doc = include_str!("../README.md")]
 
 mod debug_storage_type;
 mod type_aliases;
+
+#[cfg(all(
+    feature = "rational-dimensions",
+    not(any(feature = "std", feature = "num-traits-libm"))
+))]
+compile_error!(
+    "The \"rational-dimensions\" feature requires either \"std\" or \"num-traits-libm\""
+);
 
 #[cfg(feature = "si")]
 /// Defines the dimensions and units for the SI system.
