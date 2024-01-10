@@ -20,13 +20,14 @@ use proc_macro2::TokenStream;
 
 use crate::types::Defs;
 
-pub fn join<const D: usize>(streams: [TokenStream; D]) -> TokenStream {
+fn join<const D: usize>(streams: [TokenStream; D]) -> TokenStream {
     streams.into_iter().collect()
 }
 
 impl Defs {
     pub fn code_gen(&self) -> TokenStream {
         join([
+            self.dimension_impl(),
             self.type_definition(),
             self.type_functions(),
             self.float_definitions(),

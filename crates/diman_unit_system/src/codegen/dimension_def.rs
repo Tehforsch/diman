@@ -1,9 +1,10 @@
+use proc_macro2::TokenStream;
 use quote::quote;
 
 use crate::types::Defs;
 
 impl Defs {
-    pub(crate) fn dimension_impl(&self) -> proc_macro::TokenStream {
+    pub(crate) fn dimension_impl(&self) -> TokenStream {
         let name = &self.dimension_type;
 
         let dim_type = self.base_dimension_type();
@@ -17,7 +18,7 @@ impl Defs {
             .collect();
         let methods_impl: proc_macro2::TokenStream = self.dimension_methods_impl().into();
         let ratio_impl = self.ratio_impl();
-        let output = quote! {
+        quote! {
             #ratio_impl
             #[derive(::std::cmp::PartialEq, ::std::cmp::Eq, ::std::clone::Clone, ::std::fmt::Debug, ::std::marker::ConstParamTy)]
             pub struct #name {
@@ -25,11 +26,10 @@ impl Defs {
             }
 
             #methods_impl
-        };
-        output.into()
+        }
     }
 
-    pub(crate) fn dimension_methods_impl(&self) -> proc_macro::TokenStream {
+    pub(crate) fn dimension_methods_impl(&self) -> TokenStream {
         let type_name = &self.dimension_type;
         let none_gen: proc_macro2::TokenStream = self
             .base_dimensions()
@@ -76,7 +76,7 @@ impl Defs {
             .map(|ident| self.cbrt_safety(ident))
             .collect();
 
-        let gen = quote! {
+        quote! {
             impl #type_name {
                 pub const fn none() -> Self {
                     Self {
@@ -122,8 +122,7 @@ impl Defs {
                     }
                 }
             }
-        };
-        gen.into()
+        }
     }
 
     #[cfg(not(feature = "rational-dimensions"))]
