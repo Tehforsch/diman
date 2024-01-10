@@ -5,7 +5,7 @@ use crate::types::{BaseDimensionExponent, Defs};
 
 #[cfg(feature = "rational-dimensions")]
 impl Defs {
-    pub fn get_base_dimenison_entry(
+    pub fn get_base_dimension_entry(
         &self,
         field: &Ident,
         value: &BaseDimensionExponent,
@@ -70,7 +70,7 @@ impl Defs {
 
 #[cfg(not(feature = "rational-dimensions"))]
 impl Defs {
-    pub fn get_base_dimenison_entry(
+    pub fn get_base_dimension_entry(
         &self,
         field: &Ident,
         value: &BaseDimensionExponent,

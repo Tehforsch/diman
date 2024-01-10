@@ -67,15 +67,15 @@ impl Defs {
         let field_updates: TokenStream = dim
             .fields
             .iter()
-            .map(|(field, value)| self.get_base_dimenison_entry(field, value))
+            .map(|(field, value)| self.get_base_dimension_entry(field, value))
             .collect();
         let span = self.quantity_type.span();
         quote_spanned! {span =>
-                #[allow(clippy::needless_update)]
-                #dimension_type {
-                    #field_updates
-                    ..#dimension_type::none()
-                }
+            #[allow(clippy::needless_update)]
+            #dimension_type {
+                #field_updates
+                ..#dimension_type::none()
+            }
         }
     }
 
