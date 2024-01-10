@@ -26,8 +26,7 @@ impl Defs {
 
     pub fn generic_methods(&self) -> TokenStream {
         self.storage_type_names()
-            .iter()
-            .map(|name| self.impl_method_for_generic_storage_type(name, &quote! { abs }))
+            .map(|name| self.impl_method_for_generic_storage_type(&name, &quote! { abs }))
             .collect()
     }
 }

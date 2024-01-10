@@ -24,10 +24,11 @@ impl Defs {
                     .map(|float_type| self.float_unit_constructor(float_type, unit, &dimension))
                     .collect();
                 let conversion_impls: TokenStream = self
-                    .storage_types_with_base_names()
-                    .into_iter()
-                    .map(|(storage_type, float_type)| {
-                        self.conversion_impls(storage_type, float_type, unit, &dimension)
+                    .storage_types()
+                    .map(|storage_type| {
+                        let type_ = storage_type.name();
+                        let float_type = storage_type.base_storage();
+                        self.conversion_impls(type_, float_type, unit, &dimension)
                     })
                     .collect();
                 quote! {
@@ -41,8 +42,8 @@ impl Defs {
 
     fn conversion_impls(
         &self,
-        storage_type: Type,
-        base_type: FloatType,
+        storage_type: &Type,
+        base_type: &FloatType,
         unit: &Unit,
         dimension: &TokenStream,
     ) -> TokenStream {

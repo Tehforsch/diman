@@ -23,15 +23,16 @@ pub struct FloatType {
     pub serialize_method: TokenStream,
 }
 
-pub trait StorageType
-where
-    Self: Sized,
-{
+pub trait StorageType {
+    /// The name of the type
     fn name(&self) -> &Type;
+
+    /// For vector types, this represents the underlying storage of a
+    /// single entry in the vector.
     fn base_storage(&self) -> &FloatType;
-    fn name_and_base_storage(self) -> (Type, FloatType) {
-        (self.name().clone(), self.base_storage().clone())
-    }
+
+    fn module_name(&self) -> &TokenStream;
+    fn generate_constants(&self) -> bool;
 }
 
 impl StorageType for VectorType {
@@ -41,6 +42,14 @@ impl StorageType for VectorType {
 
     fn base_storage(&self) -> &FloatType {
         &self.float_type
+    }
+
+    fn module_name(&self) -> &TokenStream {
+        &self.module_name
+    }
+
+    fn generate_constants(&self) -> bool {
+        false
     }
 }
 
@@ -52,27 +61,30 @@ impl StorageType for FloatType {
     fn base_storage(&self) -> &FloatType {
         self
     }
+
+    fn module_name(&self) -> &TokenStream {
+        &self.module_name
+    }
+
+    fn generate_constants(&self) -> bool {
+        true
+    }
 }
 
 impl Defs {
-    pub fn storage_type_names(&self) -> Vec<Type> {
+    pub fn storage_types(&self) -> impl Iterator<Item = Box<dyn StorageType>> {
         self.float_types()
             .into_iter()
-            .map(|x| x.name)
-            .chain(self.vector_types().into_iter().map(|x| x.name))
-            .collect()
-    }
-
-    pub fn storage_types_with_base_names(&self) -> Vec<(Type, FloatType)> {
-        self.float_types()
-            .into_iter()
-            .map(move |x| x.name_and_base_storage())
+            .map(|x| Box::new(x) as Box<dyn StorageType>)
             .chain(
                 self.vector_types()
                     .into_iter()
-                    .map(move |x| x.name_and_base_storage()),
+                    .map(|x| Box::new(x) as Box<dyn StorageType>),
             )
-            .collect()
+    }
+
+    pub fn storage_type_names(&self) -> impl Iterator<Item = Type> {
+        self.storage_types().map(|x| x.name().clone())
     }
 
     pub fn vector_types(&self) -> Vec<VectorType> {

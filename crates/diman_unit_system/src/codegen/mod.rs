@@ -28,10 +28,9 @@ impl Defs {
     pub fn code_gen(&self) -> TokenStream {
         join([
             self.dimension_impl(),
-            self.type_definition(),
-            self.type_functions(),
-            self.float_definitions(),
-            self.vector_definitions(),
+            self.quantity_definition(),
+            self.quantity_functions(),
+            self.definitions_for_storage_types(),
             self.unit_constructors(),
             self.qproduct_trait(),
             self.impl_numeric_traits(),
