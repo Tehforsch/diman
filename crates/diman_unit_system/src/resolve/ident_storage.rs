@@ -320,13 +320,11 @@ impl From<DimensionEntry> for Item {
             Definition::Expression(expr) => expr.clone().map(|f| {
                 f.map_concrete(|_| DimensionsAndMagnitude::dimensions(BaseDimensions::none()))
             }),
-            Definition::Base(()) => {
-                let mut fields = HashMap::default();
-                fields.insert(entry.dimension_entry_name(), BaseDimensionExponent::one());
-                Expr::Value(expression::Factor::Value(Factor::Concrete(
-                    DimensionsAndMagnitude::dimensions(BaseDimensions { fields }),
-                )))
-            }
+            Definition::Base(()) => Expr::Value(expression::Factor::Value(Factor::Concrete(
+                DimensionsAndMagnitude::dimensions(BaseDimensions::for_base_dimension(
+                    &entry.dimension_entry_name(),
+                )),
+            ))),
         };
         Item {
             type_: ItemType::Dimension(entry),
@@ -396,6 +394,7 @@ impl FromItem for Unit {
             name: unit_entry.name,
             magnitude: dimensions.magnitude,
             symbol: unit_entry.symbol,
+            is_base_unit: matches!(unit_entry.definition, Definition::Base(_)),
         }
     }
 }

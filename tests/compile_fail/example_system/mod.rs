@@ -11,15 +11,18 @@ unit_system!(
     dimension Dimensionless = 1;
     unit dimensionless = 1;
     #[base(Length)]
+    #[symbol(m)]
     unit meters: Length;
     unit kilometers = 1000.0 * meters;
     #[base(Time)]
+    #[symbol(s)]
     unit seconds: Time;
     dimension Velocity = Length / Time;
     unit meters_per_second = meters / seconds;
     dimension Energy = Mass * Velocity * Velocity;
     unit joules: Energy = kilograms * meters_per_second^2;
     #[base(Mass)]
+    #[symbol(kg)]
     unit kilograms: Mass;
     unit grams = 1e-3 * kilograms;
     dimension Area = Length * Length;

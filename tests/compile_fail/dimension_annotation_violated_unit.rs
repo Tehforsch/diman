@@ -8,6 +8,7 @@ unit_system!(
     dimension Mass;
     dimension Length;
     #[base(Mass)]
+    #[symbol(kg)]
     unit kilograms: Mass;
     unit foo: Length = kilograms * kilograms;
 );

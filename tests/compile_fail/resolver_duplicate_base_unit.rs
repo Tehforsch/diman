@@ -8,8 +8,10 @@ unit_system!(
     dimension_type Dimension;
     dimension Length;
     #[base(Length)]
+    #[symbol(m)]
     unit meters: Length;
     #[base(Length)]
+    #[symbol(pc)]
     unit parsec: Length;
 );
 

@@ -7,6 +7,7 @@ unit_system!(
     #[base(Length)]
     #[alias(metres)]
     #[metric_prefixes]
+    #[symbol(m)]
     unit meters: Length;
 
     #[prefix(kilo)]

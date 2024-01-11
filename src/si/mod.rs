@@ -109,6 +109,7 @@ unit_system!(
 
     #[alias(kilograms)]
     #[base(Mass)]
+    #[symbol(kg)]
     unit kilogram: Mass;
 
     #[metric_prefixes(skip: kilo)]

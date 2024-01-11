@@ -7,6 +7,7 @@ unit_system!(
     dimension_type Dimension;
     dimension Mass;
     #[base(Mass)]
+    #[symbol(kg)]
     unit kilograms: Mass;
     dimension Mass2 = kilograms;
 );

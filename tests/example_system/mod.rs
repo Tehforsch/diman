@@ -14,12 +14,15 @@ unit_system!(
     #[metric_prefixes]
     unit meters: Length;
     #[base(Time)]
+    #[symbol(s)]
     unit seconds: Time;
     dimension Velocity = Length / Time;
     unit meters_per_second = meters / seconds;
     dimension Energy = Mass * Velocity * Velocity;
+    #[symbol(J)]
     unit joules = kilograms * meters_per_second^2;
     #[base(Mass)]
+    #[symbol(kg)]
     unit kilograms: Mass;
     unit grams = 1e-3 * kilograms;
     dimension Area = Length^2;
@@ -28,6 +31,7 @@ unit_system!(
     unit cubic_meters = meters^3;
     dimension Force = Energy / Length;
     #[base(Temperature)]
+    #[symbol(K)]
     unit kelvins: Temperature;
     dimension InverseTemperature = 1 / Temperature;
     unit newtons = joules / meters;

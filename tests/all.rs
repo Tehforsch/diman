@@ -12,6 +12,9 @@ mod type_aliases;
 pub mod unit_aliases;
 
 #[cfg(feature = "f64")]
+mod debug;
+
+#[cfg(feature = "f64")]
 mod dimension_defs;
 
 #[cfg(feature = "f64")]

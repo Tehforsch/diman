@@ -7,6 +7,7 @@ unit_system!(
     dimension_type Dimension;
     dimension Mass;
     #[base(Mass)]
+    #[symbol(kg)]
     unit kilograms: Mass;
     unit grams = 1e-3 * kilograms;
     constant SOLAR_MASS: Mass = 1.988477e30 * kilograms * grams;

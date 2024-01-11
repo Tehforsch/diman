@@ -1,7 +1,10 @@
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 
-use crate::types::{Defs, Unit};
+use crate::{
+    dimension_math::BaseDimensions,
+    types::{Defs, Unit},
+};
 
 impl Defs {
     pub fn units_array<'a>(&self, units: impl Iterator<Item = &'a Unit>) -> TokenStream {
@@ -25,32 +28,48 @@ impl Defs {
             ..
         } = &self;
         let units = self.units_array(self.units.iter().filter(|unit| unit.magnitude == 1.0));
+        let get_base_dimension_symbols = self
+            .base_dimensions
+            .iter()
+            .map(|base_dim| self.get_base_dimension_symbol(base_dim))
+            .collect::<TokenStream>();
         quote! {
-            impl<const D: #dimension_type, S: diman::DebugStorageType + std::fmt::Display> std::fmt::Debug for #quantity_type<S, D> {
+            fn get_symbol<const D: #dimension_type>() -> Option<&'static str> {
+                let units: &[(#dimension_type, &str, f64)] = &#units;
+                units
+                    .iter()
+                    .filter(|(d, name, _)|  d == &D )
+                    .map(|(_, name, _)| name)
+                    .next()
+                    .copied()
+            }
+
+            impl<const D: #dimension_type, S: std::fmt::Display> std::fmt::Debug for #quantity_type<S, D> {
                 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                    let closeness = |value: f64, magnitude: f64| {
-                        if value == 0.0 {
-                            1.0
-                        } else {
-                            (value / magnitude).abs().ln().abs()
-                        }
-                    };
-                    let val = self.0.representative_value();
-                    let units: &[(#dimension_type, _, _)] = &#units;
-                    let (unit_name, magnitude) = units
-                        .iter()
-                        .filter(|(d, _, _)| d == &D)
-                        .min_by(|(_, _, x), (_, _, y)| {
-                            closeness(val, *x)
-                                .partial_cmp(&closeness(val, *y))
-                                .unwrap_or(std::cmp::Ordering::Equal)
-                        })
-                        .map(|(_, name, val)| (name, val))
-                        .unwrap_or((&"unknown unit", &1.0));
-                    (self.0.div_f64(*magnitude))
-                        .fmt(f)
-                        .and_then(|_| write!(f, " {}", unit_name))
+                    self.0.fmt(f)?;
+                    if let Some(symbol) = get_symbol::<D>() {
+                        write!(f, " {}", symbol)
+                    }
+                    else {
+                        #get_base_dimension_symbols
+                        Ok(())
+                    }
                 }
+            }
+        }
+    }
+
+    fn get_base_dimension_symbol(&self, base_dim: &Ident) -> TokenStream {
+        let dim = self.get_dimension_expr(&BaseDimensions::for_base_dimension(base_dim));
+        // We know that symbols exist for base dimensions, so we can unwrap here.
+        let base_dimension_type_zero = self.base_dimension_type_zero();
+        let base_dimension_type_one = self.base_dimension_type_one();
+        quote! {
+            if D.#base_dim == #base_dimension_type_one {
+                write!(f, " {}", get_symbol::< { #dim }>().unwrap())?;
+            }
+            else if D.#base_dim != #base_dimension_type_zero {
+                write!(f, " {}^{}", get_symbol::< { #dim }>().unwrap(), D.#base_dim)?;
             }
         }
     }

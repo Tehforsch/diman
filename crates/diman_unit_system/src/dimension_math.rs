@@ -26,6 +26,12 @@ impl BaseDimensions {
             fields: HashMap::default(),
         }
     }
+
+    pub fn for_base_dimension(base_dim: &Ident) -> Self {
+        let mut fields = HashMap::new();
+        fields.insert(base_dim.clone(), BaseDimensionExponent::one());
+        Self { fields }
+    }
 }
 
 impl std::ops::Mul for BaseDimensions {

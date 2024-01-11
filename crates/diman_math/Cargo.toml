@@ -1,0 +1,30 @@
+[package]
+name = "diman_math"
+version = "0.4.0"
+edition = "2021"
+authors = [
+    "Toni Peter <mail@tonipeter.de>",
+]
+description = "Internal math types for diman."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/tehforsch/diman"
+
+[features]
+glam = []
+glam-vec2 = []
+glam-dvec2 = []
+glam-vec3 = []
+glam-dvec3 = []
+f32 = []
+f64 = []
+mpi = []
+serde = []
+rand = []
+hdf5 = []
+gen-vec-names = [] 
+rational-dimensions = []
+
+[dependencies]
+syn = { version = "2.0", features = ["full", "extra-traits"] }
+quote = "1.0"
+proc-macro2 = "1.0"

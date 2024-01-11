@@ -8,6 +8,7 @@ unit_system!(
     dimension_type Dimension;
     dimension Length;
     #[base(Length)]
+    #[symbol(m)]
     unit meters;
     unit kilometers = 1000.0 * meters;
     unit millimeters = 0.001 * meters;

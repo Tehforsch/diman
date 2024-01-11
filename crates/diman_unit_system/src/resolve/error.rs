@@ -4,7 +4,10 @@ use proc_macro::{Diagnostic, Level};
 use proc_macro2::Span;
 use syn::Ident;
 
-use crate::{dimension_math::BaseDimensions, types::BaseDimensionExponent};
+use crate::{
+    dimension_math::BaseDimensions,
+    types::{BaseDimensionExponent, Unit},
+};
 
 use super::ident_storage::Kind;
 
@@ -57,6 +60,8 @@ pub struct SymbolDefinedMultipleTimes<'a> {
     pub symbol: &'a Ident,
     pub units: Vec<&'a Ident>,
 }
+
+pub struct NoSymbolForBaseUnitError<'a>(pub &'a Unit);
 
 pub trait Emit {
     fn emit(self);
@@ -307,5 +312,20 @@ impl<'a> Emit for SymbolDefinedMultipleTimes<'a> {
             format!("Symbol '{}' is used for multiple units.", self.symbol),
         )
         .emit()
+    }
+}
+
+impl<'a> Emit for NoSymbolForBaseUnitError<'a> {
+    fn emit(self) {
+        self.0
+            .name
+            .span()
+            .unwrap()
+            .error(format!(
+                "Unit {} is declared as a base unit but does not define its symbol.",
+                self.0.name
+            ))
+            .note("Declare the symbol using\n`#[symbol(...)]`")
+            .emit()
     }
 }

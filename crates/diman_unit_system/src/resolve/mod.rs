@@ -6,12 +6,12 @@ use std::{collections::HashMap, result::Result};
 use proc_macro2::Span;
 use syn::Ident;
 
-use crate::types::{Definition, Defs, DimensionEntry, UnitEntry, UnresolvedDefs};
+use crate::types::{Definition, Defs, DimensionEntry, Unit, UnitEntry, UnresolvedDefs};
 
 use self::{
     error::{
         emit_if_err, BaseUnitForNonBaseDimensionError, Emit, MultipleBaseUnitsForDimensionError,
-        SymbolDefinedMultipleTimes, TypeDefinitionsError,
+        NoSymbolForBaseUnitError, SymbolDefinedMultipleTimes, TypeDefinitionsError,
     },
     ident_storage::IdentStorage,
 };
@@ -85,6 +85,7 @@ impl UnresolvedDefs {
         let dimensions = idents.get_items();
         let units = idents.get_items();
         let constants = idents.get_items();
+        check_for_base_units_without_symbol(&units);
         Defs {
             dimension_type,
             quantity_type,
@@ -92,6 +93,16 @@ impl UnresolvedDefs {
             units,
             constants,
             base_dimensions,
+        }
+    }
+}
+
+fn check_for_base_units_without_symbol(units: &[Unit]) {
+    for unit in units {
+        if unit.is_base_unit {
+            if unit.symbol.is_none() {
+                NoSymbolForBaseUnitError(unit).emit();
+            }
         }
     }
 }

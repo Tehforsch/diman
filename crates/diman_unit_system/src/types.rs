@@ -212,6 +212,7 @@ pub struct Unit {
     pub dimensions: BaseDimensions,
     pub magnitude: f64,
     pub symbol: Option<Symbol>,
+    pub is_base_unit: bool,
 }
 
 pub struct Constant {
