@@ -67,12 +67,6 @@ pub trait Emit {
     fn emit(self);
 }
 
-pub fn emit_if_err<T, E: Emit>(result: Result<T, E>) {
-    if let Err(err) = result {
-        err.emit();
-    }
-}
-
 impl Emit for TypeDefinitionsError {
     fn emit(self) {
         match self {

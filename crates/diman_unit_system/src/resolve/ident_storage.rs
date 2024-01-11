@@ -138,7 +138,7 @@ impl IdentStorage {
         self.unresolved.extend(items.into_iter().map(|t| t.into()));
     }
 
-    pub fn resolve(&mut self) -> Result<(), UnresolvableError> {
+    pub fn resolve(&mut self) {
         // TODO(minor): This is a very inefficient topological sort.
         while !self.unresolved.is_empty() {
             let next_resolvable_index = self
@@ -159,15 +159,16 @@ impl IdentStorage {
                     },
                 );
             } else {
-                return Err(UnresolvableError(
+                UnresolvableError(
                     self.unresolved
                         .drain(..)
                         .map(|x| x.ident().clone())
                         .collect(),
-                ));
+                )
+                .emit();
+                return;
             }
         }
-        Ok(())
     }
 
     pub fn get_items<I: FromItem>(&self) -> Vec<I> {
@@ -204,7 +205,7 @@ impl IdentStorage {
         })
     }
 
-    pub(crate) fn filter_undefined(&mut self) -> Result<(), UndefinedError> {
+    pub(crate) fn filter_undefined(&mut self) {
         // TODO(minor): This code clones quite a lot.
         let defined_idents = self.unresolved_idents();
         let mut undefined_lhs = vec![];
@@ -221,14 +222,12 @@ impl IdentStorage {
             })
         });
         self.unresolved = defined;
-        if undefined.is_empty() {
-            Ok(())
-        } else {
-            Err(UndefinedError(undefined_lhs))
+        if !undefined.is_empty() {
+            UndefinedError(undefined_lhs).emit();
         }
     }
 
-    pub(crate) fn filter_multiply_defined(&mut self) -> Result<(), MultipleDefinitionsError> {
+    pub(crate) fn filter_multiply_defined(&mut self) {
         let num_definitions: HashMap<_, usize> =
             self.unresolved
                 .iter()
@@ -248,14 +247,12 @@ impl IdentStorage {
                 );
             }
         }
-        if v.is_empty() {
-            Ok(())
-        } else {
-            Err(MultipleDefinitionsError(v))
+        if !v.is_empty() {
+            MultipleDefinitionsError(v).emit();
         }
     }
 
-    pub(crate) fn check_type_annotations(&self) -> Result<(), ViolatedAnnotationError> {
+    pub(crate) fn check_type_annotations(&self) {
         for item in self.resolved.values() {
             if let Some(annotation_ident) = item.item.annotation() {
                 match self.resolved.get(annotation_ident) {
@@ -279,7 +276,6 @@ impl IdentStorage {
                 }
             }
         }
-        Ok(())
     }
 
     pub(crate) fn check_kinds_in_definitions(&self) {
