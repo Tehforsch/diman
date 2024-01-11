@@ -16,7 +16,7 @@ impl Defs {
                 }
             })
             .collect();
-        let methods_impl: proc_macro2::TokenStream = self.dimension_methods_impl().into();
+        let methods_impl: proc_macro2::TokenStream = self.dimension_methods_impl();
         let ratio_impl = self.ratio_impl();
         quote! {
             #ratio_impl

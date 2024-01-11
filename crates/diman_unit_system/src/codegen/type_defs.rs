@@ -70,11 +70,15 @@ impl Defs {
             .map(|(field, value)| self.get_base_dimension_entry(field, value))
             .collect();
         let span = self.quantity_type.span();
+        let none_update = if dim.fields.len() < self.base_dimensions.len() {
+            quote! { ..#dimension_type::none() }
+        } else {
+            quote! {}
+        };
         quote_spanned! {span =>
-            #[allow(clippy::needless_update)]
             #dimension_type {
                 #field_updates
-                ..#dimension_type::none()
+                #none_update
             }
         }
     }
@@ -84,7 +88,7 @@ impl Defs {
             .map(|type_| {
                 self.definitions_for_storage_type(
                     &*type_,
-                    &type_.module_name(),
+                    type_.module_name(),
                     type_.generate_constants(),
                 )
             })
