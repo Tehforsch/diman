@@ -112,9 +112,6 @@ impl Defs {
             quantity_type,
             ..
         } = &self;
-        // TODO: The use statements here are quite hacky and will probably
-        // not work if dimension is declared in a different place from
-        // the macro invocation.
         let quantities = self.quantity_definitions_for_storage_type(type_);
         let constants = if gen_constants {
             self.constant_definitions_for_storage_type(type_)
