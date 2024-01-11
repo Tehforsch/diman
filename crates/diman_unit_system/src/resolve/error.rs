@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use proc_macro::{Diagnostic, Level};
+use proc_macro2::Span;
 use syn::Ident;
 
 use crate::{dimension_math::BaseDimensions, types::BaseDimensionExponent};
@@ -11,9 +12,15 @@ pub struct UnresolvableError(pub Vec<Ident>);
 pub struct UndefinedError(pub Vec<Ident>);
 pub struct MultipleDefinitionsError(pub Vec<Vec<Ident>>);
 
-pub struct MultipleTypeDefinitionsError {
-    pub type_name: &'static str,
-    pub idents: Vec<Ident>,
+pub enum TypeDefinitionsError {
+    Multiple {
+        type_name: &'static str,
+        idents: Vec<Ident>,
+    },
+    None {
+        type_name: &'static str,
+        default_name: &'static str,
+    },
 }
 
 pub struct ViolatedAnnotationError<'a> {
@@ -61,17 +68,35 @@ pub fn emit_if_err<T, E: Emit>(result: Result<T, E>) {
     }
 }
 
-impl Emit for MultipleTypeDefinitionsError {
+impl Emit for TypeDefinitionsError {
     fn emit(self) {
-        for ident in self.idents {
-            ident
-                .span()
-                .unwrap()
-                .error(format!(
-                    "Multiple definitions for {} \"{}\".",
-                    self.type_name, ident
-                ))
-                .emit();
+        match self {
+            Self::Multiple { type_name, idents } => {
+                for ident in idents {
+                    ident
+                        .span()
+                        .unwrap()
+                        .error(format!(
+                            "Multiple definitions for {} \"{}\".",
+                            type_name, ident
+                        ))
+                        .emit();
+                }
+            }
+            Self::None {
+                type_name,
+                default_name,
+            } => {
+                Span::call_site()
+                    .unwrap()
+                    .error(format!("No definition for {}", type_name))
+                    .note("In order to provide readable error messages, the name must be specified in the macro call.")
+                    .help(format!(
+                        "Consider adding a definition inside the unit_system! macro:\n\t{} {};",
+                        type_name, default_name
+                    ))
+                    .emit();
+            }
         }
     }
 }

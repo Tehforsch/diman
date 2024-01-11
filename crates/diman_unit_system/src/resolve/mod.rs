@@ -11,33 +11,32 @@ use crate::types::{Definition, Defs, DimensionEntry, UnitEntry, UnresolvedDefs};
 use self::{
     error::{
         emit_if_err, BaseUnitForNonBaseDimensionError, Emit, MultipleBaseUnitsForDimensionError,
-        MultipleTypeDefinitionsError, SymbolDefinedMultipleTimes,
+        SymbolDefinedMultipleTimes, TypeDefinitionsError,
     },
     ident_storage::IdentStorage,
 };
 
-fn default_dimension_type() -> Ident {
-    Ident::new("Dimension", Span::call_site())
-}
-
-fn default_quantity_type() -> Ident {
-    Ident::new("quantity", Span::call_site())
-}
-
 fn get_single_ident(
     mut dimension_types: Vec<Ident>,
     type_name: &'static str,
-    default: impl Fn() -> Ident,
-) -> (Ident, Result<(), MultipleTypeDefinitionsError>) {
+    default_name: &'static str,
+) -> (Ident, Result<(), TypeDefinitionsError>) {
     if dimension_types.len() == 1 {
         (dimension_types.remove(0), Ok(()))
     } else if dimension_types.is_empty() {
-        (default(), Ok(()))
+        // Construct an identifier to be able to continue
+        (
+            Ident::new(default_name, Span::call_site()),
+            Err(TypeDefinitionsError::None {
+                type_name,
+                default_name,
+            }),
+        )
     } else {
         let dimension_type = dimension_types[0].clone();
         (
             dimension_type,
-            Err(MultipleTypeDefinitionsError {
+            Err(TypeDefinitionsError::Multiple {
                 idents: dimension_types,
                 type_name,
             }),
@@ -62,12 +61,12 @@ impl UnresolvedDefs {
         let quantity_type = emit_errors(get_single_ident(
             self.quantity_types,
             "quantity type",
-            default_quantity_type,
+            "Quantity",
         ));
         let dimension_type = emit_errors(get_single_ident(
             self.dimension_types,
             "dimension type",
-            default_dimension_type,
+            "Dimension",
         ));
         let mut idents = IdentStorage::default();
         let base_dimensions = get_base_dimensions(&self.dimensions, &self.units);
