@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use proc_macro2::Ident;
 
 use crate::{
-    dimension_math::{BaseDimensions, DimensionsAndFactor},
+    dimension_math::{BaseDimensions, DimensionsAndMagnitude},
     expression::{self, Expr},
     types::{
         BaseDimensionExponent, Constant, ConstantEntry, Definition, Dimension, DimensionEntry,
@@ -40,7 +40,7 @@ impl Kind {
 
 #[derive(Clone)]
 pub struct Item {
-    expr: Expr<Factor<DimensionsAndFactor>, BaseDimensionExponent>,
+    expr: Expr<Factor<DimensionsAndMagnitude>, BaseDimensionExponent>,
     type_: ItemType,
 }
 
@@ -105,7 +105,7 @@ impl ItemType {
 
 pub struct ResolvedItem {
     pub item: Item,
-    pub dimensions: DimensionsAndFactor,
+    pub dimensions: DimensionsAndMagnitude,
 }
 
 #[derive(Default)]
@@ -124,7 +124,7 @@ impl IdentStorage {
         all_factors_concrete_or_given
     }
 
-    fn resolve_dimensions(&self, item: &Item) -> DimensionsAndFactor {
+    fn resolve_dimensions(&self, item: &Item) -> DimensionsAndMagnitude {
         item.expr
             .clone()
             .map(|val_or_expr| match val_or_expr {
@@ -318,13 +318,13 @@ impl From<DimensionEntry> for Item {
     fn from(entry: DimensionEntry) -> Self {
         let expr = match &entry.rhs {
             Definition::Expression(expr) => expr.clone().map(|f| {
-                f.map_concrete(|_| DimensionsAndFactor::dimensions(BaseDimensions::none()))
+                f.map_concrete(|_| DimensionsAndMagnitude::dimensions(BaseDimensions::none()))
             }),
             Definition::Base(()) => {
                 let mut fields = HashMap::default();
                 fields.insert(entry.dimension_entry_name(), BaseDimensionExponent::one());
                 Expr::Value(expression::Factor::Value(Factor::Concrete(
-                    DimensionsAndFactor::dimensions(BaseDimensions { fields }),
+                    DimensionsAndMagnitude::dimensions(BaseDimensions { fields }),
                 )))
             }
         };
@@ -340,7 +340,7 @@ impl From<UnitEntry> for Item {
         let expr = match &entry.definition {
             Definition::Expression(rhs) => rhs
                 .clone()
-                .map(|f| f.map_concrete(DimensionsAndFactor::factor)),
+                .map(|f| f.map_concrete(DimensionsAndMagnitude::magnitude)),
             Definition::Base(dimension) => {
                 Expr::Value(expression::Factor::Value(Factor::Other(dimension.clone())))
             }
@@ -357,7 +357,7 @@ impl From<ConstantEntry> for Item {
         let expr = entry
             .rhs
             .clone()
-            .map(|f| f.map_concrete(DimensionsAndFactor::factor));
+            .map(|f| f.map_concrete(DimensionsAndMagnitude::magnitude));
         Item {
             type_: ItemType::Constant(entry),
             expr,
@@ -366,7 +366,7 @@ impl From<ConstantEntry> for Item {
 }
 
 pub trait FromItem {
-    fn from_item_and_dimensions(item: Item, dimensions: DimensionsAndFactor) -> Self;
+    fn from_item_and_dimensions(item: Item, dimensions: DimensionsAndMagnitude) -> Self;
     fn is_correct_kind(kind: Kind) -> bool;
 }
 
@@ -375,7 +375,7 @@ impl FromItem for Dimension {
         kind == Kind::Dimension
     }
 
-    fn from_item_and_dimensions(item: Item, dimensions: DimensionsAndFactor) -> Self {
+    fn from_item_and_dimensions(item: Item, dimensions: DimensionsAndMagnitude) -> Self {
         let dimension_entry = item.type_.unwrap_dimension();
         Dimension {
             dimensions: dimensions.dimensions,
@@ -389,12 +389,12 @@ impl FromItem for Unit {
         kind == Kind::Unit || kind == Kind::BaseUnit
     }
 
-    fn from_item_and_dimensions(item: Item, dimensions: DimensionsAndFactor) -> Self {
+    fn from_item_and_dimensions(item: Item, dimensions: DimensionsAndMagnitude) -> Self {
         let unit_entry = item.type_.unwrap_unit();
         Unit {
             dimensions: dimensions.dimensions,
             name: unit_entry.name,
-            factor: dimensions.factor,
+            magnitude: dimensions.magnitude,
             symbol: unit_entry.symbol,
         }
     }
@@ -405,12 +405,12 @@ impl FromItem for Constant {
         kind == Kind::Constant
     }
 
-    fn from_item_and_dimensions(item: Item, dimensions: DimensionsAndFactor) -> Self {
+    fn from_item_and_dimensions(item: Item, dimensions: DimensionsAndMagnitude) -> Self {
         let constant_entry = item.type_.unwrap_constant();
         Constant {
             dimensions: dimensions.dimensions,
             name: constant_entry.name,
-            factor: dimensions.factor,
+            magnitude: dimensions.magnitude,
         }
     }
 }

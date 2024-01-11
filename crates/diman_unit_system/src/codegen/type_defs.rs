@@ -154,7 +154,7 @@ impl Defs {
                 let dimension = self.get_dimension_expr(&constant.dimensions);
                 let quantity_type = &self.quantity_type;
                 let constant_name = &constant.name;
-                let value = constant.factor;
+                let value = constant.magnitude;
                 let float_type = &type_.base_storage().name;
                 let type_ = type_.name();
                 // TODO(minor): The allow(clippy::approx_constant)

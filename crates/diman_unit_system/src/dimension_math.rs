@@ -77,53 +77,53 @@ impl MulDiv for BaseDimensions {
 }
 
 #[derive(Clone)]
-pub struct DimensionsAndFactor {
+pub struct DimensionsAndMagnitude {
     pub dimensions: BaseDimensions,
-    pub factor: f64,
+    pub magnitude: f64,
 }
 
-impl DimensionsAndFactor {
-    pub fn factor(factor: f64) -> Self {
+impl DimensionsAndMagnitude {
+    pub fn magnitude(magnitude: f64) -> Self {
         Self {
             dimensions: BaseDimensions::none(),
-            factor,
+            magnitude,
         }
     }
 
     pub(crate) fn dimensions(dimensions: BaseDimensions) -> Self {
         Self {
             dimensions,
-            factor: 1.0,
+            magnitude: 1.0,
         }
     }
 }
 
-impl std::ops::Mul for DimensionsAndFactor {
+impl std::ops::Mul for DimensionsAndMagnitude {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
         Self {
             dimensions: self.dimensions * rhs.dimensions,
-            factor: self.factor * rhs.factor,
+            magnitude: self.magnitude * rhs.magnitude,
         }
     }
 }
 
-impl std::ops::Div for DimensionsAndFactor {
+impl std::ops::Div for DimensionsAndMagnitude {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self::Output {
         Self {
             dimensions: self.dimensions / rhs.dimensions,
-            factor: self.factor / rhs.factor,
+            magnitude: self.magnitude / rhs.magnitude,
         }
     }
 }
 
-impl MulDiv for DimensionsAndFactor {
+impl MulDiv for DimensionsAndMagnitude {
     fn pow(self, pow: BaseDimensionExponent) -> Self {
         Self {
-            factor: BaseDimensionExponent::pow(self.factor, pow),
+            magnitude: BaseDimensionExponent::pow(self.magnitude, pow),
             dimensions: self.dimensions.pow(pow),
         }
     }

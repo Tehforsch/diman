@@ -8,10 +8,10 @@ impl Defs {
         let units: TokenStream = units
             .filter_map(|unit| {
                 let dim = self.get_dimension_expr(&unit.dimensions);
-                let factor = unit.factor;
+                let magnitude = unit.magnitude;
                 let symbol = &unit.symbol.as_ref()?.0.to_string();
                 Some(quote! {
-                    (#dim, #symbol, #factor),
+                    (#dim, #symbol, #magnitude),
                 })
             })
             .collect();
@@ -24,20 +24,20 @@ impl Defs {
             dimension_type,
             ..
         } = &self;
-        let units = self.units_array(self.units.iter().filter(|unit| unit.factor == 1.0));
+        let units = self.units_array(self.units.iter().filter(|unit| unit.magnitude == 1.0));
         quote! {
             impl<const D: #dimension_type, S: diman::DebugStorageType + std::fmt::Display> std::fmt::Debug for #quantity_type<S, D> {
                 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                    let closeness = |value: f64, unit_factor: f64| {
+                    let closeness = |value: f64, magnitude: f64| {
                         if value == 0.0 {
                             1.0
                         } else {
-                            (value / unit_factor).abs().ln().abs()
+                            (value / magnitude).abs().ln().abs()
                         }
                     };
                     let val = self.0.representative_value();
                     let units: &[(#dimension_type, _, _)] = &#units;
-                    let (unit_name, unit_value) = units
+                    let (unit_name, magnitude) = units
                         .iter()
                         .filter(|(d, _, _)| d == &D)
                         .min_by(|(_, _, x), (_, _, y)| {
@@ -47,7 +47,7 @@ impl Defs {
                         })
                         .map(|(_, name, val)| (name, val))
                         .unwrap_or((&"unknown unit", &1.0));
-                    (self.0.div_f64(*unit_value))
+                    (self.0.div_f64(*magnitude))
                         .fmt(f)
                         .and_then(|_| write!(f, " {}", unit_name))
                 }

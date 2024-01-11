@@ -210,14 +210,14 @@ pub struct Dimension {
 pub struct Unit {
     pub name: Ident,
     pub dimensions: BaseDimensions,
-    pub factor: f64,
+    pub magnitude: f64,
     pub symbol: Option<Symbol>,
 }
 
 pub struct Constant {
     pub name: Ident,
     pub dimensions: BaseDimensions,
-    pub factor: f64,
+    pub magnitude: f64,
 }
 
 pub struct Defs {

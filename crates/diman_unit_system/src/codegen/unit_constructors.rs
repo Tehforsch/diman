@@ -50,13 +50,13 @@ impl Defs {
         let quantity_type = &self.quantity_type;
         let unit_name = &unit.name;
         let conversion_method_name = format_ident!("in_{}", unit_name);
-        let factor = unit.factor;
+        let magnitude = unit.magnitude;
         let base_type = &base_type.name;
         quote! {
             impl #quantity_type<#storage_type, {#dimension}> {
                 pub fn #conversion_method_name(self) -> #storage_type {
-                    let factor: #base_type = #factor as #base_type;
-                    self.0 / factor
+                    let magnitude: #base_type = #magnitude as #base_type;
+                    self.0 / magnitude
                 }
             }
         }
@@ -71,7 +71,7 @@ impl Defs {
         let Defs { quantity_type, .. } = &self;
         let Unit {
             name: unit_name,
-            factor,
+            magnitude,
             ..
         } = unit;
         let name = &float_type.name;
@@ -80,7 +80,7 @@ impl Defs {
         // we cannot make unit constructors a const fn in general (since it requires the unstable
         // const_fn_floating_point_arithmetic feature). The following allows the constructor with 1.0
         // conversion factor to be const.
-        let const_fn = *factor == 1.0;
+        let const_fn = *magnitude == 1.0;
         let fn_def = if const_fn {
             quote! { const fn }
         } else {
@@ -89,7 +89,7 @@ impl Defs {
         let value = if const_fn {
             quote! { val }
         } else {
-            quote! { val * #factor as #name }
+            quote! { val * #magnitude as #name }
         };
         quote_spanned! {span =>
             impl #quantity_type<#name, {#quantity_dimension}> {
@@ -109,7 +109,7 @@ impl Defs {
         let Defs { quantity_type, .. } = &self;
         let Unit {
             name: unit_name,
-            factor,
+            magnitude,
             ..
         } = unit;
         let VectorType {
@@ -133,7 +133,7 @@ impl Defs {
         quote_spanned! {span =>
             impl #quantity_type<#name, {#quantity_dimension}> {
                 pub fn #unit_name(#fn_args) -> #quantity_type<#name, {#quantity_dimension}> {
-                    #quantity_type::<#name, {#quantity_dimension}>(#name::new(#call_args) * (#factor as #float_type))
+                    #quantity_type::<#name, {#quantity_dimension}>(#name::new(#call_args) * (#magnitude as #float_type))
                 }
             }
         }
