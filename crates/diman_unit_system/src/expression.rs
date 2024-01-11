@@ -180,7 +180,7 @@ mod tests {
 
     impl From<MyInt> for BaseDimensionExponent {
         fn from(value: MyInt) -> Self {
-            BaseDimensionExponent(value.0)
+            BaseDimensionExponent(value.0.into())
         }
     }
 

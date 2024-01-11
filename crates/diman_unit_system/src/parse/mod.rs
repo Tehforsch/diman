@@ -49,7 +49,7 @@ pub struct Number {
 
 pub struct Int {
     pub lit: Lit,
-    pub int: i32,
+    pub int: i64,
 }
 
 #[derive(Clone)]
@@ -62,7 +62,7 @@ struct Exponent {
 }
 
 #[cfg(not(feature = "rational-dimensions"))]
-struct Exponent(i32);
+struct Exponent(i64);
 
 pub enum Entry {
     QuantityType(Ident),
@@ -104,7 +104,7 @@ impl Parse for Int {
     fn parse(input: ParseStream) -> Result<Self> {
         let lit = input.parse()?;
         let int = match lit {
-            Lit::Int(ref int) => int.base10_parse::<i32>(),
+            Lit::Int(ref int) => int.base10_parse::<i64>(),
             _ => Err(Error::new(
                 lit.span(),
                 "Unexpected literal, expected a numerical value".to_string(),

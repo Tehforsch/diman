@@ -7,11 +7,11 @@ mod reexport {
     /// that would require another proc macro crate.
     #[derive(Clone, PartialEq, Copy)]
     pub struct BaseDimensionExponent {
-        pub num: i32,
-        pub denom: i32,
+        pub num: i64,
+        pub denom: i64,
     }
 
-    fn gcd(mut a: i32, mut b: i32) -> i32 {
+    fn gcd(mut a: i64, mut b: i64) -> i64 {
         while b != 0 {
             let temp = b;
             b = a % b;
@@ -33,7 +33,7 @@ mod reexport {
             num.powf(exponent.num as f64 / exponent.denom as f64)
         }
 
-        fn new(num: i32, denom: i32) -> Self {
+        fn new(num: i64, denom: i64) -> Self {
             let gcd = gcd(num, denom);
             Self {
                 num: num / gcd,
@@ -83,7 +83,7 @@ mod reexport {
 #[cfg(not(feature = "rational-dimensions"))]
 mod reexport {
     #[derive(Clone, PartialEq, Copy)]
-    pub struct BaseDimensionExponent(pub i32);
+    pub struct BaseDimensionExponent(pub i64);
 
     impl BaseDimensionExponent {
         pub fn one() -> BaseDimensionExponent {
@@ -95,7 +95,7 @@ mod reexport {
         }
 
         pub fn pow(num: f64, exponent: Self) -> f64 {
-            num.powi(exponent.0)
+            num.powi(exponent.0 as i32)
         }
     }
 

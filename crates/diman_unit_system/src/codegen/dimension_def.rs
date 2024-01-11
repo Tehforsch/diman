@@ -138,11 +138,11 @@ impl Defs {
         quote! {
             #[derive(::std::cmp::PartialEq, ::std::cmp::Eq, ::std::clone::Clone, ::std::fmt::Debug, ::std::marker::ConstParamTy)]
             struct Ratio {
-                num: i32,
-                denom: i32,
+                num: i64,
+                denom: i64,
             }
 
-            const fn gcd(mut a: i32, mut b: i32) -> i32 {
+            const fn gcd(mut a: i64, mut b: i64) -> i64 {
                 while b != 0 {
                     let temp = b;
                     b = a % b;
@@ -152,16 +152,22 @@ impl Defs {
             }
 
             impl Ratio  {
-                const fn int(num: i32) -> Self {
+                const fn int(num: i64) -> Self {
                     Self { num, denom: 1 }
                 }
 
-                const fn new(num: i32, denom: i32) -> Self {
+                const fn new(num: i64, denom: i64) -> Self {
                     let gcd = gcd(num, denom);
-                    Ratio {
+                    Self {
                         num: num / gcd,
                         denom: denom / gcd,
                     }
+                }
+
+                pub const fn powi(self, exp: i32) -> Self {
+                    let num = self.num * exp as i64;
+                    let denom = self.denom * exp as i64;
+                    Self::new(num, denom)
                 }
 
                 const fn add(self, rhs: Self) -> Self {
@@ -197,7 +203,6 @@ impl Defs {
                         denom: self.num,
                     }
                 }
-
             }
         }
     }

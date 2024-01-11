@@ -20,7 +20,7 @@ impl Defs {
     }
 
     pub fn zero_entry(&self, ident: &Ident) -> TokenStream {
-        quote! { #ident: Ratio::int(0), }
+        quote! { #ident: Ratio::int(0i64), }
     }
 
     pub fn add_entry(&self, ident: &Ident) -> TokenStream {
@@ -43,7 +43,7 @@ impl Defs {
 
     pub fn mul_entry(&self, ident: &Ident) -> TokenStream {
         quote! {
-            #ident: self.#ident.mul(Ratio::int(other)),
+            #ident: self.#ident.mul(Ratio::int(other as i64)),
         }
     }
 
@@ -80,11 +80,11 @@ impl Defs {
     }
 
     pub fn base_dimension_type(&self) -> TokenStream {
-        quote! { i32 }
+        quote! { i64 }
     }
 
     pub fn zero_entry(&self, ident: &Ident) -> TokenStream {
-        quote! { #ident: 0, }
+        quote! { #ident: 0i64, }
     }
 
     pub fn add_entry(&self, ident: &Ident) -> TokenStream {
@@ -107,7 +107,7 @@ impl Defs {
 
     pub fn mul_entry(&self, ident: &Ident) -> TokenStream {
         quote! {
-            #ident: self.#ident * other,
+            #ident: self.#ident * other as i64,
         }
     }
 
