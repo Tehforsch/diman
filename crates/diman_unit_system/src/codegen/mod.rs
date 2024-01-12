@@ -1,19 +1,19 @@
 mod base_dimension_type;
-mod debug;
-mod dimension_def;
+mod debug_trait;
+mod dimension_type;
+mod dimensions;
 mod float_methods;
 mod generic_methods;
 #[cfg(feature = "hdf5")]
 mod hdf5;
 #[cfg(feature = "mpi")]
 mod mpi;
+mod num_traits;
 #[cfg(feature = "rand")]
 mod rand;
 #[cfg(feature = "serde")]
 mod serde;
-mod traits;
-mod type_defs;
-mod unit_constructors;
+mod units;
 mod vector_methods;
 
 use proc_macro2::TokenStream;
