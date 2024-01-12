@@ -625,19 +625,6 @@ impl Defs {
         traits.into_iter()
     }
 
-    pub(crate) fn qproduct_trait(&self) -> TokenStream {
-        let Self {
-            quantity_type,
-            dimension_type,
-            ..
-        } = &self;
-        quote! {
-            impl<S, const D: #dimension_type> diman::QProduct for #quantity_type<S, D> {
-                type Output = #quantity_type<S, D>;
-            }
-        }
-    }
-
     fn generic_numeric_trait_impl(&self, numeric_trait: NumericTrait) -> TokenStream {
         let name = numeric_trait.name;
         let fn_name = name.fn_name();

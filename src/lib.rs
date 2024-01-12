@@ -9,7 +9,6 @@ mod type_aliases;
 pub mod si;
 
 pub use type_aliases::Product;
-pub use type_aliases::QProduct;
 pub use type_aliases::Quotient;
 
 // The surrounding module around the unit_system calls is needed to make the doctest work
@@ -32,6 +31,7 @@ pub use type_aliases::Quotient;
 /// # dimension_type Dimension;
 /// # dimension Length;
 /// #[base(Length)]
+/// #[symbol(m)]
 /// unit meter
 /// # );
 /// # }
@@ -47,6 +47,7 @@ pub use type_aliases::Quotient;
 /// # dimension_type Dimension;
 /// # dimension Length;
 /// # #[base(Length)]
+/// # #[symbol(m)]
 /// # unit meter;
 /// unit foot = 0.3048 * meter;
 /// # );
@@ -63,6 +64,7 @@ pub use type_aliases::Quotient;
 /// # dimension_type Dimension;
 /// # dimension Length;
 /// # #[base(Length)]
+/// # #[symbol(m)]
 /// # unit meter;
 /// unit foot: Length = 0.3048 * meter;
 /// # );
@@ -88,12 +90,13 @@ pub use type_aliases::Quotient;
 ///
 ///     dimension Velocity = Length / Time;
 ///
+///     #[base(Length)]
 ///     #[prefix(kilo, milli)]
 ///     #[symbol(m)]
-///     #[base(Length)]
 ///     unit meters;
 ///
 ///     #[base(Time)]
+///     #[symbol(s)]
 ///     unit seconds;
 ///
 ///     unit hours: Time = 3600 * seconds;

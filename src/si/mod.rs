@@ -1,4 +1,3 @@
-use crate as diman;
 use crate::unit_system;
 
 unit_system!(

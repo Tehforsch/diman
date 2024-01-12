@@ -32,7 +32,6 @@ impl Defs {
             self.quantity_functions(),
             self.definitions_for_storage_types(),
             self.unit_constructors(),
-            self.qproduct_trait(),
             self.impl_numeric_traits(),
             self.debug_trait(),
             self.float_methods(),
