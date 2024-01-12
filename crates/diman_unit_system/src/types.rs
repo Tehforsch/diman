@@ -1,4 +1,4 @@
-mod allowed_exponent;
+mod base_dimension_exponent;
 
 use proc_macro2::Span;
 use syn::*;
@@ -11,7 +11,7 @@ use crate::{
     to_snakecase::to_snakecase,
 };
 
-pub use allowed_exponent::BaseDimensionExponent;
+pub use base_dimension_exponent::BaseDimensionExponent;
 
 #[derive(Clone)]
 pub enum Factor<C> {
