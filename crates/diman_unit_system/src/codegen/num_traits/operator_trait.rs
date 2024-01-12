@@ -2,10 +2,8 @@ use proc_macro2::{Ident, TokenStream};
 use quote::{quote, quote_spanned};
 use syn::Type;
 
-use crate::types::Defs;
-
 #[derive(Clone, Copy)]
-enum Trait {
+pub enum Trait {
     Add,
     Sub,
     Mul,
@@ -20,8 +18,10 @@ enum Trait {
 
 use Trait::*;
 
+use crate::types::Defs;
+
 impl Trait {
-    fn name(&self) -> TokenStream {
+    pub fn name(&self) -> TokenStream {
         match self {
             Add => quote! { core::ops::Add },
             Sub => quote! { core::ops::Sub },
@@ -36,7 +36,7 @@ impl Trait {
         }
     }
 
-    fn fn_name(&self) -> TokenStream {
+    pub fn fn_name(&self) -> TokenStream {
         match self {
             Add => quote! { add },
             Sub => quote! { sub },
@@ -51,7 +51,7 @@ impl Trait {
         }
     }
 
-    fn fn_return_type(&self) -> TokenStream {
+    pub fn fn_return_type(&self) -> TokenStream {
         match self {
             Add | Sub | Mul | Div => quote! { Self::Output },
             AddAssign | SubAssign | MulAssign | DivAssign => {
@@ -62,7 +62,7 @@ impl Trait {
         }
     }
 
-    fn lhs_arg(&self) -> TokenStream {
+    pub fn lhs_arg(&self) -> TokenStream {
         match self {
             Add | Sub | Mul | Div => quote! { self },
             AddAssign | SubAssign | MulAssign | DivAssign => {
@@ -72,7 +72,7 @@ impl Trait {
         }
     }
 
-    fn rhs_arg_type(&self, rhs: &TokenStream) -> TokenStream {
+    pub fn rhs_arg_type(&self, rhs: &TokenStream) -> TokenStream {
         match self {
             Add | Sub | Mul | Div | AddAssign | SubAssign | MulAssign | DivAssign => rhs.clone(),
             PartialEq | PartialOrd => {
@@ -82,7 +82,7 @@ impl Trait {
         }
     }
 
-    fn has_output_type(&self) -> bool {
+    pub fn has_output_type(&self) -> bool {
         matches!(self, Add | Sub | Mul | Div)
     }
 }
@@ -119,6 +119,7 @@ struct Operand {
     storage: StorageType,
     reference: ReferenceType,
 }
+
 impl Operand {
     fn ref_sign(&self, span: proc_macro2::Span) -> TokenStream {
         match self.reference {
@@ -204,13 +205,13 @@ impl OutputQuantity {
     }
 }
 
-struct NumericTrait {
+struct OperatorTrait {
     name: Trait,
     lhs: Operand,
     rhs: Operand,
 }
 
-impl NumericTrait {
+impl OperatorTrait {
     /// Whether the trait allows for different dimensions on the
     /// left-hand and right-hand sides. Only Mul and Div allow this,
     /// every other trait requires the same dimension on both sides
@@ -535,7 +536,7 @@ macro_rules! add_trait {
         $traits: ident,
         $name: path,
      ($($lhs:tt)*), ($($rhs:tt)*)) => {
-        $traits.push(NumericTrait {
+        $traits.push(OperatorTrait {
             name: $name,
             lhs: def_operand!($($lhs)*),
             rhs: def_operand!($($rhs)*),
@@ -544,8 +545,14 @@ macro_rules! add_trait {
 }
 
 impl Defs {
+    pub fn gen_operator_trait_impls(&self) -> TokenStream {
+        self.iter_numeric_traits()
+            .map(|num_trait| self.gen_operator_trait_impl(num_trait))
+            .collect()
+    }
+
     #[rustfmt::skip]
-    fn iter_numeric_traits(&self) -> impl Iterator<Item = NumericTrait> + '_ {
+    fn iter_numeric_traits(&self) -> impl Iterator<Item = OperatorTrait> + '_ {
         let mut traits = vec![];
         use StorageType::*;
         for t in [Add, Sub, Mul, Div] {
@@ -625,7 +632,7 @@ impl Defs {
         traits.into_iter()
     }
 
-    fn generic_numeric_trait_impl(&self, numeric_trait: NumericTrait) -> TokenStream {
+    fn gen_operator_trait_impl(&self, numeric_trait: OperatorTrait) -> TokenStream {
         let name = numeric_trait.name;
         let fn_name = name.fn_name();
         let trait_name = name.name();
@@ -654,79 +661,6 @@ impl Defs {
                     #fn_return_expr
                 }
             }
-        }
-    }
-
-    fn impl_sum(&self) -> TokenStream {
-        let Self {
-            quantity_type,
-            dimension_type,
-            ..
-        } = self;
-        quote! {
-            impl<const D: #dimension_type, S: Default + core::ops::AddAssign<S>> core::iter::Sum
-                for #quantity_type<S, D>
-            {
-                fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
-                    let mut total = Self::default();
-                    for item in iter {
-                        total += item;
-                    }
-                    total
-                }
-            }
-
-        }
-    }
-
-    fn impl_neg(&self) -> TokenStream {
-        let Self {
-            quantity_type,
-            dimension_type,
-            ..
-        } = self;
-        quote! {
-            impl<const D: #dimension_type, S: core::ops::Neg<Output=S>> core::ops::Neg for #quantity_type<S, D> {
-                type Output = Self;
-
-                fn neg(self) -> Self::Output {
-                    Self(-self.0)
-                }
-            }
-        }
-    }
-
-    fn impl_from(&self) -> TokenStream {
-        let Self {
-            quantity_type,
-            dimension_type,
-            ..
-        } = self;
-        quote! {
-            impl<S> From<S>
-                for #quantity_type<S, { #dimension_type::none() }>
-            {
-                fn from(rhs: S) -> Self {
-                    Self(rhs)
-                }
-            }
-
-        }
-    }
-
-    pub fn gen_numeric_trait_impls(&self) -> TokenStream {
-        let ops: TokenStream = self
-            .iter_numeric_traits()
-            .map(|num_trait| self.generic_numeric_trait_impl(num_trait))
-            .collect();
-        let sum = self.impl_sum();
-        let neg = self.impl_neg();
-        let from = self.impl_from();
-        quote! {
-            #ops
-            #sum
-            #neg
-            #from
         }
     }
 }
