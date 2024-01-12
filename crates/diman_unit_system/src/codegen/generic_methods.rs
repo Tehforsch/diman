@@ -5,6 +5,12 @@ use syn::Type;
 use crate::types::Defs;
 
 impl Defs {
+    pub fn gen_generic_methods(&self) -> TokenStream {
+        self.storage_type_names()
+            .map(|name| self.impl_method_for_generic_storage_type(&name, &quote! { abs }))
+            .collect()
+    }
+
     fn impl_method_for_generic_storage_type(
         &self,
         storage_type: &Type,
@@ -22,11 +28,5 @@ impl Defs {
                 }
             }
         }
-    }
-
-    pub fn generic_methods(&self) -> TokenStream {
-        self.storage_type_names()
-            .map(|name| self.impl_method_for_generic_storage_type(&name, &quote! { abs }))
-            .collect()
     }
 }

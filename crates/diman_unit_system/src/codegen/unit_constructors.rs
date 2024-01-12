@@ -8,7 +8,7 @@ use crate::{
 };
 
 impl Defs {
-    pub fn unit_constructors(&self) -> TokenStream {
+    pub fn gen_unit_constructors(&self) -> TokenStream {
         self.units
             .iter()
             .map(|unit| {

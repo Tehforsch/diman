@@ -12,7 +12,7 @@ mod rand;
 #[cfg(feature = "serde")]
 mod serde;
 mod traits;
-pub mod type_defs;
+mod type_defs;
 mod unit_constructors;
 mod vector_methods;
 
@@ -27,24 +27,23 @@ fn join<const D: usize>(streams: [TokenStream; D]) -> TokenStream {
 impl Defs {
     pub fn code_gen(&self) -> TokenStream {
         join([
-            self.dimension_impl(),
-            self.quantity_definition(),
-            self.quantity_functions(),
-            self.definitions_for_storage_types(),
-            self.unit_constructors(),
-            self.impl_numeric_traits(),
-            self.debug_trait(),
-            self.float_methods(),
-            self.vector_methods(),
-            self.generic_methods(),
+            self.gen_dimension(),
+            self.gen_quantity(),
+            self.gen_definitions_for_storage_types(),
+            self.gen_unit_constructors(),
+            self.gen_numeric_trait_impls(),
+            self.gen_debug_trait_impl(),
+            self.gen_float_methods(),
+            self.gen_vector_methods(),
+            self.gen_generic_methods(),
             #[cfg(feature = "serde")]
-            self.serde_impl(),
+            self.gen_serde_impl(),
             #[cfg(feature = "hdf5")]
-            self.hdf5_impl(),
+            self.gen_hdf5_impl(),
             #[cfg(feature = "mpi")]
-            self.mpi_impl(),
+            self.gen_mpi_impl(),
             #[cfg(feature = "rand")]
-            self.rand_impl(),
+            self.gen_rand_impl(),
         ])
     }
 }

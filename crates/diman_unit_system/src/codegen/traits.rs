@@ -714,7 +714,7 @@ impl Defs {
         }
     }
 
-    pub fn impl_numeric_traits(&self) -> TokenStream {
+    pub fn gen_numeric_trait_impls(&self) -> TokenStream {
         let ops: TokenStream = self
             .iter_numeric_traits()
             .map(|num_trait| self.generic_numeric_trait_impl(num_trait))

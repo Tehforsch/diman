@@ -3,21 +3,23 @@ use proc_macro2::TokenStream;
 use quote::{quote, quote_spanned};
 
 impl Defs {
-    pub(crate) fn quantity_definition(&self) -> TokenStream {
+    pub(crate) fn gen_quantity(&self) -> TokenStream {
         let Self {
             quantity_type,
             dimension_type,
             ..
         } = &self;
         let span = quantity_type.span();
+        let functions = self.quantity_functions();
         quote_spanned! {span =>
-                #[derive(Clone, Copy, Eq, Default)]
-                #[repr(transparent)]
-                pub struct #quantity_type<S, const D: #dimension_type>(pub(crate) S);
+            #[derive(Clone, Copy, Eq, Default)]
+            #[repr(transparent)]
+            pub struct #quantity_type<S, const D: #dimension_type>(pub(crate) S);
+            #functions
         }
     }
 
-    pub(crate) fn quantity_functions(&self) -> TokenStream {
+    fn quantity_functions(&self) -> TokenStream {
         let Self {
             quantity_type,
             dimension_type,
@@ -83,7 +85,7 @@ impl Defs {
         }
     }
 
-    pub fn definitions_for_storage_types(&self) -> TokenStream {
+    pub(crate) fn gen_definitions_for_storage_types(&self) -> TokenStream {
         self.storage_types()
             .map(|type_| {
                 self.definitions_for_storage_type(
@@ -105,7 +107,7 @@ impl Defs {
         quote! {}
     }
 
-    pub fn definitions_for_storage_type(
+    fn definitions_for_storage_type(
         &self,
         type_: &dyn StorageType,
         module_name: &TokenStream,
@@ -134,7 +136,7 @@ impl Defs {
         }
     }
 
-    pub fn quantity_definitions_for_storage_type(&self, type_: &dyn StorageType) -> TokenStream {
+    fn quantity_definitions_for_storage_type(&self, type_: &dyn StorageType) -> TokenStream {
         self.dimensions
             .iter()
             .map(|quantity| {
@@ -150,7 +152,7 @@ impl Defs {
             .collect()
     }
 
-    pub fn constant_definitions_for_storage_type(&self, type_: &dyn StorageType) -> TokenStream {
+    fn constant_definitions_for_storage_type(&self, type_: &dyn StorageType) -> TokenStream {
         self
             .constants
             .iter()

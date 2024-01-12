@@ -5,7 +5,7 @@ use proc_macro2::TokenStream;
 use crate::{storage_types::FloatType, types::Defs};
 
 impl Defs {
-    pub fn rand_impl(&self) -> TokenStream {
+    pub fn gen_rand_impl(&self) -> TokenStream {
         let float_impls: TokenStream = self
             .float_types()
             .iter()

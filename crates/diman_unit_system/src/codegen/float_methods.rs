@@ -78,7 +78,7 @@ impl Defs {
         ])
     }
 
-    pub fn float_methods(&self) -> TokenStream {
+    pub fn gen_float_methods(&self) -> TokenStream {
         join([
             self.ensure_float_traits(),
             #[cfg(any(feature = "std", feature = "num-traits-libm"))]

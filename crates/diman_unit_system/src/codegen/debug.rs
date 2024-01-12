@@ -21,7 +21,7 @@ impl Defs {
         quote! { [ #units ] }
     }
 
-    pub fn debug_trait(&self) -> TokenStream {
+    pub fn gen_debug_trait_impl(&self) -> TokenStream {
         let Defs {
             quantity_type,
             dimension_type,

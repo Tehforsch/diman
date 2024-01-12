@@ -4,7 +4,7 @@ use quote::quote;
 use crate::types::Defs;
 
 impl Defs {
-    pub(crate) fn dimension_impl(&self) -> TokenStream {
+    pub(crate) fn gen_dimension(&self) -> TokenStream {
         let name = &self.dimension_type;
 
         let dim_type = self.base_dimension_type();
@@ -29,7 +29,7 @@ impl Defs {
         }
     }
 
-    pub(crate) fn dimension_methods_impl(&self) -> TokenStream {
+    fn dimension_methods_impl(&self) -> TokenStream {
         let type_name = &self.dimension_type;
         let none_gen: proc_macro2::TokenStream = self
             .base_dimensions()
