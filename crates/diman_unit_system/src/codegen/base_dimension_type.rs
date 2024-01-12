@@ -19,8 +19,17 @@ impl Defs {
         quote! { Ratio }
     }
 
+    pub fn base_dimension_type_zero(&self) -> TokenStream {
+        quote! { Ratio::int(0i64) }
+    }
+
+    pub fn base_dimension_type_one(&self) -> TokenStream {
+        quote! { Ratio::int(1i64) }
+    }
+
     pub fn zero_entry(&self, ident: &Ident) -> TokenStream {
-        quote! { #ident: Ratio::int(0i64), }
+        let zero = self.base_dimension_type_zero();
+        quote! { #ident: #zero, }
     }
 
     pub fn add_entry(&self, ident: &Ident) -> TokenStream {

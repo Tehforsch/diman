@@ -204,6 +204,17 @@ impl Defs {
                     }
                 }
             }
+
+            impl core::fmt::Display for Ratio {
+                fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                    if self.denom == 1 {
+                        write!(f, "{}", self.num)
+                    } else {
+                        write!(f, "{}/{}", self.num, self.denom)
+                    }
+                }
+            }
+
         }
     }
 }

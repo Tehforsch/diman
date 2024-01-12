@@ -99,10 +99,8 @@ impl UnresolvedDefs {
 
 fn check_for_base_units_without_symbol(units: &[Unit]) {
     for unit in units {
-        if unit.is_base_unit {
-            if unit.symbol.is_none() {
-                NoSymbolForBaseUnitError(unit).emit();
-            }
+        if unit.is_base_unit && unit.symbol.is_none() {
+            NoSymbolForBaseUnitError(unit).emit();
         }
     }
 }
