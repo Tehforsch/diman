@@ -3,8 +3,6 @@
 #![feature(generic_const_exprs, adt_const_params)]
 #![doc = include_str!("../README.md")]
 
-mod type_aliases;
-
 #[cfg(all(
     feature = "rational-dimensions",
     not(any(feature = "std", feature = "num-traits-libm"))
@@ -16,9 +14,6 @@ compile_error!(
 #[cfg(feature = "si")]
 /// Defines the dimensions and units for the SI system.
 pub mod si;
-
-pub use type_aliases::Product;
-pub use type_aliases::Quotient;
 
 // The surrounding module around the unit_system calls is needed to make the doctest work
 // due to the way it is compiled.
@@ -116,3 +111,21 @@ pub use type_aliases::Quotient;
 /// # }
 /// ```
 pub use diman_unit_system::unit_system;
+
+/// Constructs a product of quantities for one-off quantities.
+/// ```
+/// # #![feature(generic_const_exprs)]
+/// # use diman::si::f64::{Length, Time};
+/// # use diman::Product;
+/// let x: Product<Length, Time> = Length::meters(10.0) * Time::seconds(2.0);
+/// ```
+pub type Product<Q1, Q2> = <Q1 as ::core::ops::Mul<Q2>>::Output;
+
+/// Constructs a quotient of two quantities for one-off quantities.
+/// ```
+/// # #![feature(generic_const_exprs)]
+/// # use diman::si::f64::{Length, Time};
+/// # use diman::Quotient;
+/// let x: Quotient<Length, Time> = Length::meters(10.0) / Time::seconds(2.0);
+/// ```
+pub type Quotient<Q1, Q2> = <Q1 as core::ops::Div<Q2>>::Output;
