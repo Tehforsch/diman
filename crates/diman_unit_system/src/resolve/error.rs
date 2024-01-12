@@ -1,9 +1,13 @@
 use std::collections::HashSet;
 
 use proc_macro::{Diagnostic, Level};
+use proc_macro2::Span;
 use syn::Ident;
 
-use crate::{dimension_math::BaseDimensions, types::BaseDimensionExponent};
+use crate::{
+    dimension_math::BaseDimensions,
+    types::{BaseDimensionExponent, Unit},
+};
 
 use super::ident_storage::Kind;
 
@@ -11,9 +15,15 @@ pub struct UnresolvableError(pub Vec<Ident>);
 pub struct UndefinedError(pub Vec<Ident>);
 pub struct MultipleDefinitionsError(pub Vec<Vec<Ident>>);
 
-pub struct MultipleTypeDefinitionsError {
-    pub type_name: &'static str,
-    pub idents: Vec<Ident>,
+pub enum TypeDefinitionsError {
+    Multiple {
+        type_name: &'static str,
+        idents: Vec<Ident>,
+    },
+    None {
+        type_name: &'static str,
+        default_name: &'static str,
+    },
 }
 
 pub struct ViolatedAnnotationError<'a> {
@@ -51,27 +61,41 @@ pub struct SymbolDefinedMultipleTimes<'a> {
     pub units: Vec<&'a Ident>,
 }
 
+pub struct NoSymbolForBaseUnitError<'a>(pub &'a Unit);
+
 pub trait Emit {
     fn emit(self);
 }
 
-pub fn emit_if_err<T, E: Emit>(result: Result<T, E>) {
-    if let Err(err) = result {
-        err.emit();
-    }
-}
-
-impl Emit for MultipleTypeDefinitionsError {
+impl Emit for TypeDefinitionsError {
     fn emit(self) {
-        for ident in self.idents {
-            ident
-                .span()
-                .unwrap()
-                .error(format!(
-                    "Multiple definitions for {} \"{}\".",
-                    self.type_name, ident
-                ))
-                .emit();
+        match self {
+            Self::Multiple { type_name, idents } => {
+                for ident in idents {
+                    ident
+                        .span()
+                        .unwrap()
+                        .error(format!(
+                            "Multiple definitions for {} \"{}\".",
+                            type_name, ident
+                        ))
+                        .emit();
+                }
+            }
+            Self::None {
+                type_name,
+                default_name,
+            } => {
+                Span::call_site()
+                    .unwrap()
+                    .error(format!("No definition for {}", type_name))
+                    .note("In order to provide readable error messages, the name must be specified in the macro call.")
+                    .help(format!(
+                        "Consider adding a definition inside the unit_system! macro:\n\t{} {};",
+                        type_name, default_name
+                    ))
+                    .emit();
+            }
         }
     }
 }
@@ -80,7 +104,7 @@ impl Emit for MultipleTypeDefinitionsError {
 /// entries appearing in one will appear in the formatted
 /// string of the other.
 fn format_lhs_rhs_dimensions(lhs: &BaseDimensions, rhs: &BaseDimensions) -> (String, String) {
-    let available_dims: HashSet<_> = lhs.fields.keys().chain(rhs.fields.keys()).collect();
+    let available_dims: HashSet<_> = lhs.keys().chain(rhs.keys()).collect();
     // Make sure to sort identifiers alphabetically, to make sure
     // we get deterministic error messages.
     let mut available_dims: Vec<_> = available_dims.into_iter().collect();
@@ -89,11 +113,8 @@ fn format_lhs_rhs_dimensions(lhs: &BaseDimensions, rhs: &BaseDimensions) -> (Str
         available_dims
             .iter()
             .map(|dim| {
-                let value = *dims
-                    .fields
-                    .get(dim)
-                    .unwrap_or(&BaseDimensionExponent::zero());
-                format!("{}^{}", dim, value)
+                let value = *dims.get(dim).unwrap_or(&BaseDimensionExponent::zero());
+                format!("{}^{}", dim.0, value)
             })
             .collect::<Vec<_>>()
             .join(" ")
@@ -282,5 +303,20 @@ impl<'a> Emit for SymbolDefinedMultipleTimes<'a> {
             format!("Symbol '{}' is used for multiple units.", self.symbol),
         )
         .emit()
+    }
+}
+
+impl<'a> Emit for NoSymbolForBaseUnitError<'a> {
+    fn emit(self) {
+        self.0
+            .name
+            .span()
+            .unwrap()
+            .error(format!(
+                "Unit {} is declared as a base unit but does not define its symbol.",
+                self.0.name
+            ))
+            .note("Declare the symbol using\n`#[symbol(...)]`")
+            .emit()
     }
 }

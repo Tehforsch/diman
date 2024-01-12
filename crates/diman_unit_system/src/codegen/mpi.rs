@@ -1,26 +1,24 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::{
-    storage_types::{FloatType, VectorType},
-    types::Defs,
-};
+use super::storage_types::{FloatType, VectorType};
+use crate::types::Defs;
 
 use super::join;
 
 impl Defs {
-    pub fn mpi_impl(&self) -> TokenStream {
+    pub fn gen_mpi_impl(&self) -> TokenStream {
         join([self.mpi_floats_impl(), self.mpi_vectors_impl()])
     }
 
-    pub fn mpi_floats_impl(&self) -> TokenStream {
+    fn mpi_floats_impl(&self) -> TokenStream {
         self.float_types()
             .iter()
             .map(|float_type| self.mpi_float_impl(float_type))
             .collect()
     }
 
-    pub fn mpi_float_impl(&self, float_type: &FloatType) -> TokenStream {
+    fn mpi_float_impl(&self, float_type: &FloatType) -> TokenStream {
         let float_type_name = &float_type.name;
         let mpi_type = &float_type.mpi_type;
         let Defs {
@@ -41,14 +39,14 @@ impl Defs {
         }
     }
 
-    pub fn mpi_vectors_impl(&self) -> TokenStream {
+    fn mpi_vectors_impl(&self) -> TokenStream {
         self.vector_types()
             .iter()
             .map(|vector_type| self.mpi_vector_impl(vector_type))
             .collect()
     }
 
-    pub fn mpi_vector_impl(&self, vector_type: &VectorType) -> TokenStream {
+    fn mpi_vector_impl(&self, vector_type: &VectorType) -> TokenStream {
         let vector_type_name = &vector_type.name;
         let float_type = &vector_type.float_type.name;
         let num_dims = vector_type.num_dims as i32;

@@ -1,15 +1,13 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::{
-    storage_types::{FloatType, VectorType},
-    types::Defs,
-};
+use super::storage_types::{FloatType, VectorType};
+use crate::types::Defs;
 
 use super::join;
 
 impl Defs {
-    pub fn serde_impl(&self) -> TokenStream {
+    pub fn gen_serde_impl(&self) -> TokenStream {
         join([
             self.serde_helpers_impl(),
             self.serde_floats_impl(),
@@ -17,7 +15,7 @@ impl Defs {
         ])
     }
 
-    pub fn serde_helpers_impl(&self) -> TokenStream {
+    fn serde_helpers_impl(&self) -> TokenStream {
         let Defs {
             dimension_type,
             quantity_type,
@@ -92,14 +90,14 @@ impl Defs {
         }
     }
 
-    pub fn serde_floats_impl(&self) -> TokenStream {
+    fn serde_floats_impl(&self) -> TokenStream {
         self.float_types()
             .iter()
             .map(|float_type| self.serde_float_impl(float_type))
             .collect()
     }
 
-    pub fn serde_float_impl(&self, float_type: &FloatType) -> TokenStream {
+    fn serde_float_impl(&self, float_type: &FloatType) -> TokenStream {
         let Defs {
             dimension_type,
             quantity_type,
@@ -215,14 +213,14 @@ impl Defs {
         }
     }
 
-    pub fn serde_vectors_impl(&self) -> TokenStream {
+    fn serde_vectors_impl(&self) -> TokenStream {
         self.vector_types()
             .iter()
             .map(|vector_type| self.serde_vector_impl(vector_type))
             .collect()
     }
 
-    pub fn serde_vector_impl(&self, vector_type: &VectorType) -> TokenStream {
+    fn serde_vector_impl(&self, vector_type: &VectorType) -> TokenStream {
         let float_type = &vector_type.float_type.name;
         let num_dims = vector_type.num_dims;
         let vector_type = &vector_type.name;

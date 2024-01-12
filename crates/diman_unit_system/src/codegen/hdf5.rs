@@ -1,26 +1,23 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::{
-    storage_types::{FloatType, VectorType},
-    types::Defs,
-};
-
 use super::join;
+use super::storage_types::{FloatType, VectorType};
+use crate::types::Defs;
 
 impl Defs {
-    pub fn hdf5_impl(&self) -> TokenStream {
+    pub fn gen_hdf5_impl(&self) -> TokenStream {
         join([self.hdf5_floats_impl(), self.hdf5_vectors_impl()])
     }
 
-    pub fn hdf5_floats_impl(&self) -> TokenStream {
+    fn hdf5_floats_impl(&self) -> TokenStream {
         self.float_types()
             .iter()
             .map(|float_type| self.hdf5_float_impl(float_type))
             .collect()
     }
 
-    pub fn hdf5_float_impl(&self, float_type: &FloatType) -> TokenStream {
+    fn hdf5_float_impl(&self, float_type: &FloatType) -> TokenStream {
         let float_type_name = &float_type.name;
         let hdf5_type = &float_type.hdf5_type;
         let Defs {
@@ -37,14 +34,14 @@ impl Defs {
         }
     }
 
-    pub fn hdf5_vectors_impl(&self) -> TokenStream {
+    fn hdf5_vectors_impl(&self) -> TokenStream {
         self.vector_types()
             .iter()
             .map(|vector_type| self.hdf5_vector_impl(vector_type))
             .collect()
     }
 
-    pub fn hdf5_vector_impl(&self, vector_type: &VectorType) -> TokenStream {
+    fn hdf5_vector_impl(&self, vector_type: &VectorType) -> TokenStream {
         let vector_type_name = &vector_type.name;
         let hdf5_type = &vector_type.float_type.hdf5_type;
         let num_dims = vector_type.num_dims;

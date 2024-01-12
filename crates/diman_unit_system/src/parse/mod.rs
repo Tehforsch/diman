@@ -8,10 +8,10 @@ use syn::{
 };
 
 use crate::{
-    expression::{BinaryOperator, Expr, Factor, Operator},
     parse::attributes::Attributes,
-    prefixes::{ExplicitPrefixes, MetricPrefixes},
-    types::{Alias, BaseAttribute, BaseDimensionExponent, Definition, UnresolvedTemplates},
+    types::expression::{BinaryOperator, Expr, Factor, Operator},
+    types::prefixes::{ExplicitPrefixes, MetricPrefixes},
+    types::{Alias, BaseAttribute, BaseDimensionExponent, Definition, One, UnresolvedTemplates},
 };
 
 use self::{
@@ -24,7 +24,7 @@ use self::{
 
 use super::types::{ConstantEntry, DimensionEntry, DimensionFactor, UnitTemplate};
 
-pub mod keywords {
+mod keywords {
     syn::custom_keyword!(quantity_type);
     syn::custom_keyword!(dimension_type);
     syn::custom_keyword!(dimension);
@@ -32,7 +32,7 @@ pub mod keywords {
     syn::custom_keyword!(constant);
 }
 
-pub mod tokens {
+mod tokens {
     syn::custom_punctuation!(AssignmentToken, =);
     syn::custom_punctuation!(TypeAnnotationToken, :);
     syn::custom_punctuation!(MultiplicationToken, *);
@@ -42,18 +42,14 @@ pub mod tokens {
     syn::custom_punctuation!(AttributeToken, #);
 }
 
-pub struct Number {
+struct Number {
     pub lit: Lit,
     pub float: f64,
 }
 
-pub struct Int {
-    pub lit: Lit,
-    pub int: i32,
+struct Int {
+    pub int: i64,
 }
-
-#[derive(Clone)]
-pub struct One;
 
 #[cfg(feature = "rational-dimensions")]
 struct Exponent {
@@ -62,9 +58,9 @@ struct Exponent {
 }
 
 #[cfg(not(feature = "rational-dimensions"))]
-struct Exponent(i32);
+struct Exponent(i64);
 
-pub enum Entry {
+enum Entry {
     QuantityType(Ident),
     DimensionType(Ident),
     Dimension(DimensionEntry),
@@ -104,13 +100,13 @@ impl Parse for Int {
     fn parse(input: ParseStream) -> Result<Self> {
         let lit = input.parse()?;
         let int = match lit {
-            Lit::Int(ref int) => int.base10_parse::<i32>(),
+            Lit::Int(ref int) => int.base10_parse::<i64>(),
             _ => Err(Error::new(
                 lit.span(),
                 "Unexpected literal, expected a numerical value".to_string(),
             )),
         }?;
-        Ok(Self { lit, int })
+        Ok(Self { int })
     }
 }
 
@@ -414,8 +410,8 @@ pub mod tests {
     use quote::quote;
 
     use crate::{
-        expression::{BinaryOperator, Expr, Factor, Operator},
         parse::Entry,
+        types::expression::{BinaryOperator, Expr, Factor, Operator},
     };
 
     use syn::{

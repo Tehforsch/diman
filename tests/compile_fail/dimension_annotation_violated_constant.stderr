@@ -1,8 +1,0 @@
-error: Dimension mismatch in expression.
-  --> tests/compile_fail/dimension_annotation_violated_constant.rs:12:26
-   |
-12 |     constant SOLAR_MASS: Mass = 1.988477e30 * kilograms * grams;
-   |                          ^^^^
-   |
-   = help: The annotation on the left-hand side has dimensions mass^1
-   = help: but the expression on the right-hand side has dimensions mass^2

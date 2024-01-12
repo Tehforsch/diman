@@ -7,7 +7,7 @@ use syn::{
 
 use crate::{
     parse::tokens,
-    prefixes::{ExplicitPrefixes, MetricPrefixes, Prefix},
+    types::prefixes::{ExplicitPrefixes, MetricPrefixes, Prefix},
     types::{Alias, BaseAttribute, Symbol},
 };
 

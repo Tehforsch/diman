@@ -1,7 +1,0 @@
-error: Identifier "foo" defined multiple times.
-  --> tests/compile_fail/resolver_duplicate_definition.rs:12:10
-   |
-12 |     unit foo: Length = 10.0 * meters;
-   |          ^^^
-13 |     unit foo: Length = 20.0 * meters;
-   |          ^^^

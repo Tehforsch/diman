@@ -1,9 +1,9 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::{storage_types::FloatType, types::Defs};
+use crate::types::Defs;
 
-use super::join;
+use super::{join, storage_types::FloatType};
 
 impl Defs {
     fn ensure_float_traits(&self) -> TokenStream {
@@ -78,7 +78,7 @@ impl Defs {
         ])
     }
 
-    pub fn float_methods(&self) -> TokenStream {
+    pub fn gen_float_methods(&self) -> TokenStream {
         join([
             self.ensure_float_traits(),
             #[cfg(any(feature = "std", feature = "num-traits-libm"))]

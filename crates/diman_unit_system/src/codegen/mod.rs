@@ -1,51 +1,50 @@
 mod base_dimension_type;
-mod debug;
-mod dimension_def;
+mod debug_trait;
+mod dimension_type;
+mod dimensions;
 mod float_methods;
 mod generic_methods;
 #[cfg(feature = "hdf5")]
 mod hdf5;
 #[cfg(feature = "mpi")]
 mod mpi;
+mod num_traits;
 #[cfg(feature = "rand")]
 mod rand;
 #[cfg(feature = "serde")]
 mod serde;
-mod traits;
-pub mod type_defs;
-mod unit_constructors;
+mod storage_types;
+mod units;
 mod vector_methods;
 
 use proc_macro2::TokenStream;
 
 use crate::types::Defs;
 
-pub fn join<const D: usize>(streams: [TokenStream; D]) -> TokenStream {
+fn join<const D: usize>(streams: [TokenStream; D]) -> TokenStream {
     streams.into_iter().collect()
 }
 
 impl Defs {
     pub fn code_gen(&self) -> TokenStream {
         join([
-            self.type_definition(),
-            self.type_functions(),
-            self.float_definitions(),
-            self.vector_definitions(),
-            self.unit_constructors(),
-            self.qproduct_trait(),
-            self.impl_numeric_traits(),
-            self.debug_trait(),
-            self.float_methods(),
-            self.vector_methods(),
-            self.generic_methods(),
+            self.gen_dimension(),
+            self.gen_quantity(),
+            self.gen_definitions_for_storage_types(),
+            self.gen_unit_constructors(),
+            self.gen_numeric_trait_impls(),
+            self.gen_debug_trait_impl(),
+            self.gen_float_methods(),
+            self.gen_vector_methods(),
+            self.gen_generic_methods(),
             #[cfg(feature = "serde")]
-            self.serde_impl(),
+            self.gen_serde_impl(),
             #[cfg(feature = "hdf5")]
-            self.hdf5_impl(),
+            self.gen_hdf5_impl(),
             #[cfg(feature = "mpi")]
-            self.mpi_impl(),
+            self.gen_mpi_impl(),
             #[cfg(feature = "rand")]
-            self.rand_impl(),
+            self.gen_rand_impl(),
         ])
     }
 }

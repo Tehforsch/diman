@@ -1,0 +1,7 @@
+error: 'parsec' is defined to be a base unit for dimension 'Length', but there already is a base unit for this dimension.
+  --> tests/compile_fail/resolver_duplicate_base_unit.rs:15:10
+   |
+15 |     unit parsec: Length;
+   |          ^^^^^^
+   |
+   = note: There can only be one base unit per base dimension.

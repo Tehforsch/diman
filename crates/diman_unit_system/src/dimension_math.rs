@@ -2,11 +2,20 @@ use std::collections::HashMap;
 
 use proc_macro2::Ident;
 
-use crate::{expression::MulDiv, types::BaseDimensionExponent};
+use crate::{
+    types::expression::MulDiv,
+    types::{base_dimension::BaseDimension, BaseDimensionExponent},
+};
 
 #[derive(Clone)]
 pub struct BaseDimensions {
-    pub fields: HashMap<Ident, BaseDimensionExponent>,
+    fields: HashMap<BaseDimension, BaseDimensionExponent>,
+}
+
+#[derive(Clone)]
+pub struct DimensionsAndMagnitude {
+    pub dimensions: BaseDimensions,
+    pub magnitude: f64,
 }
 
 impl PartialEq for BaseDimensions {
@@ -25,6 +34,28 @@ impl BaseDimensions {
         Self {
             fields: HashMap::default(),
         }
+    }
+
+    pub fn for_base_dimension(base_dim: BaseDimension) -> Self {
+        let mut fields = HashMap::new();
+        fields.insert(base_dim, BaseDimensionExponent::one());
+        Self { fields }
+    }
+
+    pub(crate) fn fields(&self) -> impl Iterator<Item = (&Ident, &BaseDimensionExponent)> {
+        self.fields.iter().map(|(dim, exp)| (&dim.0, exp))
+    }
+
+    pub(crate) fn keys(&self) -> impl Iterator<Item = &BaseDimension> {
+        self.fields.keys()
+    }
+
+    pub(crate) fn num_fields(&self) -> usize {
+        self.fields.len()
+    }
+
+    pub(crate) fn get(&self, dim: &BaseDimension) -> Option<&BaseDimensionExponent> {
+        self.fields.get(dim)
     }
 }
 
@@ -76,54 +107,48 @@ impl MulDiv for BaseDimensions {
     }
 }
 
-#[derive(Clone)]
-pub struct DimensionsAndFactor {
-    pub dimensions: BaseDimensions,
-    pub factor: f64,
-}
-
-impl DimensionsAndFactor {
-    pub fn factor(factor: f64) -> Self {
+impl DimensionsAndMagnitude {
+    pub fn magnitude(magnitude: f64) -> Self {
         Self {
             dimensions: BaseDimensions::none(),
-            factor,
+            magnitude,
         }
     }
 
     pub(crate) fn dimensions(dimensions: BaseDimensions) -> Self {
         Self {
             dimensions,
-            factor: 1.0,
+            magnitude: 1.0,
         }
     }
 }
 
-impl core::ops::Mul for DimensionsAndFactor {
+impl core::ops::Mul for DimensionsAndMagnitude {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
         Self {
             dimensions: self.dimensions * rhs.dimensions,
-            factor: self.factor * rhs.factor,
+            magnitude: self.magnitude * rhs.magnitude,
         }
     }
 }
 
-impl core::ops::Div for DimensionsAndFactor {
+impl core::ops::Div for DimensionsAndMagnitude {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self::Output {
         Self {
             dimensions: self.dimensions / rhs.dimensions,
-            factor: self.factor / rhs.factor,
+            magnitude: self.magnitude / rhs.magnitude,
         }
     }
 }
 
-impl MulDiv for DimensionsAndFactor {
+impl MulDiv for DimensionsAndMagnitude {
     fn pow(self, pow: BaseDimensionExponent) -> Self {
         Self {
-            factor: BaseDimensionExponent::pow(self.factor, pow),
+            magnitude: BaseDimensionExponent::pow(self.magnitude, pow),
             dimensions: self.dimensions.pow(pow),
         }
     }

@@ -169,10 +169,10 @@ Sometimes, intermediate types in computations are quantities that don't really h
 not needed too many times. Having to add a definition to the unit system for this case can be cumbersome.
 This is why the `Product` and `Quotient` types are provided:
 ```rust
-use diman::si::f64::{Length, Time, Velocity, Area, Volume};
+use diman::si::f64::{Length, Time};
 use diman::{Product, Quotient};
-fn foo(l: Length, t: Time, vol: Volume) -> Product<(Length, Time, Volume)> {
-    l * t * vol
+fn foo(l: Length, t: Time) -> Product<Length, Time> {
+    l * t
 }
 
 fn bar(l: Length, t: Time) -> Quotient<Length, Time> {

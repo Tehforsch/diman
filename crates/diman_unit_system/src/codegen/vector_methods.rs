@@ -1,17 +1,19 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::{storage_types::VectorType, types::Defs};
+use crate::types::Defs;
+
+use super::storage_types::VectorType;
 
 impl Defs {
-    pub fn vector_methods(&self) -> TokenStream {
+    pub fn gen_vector_methods(&self) -> TokenStream {
         self.vector_types()
             .iter()
             .map(|vector_type| self.impl_vector_methods(vector_type))
             .collect()
     }
 
-    pub fn impl_vector_methods(&self, vector_type: &VectorType) -> TokenStream {
+    fn impl_vector_methods(&self, vector_type: &VectorType) -> TokenStream {
         let Defs {
             dimension_type,
             quantity_type,

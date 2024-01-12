@@ -5,7 +5,7 @@ use crate::types::{BaseDimensionExponent, Defs};
 
 #[cfg(feature = "rational-dimensions")]
 impl Defs {
-    pub fn get_base_dimenison_entry(
+    pub fn get_base_dimension_entry(
         &self,
         field: &Ident,
         value: &BaseDimensionExponent,
@@ -19,8 +19,17 @@ impl Defs {
         quote! { Ratio }
     }
 
+    pub fn base_dimension_type_zero(&self) -> TokenStream {
+        quote! { Ratio::int(0i64) }
+    }
+
+    pub fn base_dimension_type_one(&self) -> TokenStream {
+        quote! { Ratio::int(1i64) }
+    }
+
     pub fn zero_entry(&self, ident: &Ident) -> TokenStream {
-        quote! { #ident: Ratio::int(0), }
+        let zero = self.base_dimension_type_zero();
+        quote! { #ident: #zero, }
     }
 
     pub fn add_entry(&self, ident: &Ident) -> TokenStream {
@@ -43,7 +52,7 @@ impl Defs {
 
     pub fn mul_entry(&self, ident: &Ident) -> TokenStream {
         quote! {
-            #ident: self.#ident.mul(Ratio::int(other)),
+            #ident: self.#ident.mul(Ratio::int(other as i64)),
         }
     }
 
@@ -70,7 +79,7 @@ impl Defs {
 
 #[cfg(not(feature = "rational-dimensions"))]
 impl Defs {
-    pub fn get_base_dimenison_entry(
+    pub fn get_base_dimension_entry(
         &self,
         field: &Ident,
         value: &BaseDimensionExponent,
@@ -80,11 +89,20 @@ impl Defs {
     }
 
     pub fn base_dimension_type(&self) -> TokenStream {
-        quote! { i32 }
+        quote! { i64 }
+    }
+
+    pub fn base_dimension_type_zero(&self) -> TokenStream {
+        quote! { 0i64 }
+    }
+
+    pub fn base_dimension_type_one(&self) -> TokenStream {
+        quote! { 1i64 }
     }
 
     pub fn zero_entry(&self, ident: &Ident) -> TokenStream {
-        quote! { #ident: 0, }
+        let zero = self.base_dimension_type_zero();
+        quote! { #ident: #zero, }
     }
 
     pub fn add_entry(&self, ident: &Ident) -> TokenStream {
@@ -107,7 +125,7 @@ impl Defs {
 
     pub fn mul_entry(&self, ident: &Ident) -> TokenStream {
         quote! {
-            #ident: self.#ident * other,
+            #ident: self.#ident * other as i64,
         }
     }
 
