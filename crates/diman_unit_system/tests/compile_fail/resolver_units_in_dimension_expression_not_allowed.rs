@@ -1,7 +1,7 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs, adt_const_params)]
 
-use ::diman::unit_system;
+use diman_unit_system::unit_system;
 unit_system!(
     quantity_type Quantity;
     dimension_type Dimension;
@@ -9,8 +9,7 @@ unit_system!(
     #[base(Mass)]
     #[symbol(kg)]
     unit kilograms: Mass;
-    unit grams = 1e-3 * kilograms;
-    constant SOLAR_MASS: Mass = 1.988477e30 * kilograms * grams;
+    dimension Mass2 = kilograms;
 );
 
 fn main() {

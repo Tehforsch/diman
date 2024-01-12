@@ -1,4 +1,4 @@
-use ::diman::unit_system;
+use diman_unit_system::unit_system;
 
 
 unit_system!(
