@@ -35,6 +35,10 @@ jobs:
         run: cargo test --tests --features glam,glam-vec2,glam-dvec2,glam-vec3,glam-dvec3,f32,f64,gen-vec-names,si,mpi,hdf5,rand,serde
       - name: Run tests (all features)
         run: cargo test --tests --all-features
+      - name: Run tests (no std, no libm)
+        run: cargo test --tests --no-default-features --features f32,f64,si
+      - name: Run tests (no std, libm)
+        run: cargo test --tests --no-default-features --features f32,f64,num-traits-libm,si
       - name: Doctests
         run: cargo test --doc --all-features
 
@@ -55,6 +59,8 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install mpich
+    - name: Run clippy on all targets
+      run: cargo clippy --version
     - name: Run clippy on all targets
       run: cargo clippy --all-targets --all-features -- -D warnings
 
