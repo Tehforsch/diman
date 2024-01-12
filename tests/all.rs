@@ -17,6 +17,7 @@ mod debug;
 #[cfg(feature = "f64")]
 mod dimension_defs;
 
+#[cfg(feature = "si")]
 #[cfg(feature = "f64")]
 mod gas;
 
@@ -36,7 +37,7 @@ mod rand;
 pub mod rational_dimensions;
 
 #[test]
-#[cfg(feature = "f32")]
+#[cfg(feature = "f64")]
 fn compile_fail_float() {
     let t = trybuild::TestCases::new();
     t.compile_fail("tests/compile_fail/float_*.rs");
@@ -51,12 +52,15 @@ fn compile_fail_glam() {
 }
 
 #[test]
+#[cfg(feature = "f64")]
 fn compile_fail_resolver() {
     let t = trybuild::TestCases::new();
     t.compile_fail("tests/compile_fail/resolver_*.rs");
 }
 
 #[test]
+#[cfg(feature = "f64")]
+#[cfg(feature = "si")]
 #[cfg(not(feature = "rational-dimensions"))]
 fn compile_fail_type_mismatch() {
     let t = trybuild::TestCases::new();
