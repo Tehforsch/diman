@@ -6,7 +6,6 @@ use syn::*;
 use crate::{
     dimension_math::BaseDimensions,
     expression::{self, BinaryOperator, Expr, Operator},
-    parse::One,
     prefixes::Prefix,
     to_snakecase::to_snakecase,
 };
@@ -61,6 +60,9 @@ pub struct BaseAttribute {
 pub struct Alias {
     pub name: Ident,
 }
+
+#[derive(Clone)]
+pub struct One;
 
 #[derive(Clone)]
 pub struct Symbol(pub Ident);

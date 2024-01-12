@@ -151,10 +151,12 @@ impl<T: MulDiv, I: Into<BaseDimensionExponent> + Clone> Factor<T, I> {
 #[cfg(test)]
 #[cfg(not(feature = "rational-dimensions"))]
 mod tests {
-    use crate::{parse::tests::MyInt, types::BaseDimensionExponent};
-    use quote::quote;
+    use crate::expression::MulDiv;
+    use crate::parse::tests::parse_expr;
+    use crate::parse::tests::MyInt;
+    use crate::types::BaseDimensionExponent;
 
-    use super::{super::parse::tests::parse_expr, MulDiv};
+    use quote::quote;
 
     impl core::ops::Mul for MyInt {
         type Output = MyInt;

@@ -11,7 +11,7 @@ use crate::{
     expression::{BinaryOperator, Expr, Factor, Operator},
     parse::attributes::Attributes,
     prefixes::{ExplicitPrefixes, MetricPrefixes},
-    types::{Alias, BaseAttribute, BaseDimensionExponent, Definition, UnresolvedTemplates},
+    types::{Alias, BaseAttribute, BaseDimensionExponent, Definition, One, UnresolvedTemplates},
 };
 
 use self::{
@@ -24,7 +24,7 @@ use self::{
 
 use super::types::{ConstantEntry, DimensionEntry, DimensionFactor, UnitTemplate};
 
-pub mod keywords {
+mod keywords {
     syn::custom_keyword!(quantity_type);
     syn::custom_keyword!(dimension_type);
     syn::custom_keyword!(dimension);
@@ -32,7 +32,7 @@ pub mod keywords {
     syn::custom_keyword!(constant);
 }
 
-pub mod tokens {
+mod tokens {
     syn::custom_punctuation!(AssignmentToken, =);
     syn::custom_punctuation!(TypeAnnotationToken, :);
     syn::custom_punctuation!(MultiplicationToken, *);
@@ -42,18 +42,14 @@ pub mod tokens {
     syn::custom_punctuation!(AttributeToken, #);
 }
 
-pub struct Number {
+struct Number {
     pub lit: Lit,
     pub float: f64,
 }
 
-pub struct Int {
-    pub lit: Lit,
+struct Int {
     pub int: i64,
 }
-
-#[derive(Clone)]
-pub struct One;
 
 #[cfg(feature = "rational-dimensions")]
 struct Exponent {
@@ -64,7 +60,7 @@ struct Exponent {
 #[cfg(not(feature = "rational-dimensions"))]
 struct Exponent(i64);
 
-pub enum Entry {
+enum Entry {
     QuantityType(Ident),
     DimensionType(Ident),
     Dimension(DimensionEntry),
@@ -110,7 +106,7 @@ impl Parse for Int {
                 "Unexpected literal, expected a numerical value".to_string(),
             )),
         }?;
-        Ok(Self { lit, int })
+        Ok(Self { int })
     }
 }
 
