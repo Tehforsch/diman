@@ -1,4 +1,4 @@
-error[E0599]: no function or associated item named `unknown_method` found for struct `example_system::Quantity` in the current scope
+error[E0599]: no function or associated item named `unknown_method` found for struct `Quantity` in the current scope
  --> tests/compile_fail/float_unknown_method_on_quantity_type_alias.rs:7:13
   |
 7 |     Length::unknown_method(49.0);
@@ -9,11 +9,11 @@ error[E0599]: no function or associated item named `unknown_method` found for st
   |     quantity_type Quantity;
   |                   -------- function or associated item `unknown_method` not found for this struct
   |
-note: if you're trying to build a new `example_system::Quantity<f64, Dimension>` consider using one of the following associated functions:
-      example_system::Quantity::<f64, Dimension>::dimensionless
-      example_system::Quantity::<f64, Dimension>::grams
-      example_system::Quantity::<f64, Dimension>::joules
-      example_system::Quantity::<f64, Dimension>::kilograms
+note: if you're trying to build a new `Quantity<f64, Dimension>` consider using one of the following associated functions:
+      Quantity::<f64, Dimension>::dimensionless
+      Quantity::<f64, Dimension>::grams
+      Quantity::<f64, Dimension>::joules
+      Quantity::<f64, Dimension>::kilograms
       and $N others
  --> tests/compile_fail/example_system/mod.rs
   |
