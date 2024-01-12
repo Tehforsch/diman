@@ -4,7 +4,6 @@ mod codegen;
 mod dimension_math;
 mod parse;
 mod resolve;
-mod storage_types;
 mod types;
 
 use proc_macro2::TokenStream;

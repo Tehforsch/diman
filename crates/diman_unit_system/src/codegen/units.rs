@@ -2,10 +2,8 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote, quote_spanned};
 use syn::Type;
 
-use crate::{
-    storage_types::{FloatType, VectorType},
-    types::{Defs, Unit},
-};
+use super::storage_types::{FloatType, VectorType};
+use crate::types::{Defs, Unit};
 
 impl Defs {
     pub fn gen_unit_constructors(&self) -> TokenStream {

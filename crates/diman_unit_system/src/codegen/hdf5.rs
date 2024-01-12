@@ -1,12 +1,9 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::{
-    storage_types::{FloatType, VectorType},
-    types::Defs,
-};
-
 use super::join;
+use super::storage_types::{FloatType, VectorType};
+use crate::types::Defs;
 
 impl Defs {
     pub fn gen_hdf5_impl(&self) -> TokenStream {

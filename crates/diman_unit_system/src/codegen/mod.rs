@@ -13,6 +13,7 @@ mod num_traits;
 mod rand;
 #[cfg(feature = "serde")]
 mod serde;
+mod storage_types;
 mod units;
 mod vector_methods;
 

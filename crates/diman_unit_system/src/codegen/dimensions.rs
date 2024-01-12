@@ -1,6 +1,8 @@
-use crate::{dimension_math::BaseDimensions, storage_types::StorageType, types::Defs};
+use crate::{dimension_math::BaseDimensions, types::Defs};
 use proc_macro2::TokenStream;
 use quote::{quote, quote_spanned};
+
+use super::storage_types::StorageType;
 
 impl Defs {
     pub(crate) fn gen_quantity(&self) -> TokenStream {

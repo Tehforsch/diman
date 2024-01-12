@@ -1,7 +1,9 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::{storage_types::VectorType, types::Defs};
+use crate::types::Defs;
+
+use super::storage_types::VectorType;
 
 impl Defs {
     pub fn gen_vector_methods(&self) -> TokenStream {
