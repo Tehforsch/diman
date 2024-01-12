@@ -1,11 +1,15 @@
 mod base_dimension_exponent;
 pub mod expression;
+pub mod prefixes;
 
 use proc_macro2::Span;
 use syn::*;
 
-use self::expression::{BinaryOperator, Expr, Operator};
-use crate::{dimension_math::BaseDimensions, prefixes::Prefix, to_snakecase::to_snakecase};
+use self::{
+    expression::{BinaryOperator, Expr, Operator},
+    prefixes::Prefix,
+};
+use crate::{dimension_math::BaseDimensions, to_snakecase::to_snakecase};
 
 pub use base_dimension_exponent::BaseDimensionExponent;
 

@@ -9,8 +9,8 @@ use syn::{
 
 use crate::{
     parse::attributes::Attributes,
-    prefixes::{ExplicitPrefixes, MetricPrefixes},
     types::expression::{BinaryOperator, Expr, Factor, Operator},
+    types::prefixes::{ExplicitPrefixes, MetricPrefixes},
     types::{Alias, BaseAttribute, BaseDimensionExponent, Definition, One, UnresolvedTemplates},
 };
 

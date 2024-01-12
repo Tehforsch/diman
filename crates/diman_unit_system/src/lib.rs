@@ -3,7 +3,6 @@
 mod codegen;
 mod dimension_math;
 mod parse;
-mod prefixes;
 mod resolve;
 mod storage_types;
 mod to_snakecase;
