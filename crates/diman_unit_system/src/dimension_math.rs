@@ -2,11 +2,20 @@ use std::collections::HashMap;
 
 use proc_macro2::Ident;
 
-use crate::{types::expression::MulDiv, types::BaseDimensionExponent};
+use crate::{
+    types::expression::MulDiv,
+    types::{base_dimension::BaseDimension, BaseDimensionExponent},
+};
 
 #[derive(Clone)]
 pub struct BaseDimensions {
-    pub fields: HashMap<Ident, BaseDimensionExponent>,
+    fields: HashMap<BaseDimension, BaseDimensionExponent>,
+}
+
+#[derive(Clone)]
+pub struct DimensionsAndMagnitude {
+    pub dimensions: BaseDimensions,
+    pub magnitude: f64,
 }
 
 impl PartialEq for BaseDimensions {
@@ -27,10 +36,26 @@ impl BaseDimensions {
         }
     }
 
-    pub fn for_base_dimension(base_dim: &Ident) -> Self {
+    pub fn for_base_dimension(base_dim: BaseDimension) -> Self {
         let mut fields = HashMap::new();
-        fields.insert(base_dim.clone(), BaseDimensionExponent::one());
+        fields.insert(base_dim, BaseDimensionExponent::one());
         Self { fields }
+    }
+
+    pub(crate) fn fields(&self) -> impl Iterator<Item = (&Ident, &BaseDimensionExponent)> {
+        self.fields.iter().map(|(dim, exp)| (&dim.0, exp))
+    }
+
+    pub(crate) fn keys(&self) -> impl Iterator<Item = &BaseDimension> {
+        self.fields.keys()
+    }
+
+    pub(crate) fn num_fields(&self) -> usize {
+        self.fields.len()
+    }
+
+    pub(crate) fn get(&self, dim: &BaseDimension) -> Option<&BaseDimensionExponent> {
+        self.fields.get(dim)
     }
 }
 
@@ -80,12 +105,6 @@ impl MulDiv for BaseDimensions {
                 .collect(),
         }
     }
-}
-
-#[derive(Clone)]
-pub struct DimensionsAndMagnitude {
-    pub dimensions: BaseDimensions,
-    pub magnitude: f64,
 }
 
 impl DimensionsAndMagnitude {

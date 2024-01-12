@@ -1,5 +1,14 @@
 use proc_macro2::Ident;
 
+#[derive(PartialEq, Eq, Hash, Clone, PartialOrd, Ord)]
+pub struct BaseDimension(pub Ident);
+
+impl BaseDimension {
+    pub fn from_dimension(dim: &Ident) -> Self {
+        Self(to_snakecase(dim))
+    }
+}
+
 fn str_to_snakecase(s: &str) -> String {
     let s = s.chars().rev().collect::<String>();
     let words = s.split_inclusive(|c: char| c.is_uppercase());
@@ -10,7 +19,7 @@ fn str_to_snakecase(s: &str) -> String {
         .join("_")
 }
 
-pub fn to_snakecase(dim: &Ident) -> Ident {
+fn to_snakecase(dim: &Ident) -> Ident {
     let snake_case = str_to_snakecase(&dim.to_string());
     Ident::new(&snake_case, dim.span())
 }

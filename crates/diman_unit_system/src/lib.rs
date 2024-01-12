@@ -5,7 +5,6 @@ mod dimension_math;
 mod parse;
 mod resolve;
 mod storage_types;
-mod to_snakecase;
 mod types;
 
 use proc_macro2::TokenStream;

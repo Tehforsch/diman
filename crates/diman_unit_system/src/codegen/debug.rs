@@ -1,9 +1,9 @@
-use proc_macro2::{Ident, TokenStream};
+use proc_macro2::TokenStream;
 use quote::quote;
 
 use crate::{
     dimension_math::BaseDimensions,
-    types::{Defs, Unit},
+    types::{base_dimension::BaseDimension, Defs, Unit},
 };
 
 impl Defs {
@@ -59,11 +59,12 @@ impl Defs {
         }
     }
 
-    fn get_base_dimension_symbol(&self, base_dim: &Ident) -> TokenStream {
-        let dim = self.get_dimension_expr(&BaseDimensions::for_base_dimension(base_dim));
+    fn get_base_dimension_symbol(&self, base_dim: &BaseDimension) -> TokenStream {
+        let dim = self.get_dimension_expr(&BaseDimensions::for_base_dimension(base_dim.clone()));
         // We know that symbols exist for base dimensions, so we can unwrap here.
         let base_dimension_type_zero = self.base_dimension_type_zero();
         let base_dimension_type_one = self.base_dimension_type_one();
+        let base_dim = &base_dim.0;
         quote! {
             if D.#base_dim == #base_dimension_type_one {
                 write!(f, " {}", get_symbol::< { #dim }>().unwrap())?;

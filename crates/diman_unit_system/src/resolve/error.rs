@@ -104,7 +104,7 @@ impl Emit for TypeDefinitionsError {
 /// entries appearing in one will appear in the formatted
 /// string of the other.
 fn format_lhs_rhs_dimensions(lhs: &BaseDimensions, rhs: &BaseDimensions) -> (String, String) {
-    let available_dims: HashSet<_> = lhs.fields.keys().chain(rhs.fields.keys()).collect();
+    let available_dims: HashSet<_> = lhs.keys().chain(rhs.keys()).collect();
     // Make sure to sort identifiers alphabetically, to make sure
     // we get deterministic error messages.
     let mut available_dims: Vec<_> = available_dims.into_iter().collect();
@@ -113,11 +113,8 @@ fn format_lhs_rhs_dimensions(lhs: &BaseDimensions, rhs: &BaseDimensions) -> (Str
         available_dims
             .iter()
             .map(|dim| {
-                let value = *dims
-                    .fields
-                    .get(dim)
-                    .unwrap_or(&BaseDimensionExponent::zero());
-                format!("{}^{}", dim, value)
+                let value = *dims.get(dim).unwrap_or(&BaseDimensionExponent::zero());
+                format!("{}^{}", dim.0, value)
             })
             .collect::<Vec<_>>()
             .join(" ")

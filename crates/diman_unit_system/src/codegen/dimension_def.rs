@@ -9,8 +9,10 @@ impl Defs {
 
         let dim_type = self.base_dimension_type();
         let dimensions: proc_macro2::TokenStream = self
-            .base_dimensions()
+            .base_dimensions
+            .iter()
             .map(|dim| {
+                let dim = &dim.0;
                 quote! {
                     #dim: #dim_type,
                 }

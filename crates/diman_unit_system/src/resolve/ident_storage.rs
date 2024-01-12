@@ -4,7 +4,10 @@ use proc_macro2::Ident;
 
 use crate::{
     dimension_math::{BaseDimensions, DimensionsAndMagnitude},
-    types::expression::{self, Expr},
+    types::{
+        base_dimension::BaseDimension,
+        expression::{self, Expr},
+    },
     types::{
         BaseDimensionExponent, Constant, ConstantEntry, Definition, Dimension, DimensionEntry,
         Factor, Unit, UnitEntry,
@@ -318,7 +321,7 @@ impl From<DimensionEntry> for Item {
             }),
             Definition::Base(()) => Expr::Value(expression::Factor::Value(Factor::Concrete(
                 DimensionsAndMagnitude::dimensions(BaseDimensions::for_base_dimension(
-                    &entry.dimension_entry_name(),
+                    BaseDimension::from_dimension(&entry.name),
                 )),
             ))),
         };

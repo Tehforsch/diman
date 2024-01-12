@@ -6,7 +6,10 @@ use std::{collections::HashMap, result::Result};
 use proc_macro2::Span;
 use syn::Ident;
 
-use crate::types::{Definition, Defs, DimensionEntry, Unit, UnitEntry, UnresolvedDefs};
+use crate::types::{
+    base_dimension::BaseDimension, Definition, Defs, DimensionEntry, Unit, UnitEntry,
+    UnresolvedDefs,
+};
 
 use self::{
     error::{
@@ -122,7 +125,10 @@ fn check_multiply_defined_symbols(units: &[UnitEntry]) {
     }
 }
 
-pub fn get_base_dimensions(dimensions: &[DimensionEntry], units: &[UnitEntry]) -> Vec<Ident> {
+pub fn get_base_dimensions(
+    dimensions: &[DimensionEntry],
+    units: &[UnitEntry],
+) -> Vec<BaseDimension> {
     let base_dimensions: Vec<_> = dimensions
         .iter()
         .filter(|d| d.is_base_dimension())
@@ -130,7 +136,7 @@ pub fn get_base_dimensions(dimensions: &[DimensionEntry], units: &[UnitEntry]) -
     check_invalid_base_units(units, &base_dimensions);
     base_dimensions
         .into_iter()
-        .map(|x| x.dimension_entry_name())
+        .map(|x| BaseDimension::from_dimension(&x.name))
         .collect()
 }
 

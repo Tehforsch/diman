@@ -1,3 +1,4 @@
+pub mod base_dimension;
 mod base_dimension_exponent;
 pub mod expression;
 pub mod prefixes;
@@ -6,10 +7,11 @@ use proc_macro2::Span;
 use syn::*;
 
 use self::{
+    base_dimension::BaseDimension,
     expression::{BinaryOperator, Expr, Operator},
     prefixes::Prefix,
 };
-use crate::{dimension_math::BaseDimensions, to_snakecase::to_snakecase};
+use crate::dimension_math::BaseDimensions;
 
 pub use base_dimension_exponent::BaseDimensionExponent;
 
@@ -45,10 +47,6 @@ pub struct DimensionEntry {
 impl DimensionEntry {
     pub fn is_base_dimension(&self) -> bool {
         matches!(self.rhs, Definition::Base(()))
-    }
-
-    pub fn dimension_entry_name(&self) -> Ident {
-        to_snakecase(&self.name)
     }
 }
 
@@ -230,11 +228,11 @@ pub struct Defs {
     pub dimensions: Vec<Dimension>,
     pub units: Vec<Unit>,
     pub constants: Vec<Constant>,
-    pub base_dimensions: Vec<Ident>,
+    pub base_dimensions: Vec<BaseDimension>,
 }
 
 impl Defs {
-    pub fn base_dimensions(&self) -> impl Iterator<Item = &Ident> + '_ {
-        self.base_dimensions.iter()
+    pub(crate) fn base_dimensions(&self) -> impl Iterator<Item = &Ident> {
+        self.base_dimensions.iter().map(|x| &x.0)
     }
 }

@@ -67,12 +67,11 @@ impl Defs {
     pub fn get_dimension_expr(&self, dim: &BaseDimensions) -> TokenStream {
         let dimension_type = &self.dimension_type;
         let field_updates: TokenStream = dim
-            .fields
-            .iter()
+            .fields()
             .map(|(field, value)| self.get_base_dimension_entry(field, value))
             .collect();
         let span = self.quantity_type.span();
-        let none_update = if dim.fields.len() < self.base_dimensions.len() {
+        let none_update = if dim.num_fields() < self.base_dimensions.len() {
             quote! { ..#dimension_type::none() }
         } else {
             quote! {}
