@@ -6,6 +6,18 @@ use crate::{storage_types::FloatType, types::Defs};
 use super::join;
 
 impl Defs {
+    fn ensure_float_traits(&self) -> TokenStream {
+        if cfg!(feature = "num-traits-libm") {
+            quote! {
+                use num_traits::float::Float;
+            }
+        } else {
+            quote! {
+                use num_traits::float::FloatCore;
+            }
+        }
+    }
+
     fn dimensionless_float_method(
         &self,
         float_type: &FloatType,
@@ -36,7 +48,11 @@ impl Defs {
             .collect()
     }
 
-    pub fn float_methods(&self) -> TokenStream {
+    #[cfg_attr(
+        not(any(feature = "std", feature = "num-traits-libm")),
+        allow(dead_code)
+    )]
+    fn all_dimensionless_float_methods(&self) -> TokenStream {
         join([
             self.dimensionless_float_method_for_all_float_types(&quote! { log2 }),
             self.dimensionless_float_method_for_all_float_types(&quote! { ln }),
@@ -59,6 +75,14 @@ impl Defs {
             self.dimensionless_float_method_for_all_float_types(&quote! { atanh }),
             self.dimensionless_float_method_for_all_float_types(&quote! { exp_m1 }),
             self.dimensionless_float_method_for_all_float_types(&quote! { ln_1p }),
+        ])
+    }
+
+    pub fn float_methods(&self) -> TokenStream {
+        join([
+            self.ensure_float_traits(),
+            #[cfg(any(feature = "std", feature = "num-traits-libm"))]
+            self.all_dimensionless_float_methods(),
             self.specific_float_methods_for_all_float_types(),
         ])
     }
@@ -100,11 +124,13 @@ impl Defs {
                     #quantity_type::<#float_type, { D.dimension_powi(I) }>(self.0.powi(I))
                 }
 
+                #[cfg(any(feature = "std", feature = "num-traits-libm"))]
                 pub fn sqrt(&self) -> #quantity_type<#float_type, { D.dimension_sqrt() }>
                 {
                     #quantity_type::<#float_type, { D.dimension_sqrt() }>(self.0.sqrt())
                 }
 
+                #[cfg(any(feature = "std", feature = "num-traits-libm"))]
                 pub fn cbrt(&self) -> #quantity_type<#float_type, { D.dimension_cbrt() }>
                 {
                     #quantity_type::<#float_type, { D.dimension_cbrt() }>(self.0.cbrt())

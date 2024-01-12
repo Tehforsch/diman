@@ -26,14 +26,11 @@ impl Defs {
         } = &self;
         let units = self.units_array(self.units.iter().filter(|unit| unit.factor == 1.0));
         quote! {
-            impl<const D: #dimension_type, S: diman::DebugStorageType + std::fmt::Display> std::fmt::Debug for #quantity_type<S, D> {
-                fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            impl<const D: #dimension_type, S: diman::DebugStorageType + core::fmt::Display> core::fmt::Debug for #quantity_type<S, D> {
+                fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
                     let closeness = |value: f64, unit_factor: f64| {
-                        if value == 0.0 {
-                            1.0
-                        } else {
-                            (value / unit_factor).abs().ln().abs()
-                        }
+                        let (mantissa, exponent, _sign) = (value / unit_factor).integer_decode();
+                        (exponent, mantissa)
                     };
                     let val = self.0.representative_value();
                     let units: &[(#dimension_type, _, _)] = &#units;
@@ -43,7 +40,7 @@ impl Defs {
                         .min_by(|(_, _, x), (_, _, y)| {
                             closeness(val, *x)
                                 .partial_cmp(&closeness(val, *y))
-                                .unwrap_or(std::cmp::Ordering::Equal)
+                                .unwrap_or(core::cmp::Ordering::Equal)
                         })
                         .map(|(_, name, val)| (name, val))
                         .unwrap_or((&"unknown unit", &1.0));

@@ -19,7 +19,7 @@ impl Defs {
         let ratio_impl = self.ratio_impl();
         let output = quote! {
             #ratio_impl
-            #[derive(::std::cmp::PartialEq, ::std::cmp::Eq, ::std::clone::Clone, ::std::fmt::Debug, ::std::marker::ConstParamTy)]
+            #[derive(::core::cmp::PartialEq, ::core::cmp::Eq, ::core::clone::Clone, ::core::fmt::Debug, ::core::marker::ConstParamTy)]
             pub struct #name {
                 #dimensions
             }
@@ -137,7 +137,7 @@ impl Defs {
     #[cfg(feature = "rational-dimensions")]
     fn ratio_impl(&self) -> proc_macro2::TokenStream {
         quote! {
-            #[derive(::std::cmp::PartialEq, ::std::cmp::Eq, ::std::clone::Clone, ::std::fmt::Debug, ::std::marker::ConstParamTy)]
+            #[derive(::core::cmp::PartialEq, ::core::cmp::Eq, ::core::clone::Clone, ::core::fmt::Debug, ::core::marker::ConstParamTy)]
             struct Ratio {
                 num: i32,
                 denom: i32,

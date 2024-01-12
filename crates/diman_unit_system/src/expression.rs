@@ -42,7 +42,7 @@ pub enum Factor<T, E> {
 }
 
 pub trait MulDiv:
-    std::ops::Mul<Output = Self> + std::ops::Div<Output = Self> + Sized + Clone
+    core::ops::Mul<Output = Self> + core::ops::Div<Output = Self> + Sized + Clone
 {
     fn pow(self, pow: BaseDimensionExponent) -> Self;
 }
@@ -115,9 +115,9 @@ impl<T, E> Factor<T, E> {
 
     pub fn iter_vals<'a>(&'a self) -> Box<dyn Iterator<Item = &'a T> + 'a> {
         match self {
-            Factor::Value(val) => Box::new(std::iter::once(val)),
+            Factor::Value(val) => Box::new(core::iter::once(val)),
             Factor::ParenExpr(expr) => expr.iter_vals(),
-            Factor::Power(val, _) => Box::new(std::iter::once(val)),
+            Factor::Power(val, _) => Box::new(core::iter::once(val)),
         }
     }
 }
@@ -156,7 +156,7 @@ mod tests {
 
     use super::{super::parse::tests::parse_expr, MulDiv};
 
-    impl std::ops::Mul for MyInt {
+    impl core::ops::Mul for MyInt {
         type Output = MyInt;
 
         fn mul(self, rhs: Self) -> Self::Output {
@@ -164,7 +164,7 @@ mod tests {
         }
     }
 
-    impl std::ops::Div for MyInt {
+    impl core::ops::Div for MyInt {
         type Output = MyInt;
 
         fn div(self, rhs: Self) -> Self::Output {
