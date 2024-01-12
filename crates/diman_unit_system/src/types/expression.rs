@@ -1,4 +1,4 @@
-use crate::types::BaseDimensionExponent;
+use super::BaseDimensionExponent;
 
 #[derive(Clone)]
 #[cfg_attr(test, derive(PartialEq, Debug))]
@@ -151,9 +151,9 @@ impl<T: MulDiv, I: Into<BaseDimensionExponent> + Clone> Factor<T, I> {
 #[cfg(test)]
 #[cfg(not(feature = "rational-dimensions"))]
 mod tests {
-    use crate::expression::MulDiv;
     use crate::parse::tests::parse_expr;
     use crate::parse::tests::MyInt;
+    use crate::types::expression::MulDiv;
     use crate::types::BaseDimensionExponent;
 
     use quote::quote;

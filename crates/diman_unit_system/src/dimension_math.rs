@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use proc_macro2::Ident;
 
-use crate::{expression::MulDiv, types::BaseDimensionExponent};
+use crate::{types::expression::MulDiv, types::BaseDimensionExponent};
 
 #[derive(Clone)]
 pub struct BaseDimensions {

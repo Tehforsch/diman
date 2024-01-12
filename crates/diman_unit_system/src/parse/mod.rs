@@ -8,9 +8,9 @@ use syn::{
 };
 
 use crate::{
-    expression::{BinaryOperator, Expr, Factor, Operator},
     parse::attributes::Attributes,
     prefixes::{ExplicitPrefixes, MetricPrefixes},
+    types::expression::{BinaryOperator, Expr, Factor, Operator},
     types::{Alias, BaseAttribute, BaseDimensionExponent, Definition, One, UnresolvedTemplates},
 };
 
@@ -410,8 +410,8 @@ pub mod tests {
     use quote::quote;
 
     use crate::{
-        expression::{BinaryOperator, Expr, Factor, Operator},
         parse::Entry,
+        types::expression::{BinaryOperator, Expr, Factor, Operator},
     };
 
     use syn::{

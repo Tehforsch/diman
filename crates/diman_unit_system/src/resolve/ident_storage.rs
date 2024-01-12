@@ -4,7 +4,7 @@ use proc_macro2::Ident;
 
 use crate::{
     dimension_math::{BaseDimensions, DimensionsAndMagnitude},
-    expression::{self, Expr},
+    types::expression::{self, Expr},
     types::{
         BaseDimensionExponent, Constant, ConstantEntry, Definition, Dimension, DimensionEntry,
         Factor, Unit, UnitEntry,

@@ -2,7 +2,6 @@
 
 mod codegen;
 mod dimension_math;
-mod expression;
 mod parse;
 mod prefixes;
 mod resolve;
