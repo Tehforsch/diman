@@ -7,10 +7,12 @@ diman::unit_system!(
 
     #[base(Time)]
     #[prefix(milli)]
+    #[symbol(s)]
     unit seconds;
 
     #[base(Length)]
     #[prefix(micro)]
+    #[symbol(m)]
     unit meters;
 
     unit meters_per_sqrt_second: Sorptivity = meters / seconds^(1/2);
