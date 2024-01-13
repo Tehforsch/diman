@@ -53,7 +53,7 @@ impl Defs {
                 let mut total_factor = 1.0;
                 for unit in split {
                     let (dimension, factor) = read_single_unit_str(unit)?;
-                    total_dimension = total_dimension.dimension_mul(dimension.clone());
+                    total_dimension = total_dimension.add(dimension.clone());
                     total_factor *= factor;
                 }
                 Ok((total_dimension, total_factor))
@@ -83,7 +83,7 @@ impl Defs {
                     .find(|(_, known_unit_name, _)| &unit == known_unit_name)
                     .ok_or_else(|| E::custom(format!("unknown unit: {}", &unit)))?;
                 Ok((
-                    dimension.clone().dimension_powi(exponent),
+                    dimension.clone().mul(exponent),
                     factor.powi(exponent),
                 ))
             }

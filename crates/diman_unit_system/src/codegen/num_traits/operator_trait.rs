@@ -432,14 +432,14 @@ impl OperatorTrait {
         let existing = Existing(quote_spanned! { span=> D });
         match (&self.lhs.type_, &self.rhs.type_) {
             (Quantity, Quantity) => match self.name {
-                Mul => New(quote_spanned! {span=> { DL.dimension_mul(DR) } }),
-                Div => New(quote_spanned! {span=> { DL.dimension_div(DR) } }),
+                Mul => New(quote_spanned! {span=> { DL.add(DR) } }),
+                Div => New(quote_spanned! {span=> { DL.sub(DR) } }),
                 _ => existing,
             },
             (Quantity, Storage) => existing,
             (Storage, Quantity) => match self.name {
                 Mul => existing,
-                Div => New(quote_spanned! {span=> { D.dimension_inv() } }),
+                Div => New(quote_spanned! {span=> { D.neg() } }),
                 _ => unreachable!(),
             },
             (Dimensionless, Storage) | (Storage, Dimensionless) => {

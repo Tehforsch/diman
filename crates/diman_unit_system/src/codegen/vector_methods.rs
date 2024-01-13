@@ -130,11 +130,11 @@ impl Defs {
                 pub fn distance_squared(
                     &self,
                     other: &Self,
-                ) -> #quantity_type<#float_type, { D.dimension_powi(2) }>
+                ) -> #quantity_type<#float_type, { D.mul(2) }>
                 where
-                    #quantity_type<#float_type, { D.dimension_powi(2) }>:,
+                    #quantity_type<#float_type, { D.mul(2) }>:,
                 {
-                    #quantity_type::<#float_type, { D.dimension_powi(2) }>(self.0.distance_squared(other.0))
+                    #quantity_type::<#float_type, { D.mul(2) }>(self.0.distance_squared(other.0))
                 }
 
                 pub fn normalize(&self) -> #quantity_type<#vector_type_name, { #dimension_type::none() }> {
@@ -144,7 +144,7 @@ impl Defs {
                 pub fn dot<const DR: Dimension>(
                     self,
                     rhs: Quantity<#vector_type_name, DR>,
-                ) -> #quantity_type<#float_type, { D.dimension_mul(DR) }> {
+                ) -> #quantity_type<#float_type, { D.add(DR) }> {
                     #quantity_type(self.0.dot(rhs.0))
                 }
             }

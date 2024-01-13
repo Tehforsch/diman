@@ -56,38 +56,38 @@ impl Defs {
                     }
                 }
 
-                pub const fn dimension_mul(self, other: Self) -> Self {
+                pub const fn add(self, other: Self) -> Self {
                     Self {
                         #mul_gen
                     }
                 }
 
-                pub const fn dimension_div(self, other: Self) -> Self {
+                pub const fn sub(self, other: Self) -> Self {
                     Self {
                         #div_gen
                     }
                 }
 
-                pub const fn dimension_inv(self) -> Self {
+                pub const fn neg(self) -> Self {
                     Self {
                         #inv_gen
                     }
                 }
 
-                pub const fn dimension_powi(self, other: i32) -> Self {
+                pub const fn mul(self, other: i32) -> Self {
                     Self {
                         #powi_gen
                     }
                 }
 
-                pub const fn dimension_sqrt(self) -> Self {
+                pub const fn div_2(self) -> Self {
                     #sqrt_safety_gen
                     Self {
                         #sqrt_gen
                     }
                 }
 
-                pub const fn dimension_cbrt(self) -> Self {
+                pub const fn div_3(self) -> Self {
                     #cbrt_safety_gen
                     Self {
                         #cbrt_gen
