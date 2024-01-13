@@ -1,4 +1,4 @@
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 
 use crate::types::Defs;
@@ -33,50 +33,20 @@ impl Defs {
 
     fn dimension_methods_impl(&self) -> TokenStream {
         let type_name = &self.dimension_type;
-        let none_gen: proc_macro2::TokenStream = self
-            .base_dimensions()
-            .map(|ident| self.zero_entry(ident))
-            .collect();
-
-        let mul_gen: proc_macro2::TokenStream = self
-            .base_dimensions()
-            .map(|ident| self.add_entry(ident))
-            .collect();
-
-        let div_gen: proc_macro2::TokenStream = self
-            .base_dimensions()
-            .map(|ident| self.sub_entry(ident))
-            .collect();
-
-        let inv_gen: proc_macro2::TokenStream = self
-            .base_dimensions()
-            .map(|ident| self.neg_entry(ident))
-            .collect();
-
-        let powi_gen: proc_macro2::TokenStream = self
-            .base_dimensions()
-            .map(|ident| self.mul_entry(ident))
-            .collect();
-
-        let sqrt_gen: proc_macro2::TokenStream = self
-            .base_dimensions()
-            .map(|ident| self.sqrt_entry(ident))
-            .collect();
-
-        let cbrt_gen: proc_macro2::TokenStream = self
-            .base_dimensions()
-            .map(|ident| self.cbrt_entry(ident))
-            .collect();
-
-        let sqrt_safety_gen: proc_macro2::TokenStream = self
-            .base_dimensions()
-            .map(|ident| self.sqrt_safety(ident))
-            .collect();
-
-        let cbrt_safety_gen: proc_macro2::TokenStream = self
-            .base_dimensions()
-            .map(|ident| self.cbrt_safety(ident))
-            .collect();
+        let gen = |f: &dyn Fn(&Defs, &Ident) -> TokenStream| {
+            self.base_dimensions()
+                .map(|ident| f(self, ident))
+                .collect::<TokenStream>()
+        };
+        let none_gen = gen(&Self::zero_entry);
+        let mul_gen = gen(&Self::add_entry);
+        let div_gen = gen(&Self::sub_entry);
+        let inv_gen = gen(&Self::neg_entry);
+        let powi_gen = gen(&Self::mul_entry);
+        let sqrt_gen = gen(&Self::sqrt_entry);
+        let cbrt_gen = gen(&Self::cbrt_entry);
+        let sqrt_safety_gen = gen(&Self::sqrt_safety);
+        let cbrt_safety_gen = gen(&Self::cbrt_safety);
 
         quote! {
             impl #type_name {
