@@ -3,10 +3,12 @@ use quote::quote;
 
 use crate::{
     dimension_math::BaseDimensions,
-    types::{base_dimension::BaseDimension, Defs, Unit},
+    types::{base_dimension::BaseDimension, Unit},
 };
 
-impl Defs {
+use super::Codegen;
+
+impl Codegen {
     pub fn units_array<'a>(&self, units: impl Iterator<Item = &'a Unit>) -> TokenStream {
         let units: TokenStream = units
             .filter_map(|unit| {
@@ -22,13 +24,11 @@ impl Defs {
     }
 
     pub fn gen_debug_trait_impl(&self) -> TokenStream {
-        let Defs {
-            quantity_type,
-            dimension_type,
-            ..
-        } = &self;
-        let units = self.units_array(self.units.iter().filter(|unit| unit.magnitude == 1.0));
+        let dimension_type = &self.defs.dimension_type;
+        let quantity_type = &self.defs.quantity_type;
+        let units = self.units_array(self.defs.units.iter().filter(|unit| unit.magnitude == 1.0));
         let get_base_dimension_symbols = self
+            .defs
             .base_dimensions
             .iter()
             .map(|base_dim| self.get_base_dimension_symbol(base_dim))

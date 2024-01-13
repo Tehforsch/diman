@@ -2,12 +2,16 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote, quote_spanned};
 use syn::Type;
 
-use super::storage_types::{FloatType, VectorType};
-use crate::types::{Defs, Unit};
+use super::{
+    storage_types::{FloatType, VectorType},
+    Codegen,
+};
+use crate::types::Unit;
 
-impl Defs {
+impl Codegen {
     pub fn gen_unit_constructors(&self) -> TokenStream {
-        self.units
+        self.defs
+            .units
             .iter()
             .map(|unit| {
                 let dimension = self.get_dimension_expr(&unit.dimensions);
@@ -45,7 +49,7 @@ impl Defs {
         unit: &Unit,
         dimension: &TokenStream,
     ) -> TokenStream {
-        let quantity_type = &self.quantity_type;
+        let quantity_type = &self.defs.quantity_type;
         let unit_name = &unit.name;
         let conversion_method_name = format_ident!("in_{}", unit_name);
         let magnitude = unit.magnitude;
@@ -66,14 +70,15 @@ impl Defs {
         unit: &Unit,
         quantity_dimension: &TokenStream,
     ) -> TokenStream {
-        let Defs { quantity_type, .. } = &self;
+        let dimension_type = &self.defs.dimension_type;
+        let quantity_type = &self.defs.quantity_type;
         let Unit {
             name: unit_name,
             magnitude,
             ..
         } = unit;
         let name = &float_type.name;
-        let span = self.dimension_type.span();
+        let span = dimension_type.span();
         // Without const_fn_floating_point_arithmetic (https://github.com/rust-lang/rust/issues/57241)
         // we cannot make unit constructors a const fn in general (since it requires the unstable
         // const_fn_floating_point_arithmetic feature). The following allows the constructor with 1.0
@@ -104,7 +109,8 @@ impl Defs {
         unit: &Unit,
         quantity_dimension: &TokenStream,
     ) -> TokenStream {
-        let Defs { quantity_type, .. } = &self;
+        let dimension_type = &self.defs.dimension_type;
+        let quantity_type = &self.defs.quantity_type;
         let Unit {
             name: unit_name,
             magnitude,
@@ -127,7 +133,7 @@ impl Defs {
             3 => quote! { x, y, z },
             _ => unreachable!(),
         };
-        let span = self.dimension_type.span();
+        let span = dimension_type.span();
         quote_spanned! {span =>
             impl #quantity_type<#name, {#quantity_dimension}> {
                 pub fn #unit_name(#fn_args) -> #quantity_type<#name, {#quantity_dimension}> {

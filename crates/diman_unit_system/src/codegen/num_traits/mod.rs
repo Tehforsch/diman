@@ -3,9 +3,9 @@ mod operator_trait;
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::types::Defs;
+use super::Codegen;
 
-impl Defs {
+impl Codegen {
     pub fn gen_numeric_trait_impls(&self) -> TokenStream {
         let operators = self.gen_operator_trait_impls();
         let sum = self.gen_sum_impl();
@@ -20,11 +20,8 @@ impl Defs {
     }
 
     fn gen_sum_impl(&self) -> TokenStream {
-        let Self {
-            quantity_type,
-            dimension_type,
-            ..
-        } = self;
+        let dimension_type = &self.defs.dimension_type;
+        let quantity_type = &self.defs.quantity_type;
         quote! {
             impl<const D: #dimension_type, S: Default + core::ops::AddAssign<S>> core::iter::Sum
                 for #quantity_type<S, D>
@@ -42,11 +39,8 @@ impl Defs {
     }
 
     fn gen_neg_impl(&self) -> TokenStream {
-        let Self {
-            quantity_type,
-            dimension_type,
-            ..
-        } = self;
+        let dimension_type = &self.defs.dimension_type;
+        let quantity_type = &self.defs.quantity_type;
         quote! {
             impl<const D: #dimension_type, S: core::ops::Neg<Output=S>> core::ops::Neg for #quantity_type<S, D> {
                 type Output = Self;
@@ -59,11 +53,8 @@ impl Defs {
     }
 
     fn gen_from_impl(&self) -> TokenStream {
-        let Self {
-            quantity_type,
-            dimension_type,
-            ..
-        } = self;
+        let dimension_type = &self.defs.dimension_type;
+        let quantity_type = &self.defs.quantity_type;
         quote! {
             impl<S> From<S>
                 for #quantity_type<S, { #dimension_type::none() }>

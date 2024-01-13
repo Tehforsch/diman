@@ -1,11 +1,9 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::types::Defs;
+use super::{storage_types::VectorType, Codegen};
 
-use super::storage_types::VectorType;
-
-impl Defs {
+impl Codegen {
     pub fn gen_vector_methods(&self) -> TokenStream {
         self.vector_types()
             .iter()
@@ -14,11 +12,8 @@ impl Defs {
     }
 
     fn impl_vector_methods(&self, vector_type: &VectorType) -> TokenStream {
-        let Defs {
-            dimension_type,
-            quantity_type,
-            ..
-        } = self;
+        let dimension_type = &self.defs.dimension_type;
+        let quantity_type = &self.defs.quantity_type;
         let VectorType {
             name: vector_type_name,
             float_type,
@@ -130,11 +125,11 @@ impl Defs {
                 pub fn distance_squared(
                     &self,
                     other: &Self,
-                ) -> #quantity_type<#float_type, { D.dimension_powi(2) }>
+                ) -> #quantity_type<#float_type, { D.mul(2) }>
                 where
-                    #quantity_type<#float_type, { D.dimension_powi(2) }>:,
+                    #quantity_type<#float_type, { D.mul(2) }>:,
                 {
-                    #quantity_type::<#float_type, { D.dimension_powi(2) }>(self.0.distance_squared(other.0))
+                    #quantity_type::<#float_type, { D.mul(2) }>(self.0.distance_squared(other.0))
                 }
 
                 pub fn normalize(&self) -> #quantity_type<#vector_type_name, { #dimension_type::none() }> {
@@ -144,7 +139,7 @@ impl Defs {
                 pub fn dot<const DR: Dimension>(
                     self,
                     rhs: Quantity<#vector_type_name, DR>,
-                ) -> #quantity_type<#float_type, { D.dimension_mul(DR) }> {
+                ) -> #quantity_type<#float_type, { D.add(DR) }> {
                     #quantity_type(self.0.dot(rhs.0))
                 }
             }

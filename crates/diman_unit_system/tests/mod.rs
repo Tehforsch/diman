@@ -9,6 +9,7 @@
     feature = "mpi",
     feature = "hdf5",
     feature = "rand",
+    feature = "num-traits-libm",
 )))]
 mod tests {
     #[test]

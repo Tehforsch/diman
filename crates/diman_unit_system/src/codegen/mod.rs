@@ -21,11 +21,26 @@ use proc_macro2::TokenStream;
 
 use crate::types::Defs;
 
+pub enum CallerType {
+    /// The macro is called from within this crate (`diman_unit_system`)
+    /// and imports need to be directly from `diman_lib`.
+    #[allow(dead_code)]
+    Internal,
+    /// The macro is called from somewhere else (`diman` or a user's crate)
+    /// and imports need to be from `diman`.
+    External,
+}
+
+pub struct Codegen {
+    pub defs: Defs,
+    pub caller_type: CallerType,
+}
+
 fn join<const D: usize>(streams: [TokenStream; D]) -> TokenStream {
     streams.into_iter().collect()
 }
 
-impl Defs {
+impl Codegen {
     pub fn code_gen(&self) -> TokenStream {
         join([
             self.gen_dimension(),

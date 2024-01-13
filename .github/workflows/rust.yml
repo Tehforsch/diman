@@ -30,17 +30,17 @@ jobs:
       - name: Build
         run: cargo build --verbose --all-targets
       - name: Run tests (default features)
-        run: cargo test --tests
+        run: cargo test --tests --workspace
       - name: Run tests (all features, no rational dimensions)
-        run: cargo test --tests --features glam,glam-vec2,glam-dvec2,glam-vec3,glam-dvec3,f32,f64,gen-vec-names,si,mpi,hdf5,rand,serde
+        run: cargo test --tests --features glam,glam-vec2,glam-dvec2,glam-vec3,glam-dvec3,f32,f64,gen-vec-names,si,mpi,hdf5,rand,serde --workspace
       - name: Run tests (all features)
-        run: cargo test --tests --all-features
+        run: cargo test --tests --all-features --workspace
       - name: Run tests (no std, no libm)
-        run: cargo test --tests --no-default-features --features f32,f64,si
+        run: cargo test --tests --no-default-features --features f32,f64,si --workspace
       - name: Run tests (no std, libm)
-        run: cargo test --tests --no-default-features --features f32,f64,num-traits-libm,si
+        run: cargo test --tests --no-default-features --features f32,f64,num-traits-libm,si --workspace
       - name: Doctests
-        run: cargo test --doc --all-features
+        run: cargo test --doc --all-features --workspace
 
   clippy:
     runs-on: ubuntu-latest

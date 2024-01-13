@@ -1,11 +1,9 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::types::Defs;
+use super::{join, storage_types::FloatType, Codegen};
 
-use super::{join, storage_types::FloatType};
-
-impl Defs {
+impl Codegen {
     fn ensure_float_traits(&self) -> TokenStream {
         if cfg!(feature = "num-traits-libm") {
             quote! {
@@ -24,11 +22,8 @@ impl Defs {
         method_name: &TokenStream,
     ) -> TokenStream {
         let float_type_name = &float_type.name;
-        let Self {
-            dimension_type,
-            quantity_type,
-            ..
-        } = &self;
+        let dimension_type = &self.defs.dimension_type;
+        let quantity_type = &self.defs.quantity_type;
         quote! {
             impl #quantity_type<#float_type_name, {#dimension_type::none()} > {
                 pub fn #method_name(&self) -> #quantity_type<#float_type_name, {#dimension_type::none()}> {
@@ -96,44 +91,41 @@ impl Defs {
 
     fn specific_float_methods(&self, float_type: &FloatType) -> TokenStream {
         let float_type = &float_type.name;
-        let Self {
-            dimension_type,
-            quantity_type,
-            ..
-        } = &self;
+        let dimension_type = &self.defs.dimension_type;
+        let quantity_type = &self.defs.quantity_type;
         quote! {
             impl<const D: #dimension_type> #quantity_type<#float_type, D> {
-                pub fn squared(&self) -> #quantity_type<#float_type, { D.dimension_powi(2) }>
+                pub fn squared(&self) -> #quantity_type<#float_type, { D.mul(2) }>
                 where
-                    #quantity_type::<#float_type, { D.dimension_powi(2) }>:
+                    #quantity_type::<#float_type, { D.mul(2) }>:
                 {
-                    #quantity_type::<#float_type, { D.dimension_powi(2) }>(self.0.powi(2))
+                    #quantity_type::<#float_type, { D.mul(2) }>(self.0.powi(2))
                 }
 
-                pub fn cubed(&self) -> #quantity_type<#float_type, { D.dimension_powi(3) }>
+                pub fn cubed(&self) -> #quantity_type<#float_type, { D.mul(3) }>
                 where
-                    #quantity_type::<#float_type, { D.dimension_powi(3) }>:
+                    #quantity_type::<#float_type, { D.mul(3) }>:
                 {
-                    #quantity_type::<#float_type, { D.dimension_powi(3) }>(self.0.powi(3))
+                    #quantity_type::<#float_type, { D.mul(3) }>(self.0.powi(3))
                 }
 
-                pub fn powi<const I: i32>(&self) -> #quantity_type<#float_type, { D.dimension_powi(I) }>
+                pub fn powi<const I: i32>(&self) -> #quantity_type<#float_type, { D.mul(I) }>
                 where
-                    #quantity_type::<#float_type, { D.dimension_powi(I) }>:
+                    #quantity_type::<#float_type, { D.mul(I) }>:
                 {
-                    #quantity_type::<#float_type, { D.dimension_powi(I) }>(self.0.powi(I))
+                    #quantity_type::<#float_type, { D.mul(I) }>(self.0.powi(I))
                 }
 
                 #[cfg(any(feature = "std", feature = "num-traits-libm"))]
-                pub fn sqrt(&self) -> #quantity_type<#float_type, { D.dimension_sqrt() }>
+                pub fn sqrt(&self) -> #quantity_type<#float_type, { D.div_2() }>
                 {
-                    #quantity_type::<#float_type, { D.dimension_sqrt() }>(self.0.sqrt())
+                    #quantity_type::<#float_type, { D.div_2() }>(self.0.sqrt())
                 }
 
                 #[cfg(any(feature = "std", feature = "num-traits-libm"))]
-                pub fn cbrt(&self) -> #quantity_type<#float_type, { D.dimension_cbrt() }>
+                pub fn cbrt(&self) -> #quantity_type<#float_type, { D.div_3() }>
                 {
-                    #quantity_type::<#float_type, { D.dimension_cbrt() }>(self.0.cbrt())
+                    #quantity_type::<#float_type, { D.div_3() }>(self.0.cbrt())
                 }
 
                 pub fn min<Q: Into<Self>>(self, other: Q) -> Self {

@@ -1,3 +1,4 @@
+use super::super::Codegen;
 use proc_macro2::{Ident, TokenStream};
 use quote::{quote, quote_spanned};
 use syn::Type;
@@ -17,8 +18,6 @@ pub enum Trait {
 }
 
 use Trait::*;
-
-use crate::types::Defs;
 
 impl Trait {
     pub fn name(&self) -> TokenStream {
@@ -432,14 +431,14 @@ impl OperatorTrait {
         let existing = Existing(quote_spanned! { span=> D });
         match (&self.lhs.type_, &self.rhs.type_) {
             (Quantity, Quantity) => match self.name {
-                Mul => New(quote_spanned! {span=> { DL.dimension_mul(DR) } }),
-                Div => New(quote_spanned! {span=> { DL.dimension_div(DR) } }),
+                Mul => New(quote_spanned! {span=> { DL.add(DR) } }),
+                Div => New(quote_spanned! {span=> { DL.sub(DR) } }),
                 _ => existing,
             },
             (Quantity, Storage) => existing,
             (Storage, Quantity) => match self.name {
                 Mul => existing,
-                Div => New(quote_spanned! {span=> { D.dimension_inv() } }),
+                Div => New(quote_spanned! {span=> { D.neg() } }),
                 _ => unreachable!(),
             },
             (Dimensionless, Storage) | (Storage, Dimensionless) => {
@@ -544,7 +543,7 @@ macro_rules! add_trait {
     }
 }
 
-impl Defs {
+impl Codegen {
     pub fn gen_operator_trait_impls(&self) -> TokenStream {
         self.iter_numeric_traits()
             .map(|num_trait| self.gen_operator_trait_impl(num_trait))
@@ -637,20 +636,20 @@ impl Defs {
         let fn_name = name.fn_name();
         let trait_name = name.name();
         let fn_return_type = name.fn_return_type();
-        let lhs = numeric_trait.lhs_type(&self.quantity_type, &self.dimension_type);
-        let rhs = numeric_trait.rhs_type(&self.quantity_type, &self.dimension_type);
+        let lhs = numeric_trait.lhs_type(&self.defs.quantity_type, &self.defs.dimension_type);
+        let rhs = numeric_trait.rhs_type(&self.defs.quantity_type, &self.defs.dimension_type);
         let lhs_arg = name.lhs_arg();
         let rhs_arg = name.rhs_arg_type(&rhs);
         let fn_args = quote! { #lhs_arg, rhs: #rhs_arg };
-        let impl_generics = numeric_trait.generics_gen(&self.dimension_type);
+        let impl_generics = numeric_trait.generics_gen(&self.defs.dimension_type);
 
-        let output_type = numeric_trait.output_type(&self.dimension_type);
+        let output_type = numeric_trait.output_type(&self.defs.dimension_type);
         let output_type_def = output_type
             .as_ref()
-            .map(|output_type| output_type.output_type_def(&self.quantity_type));
+            .map(|output_type| output_type.output_type_def(&self.defs.quantity_type));
 
-        let trait_bounds = numeric_trait.trait_bounds(&self.quantity_type, &output_type);
-        let fn_return_expr = numeric_trait.fn_return_expr(&self.quantity_type, &output_type);
+        let trait_bounds = numeric_trait.trait_bounds(&self.defs.quantity_type, &output_type);
+        let fn_return_expr = numeric_trait.fn_return_expr(&self.defs.quantity_type, &output_type);
         quote! {
             impl #impl_generics #trait_name::<#rhs> for #lhs
             where

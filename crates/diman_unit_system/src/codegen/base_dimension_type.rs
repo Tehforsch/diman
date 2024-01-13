@@ -1,18 +1,19 @@
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 
-use crate::types::{BaseDimensionExponent, Defs};
+use super::Codegen;
+use crate::types::BaseDimensionExponent;
 
 #[cfg(feature = "rational-dimensions")]
-impl Defs {
+impl Codegen {
     pub fn get_base_dimension_entry(
         &self,
         field: &Ident,
         value: &BaseDimensionExponent,
     ) -> TokenStream {
-        let num = value.num;
-        let denom = value.denom;
-        quote! { #field: Ratio { num: #num, denom: #denom }, }
+        let num = value.num();
+        let denom = value.denom();
+        quote! { #field: Ratio::new(#num, #denom), }
     }
 
     pub fn base_dimension_type(&self) -> TokenStream {
@@ -78,7 +79,7 @@ impl Defs {
 }
 
 #[cfg(not(feature = "rational-dimensions"))]
-impl Defs {
+impl Codegen {
     pub fn get_base_dimension_entry(
         &self,
         field: &Ident,
