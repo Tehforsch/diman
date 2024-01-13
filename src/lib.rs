@@ -135,3 +135,4 @@ pub type Product<Q1, Q2> = <Q1 as ::core::ops::Mul<Q2>>::Output;
 pub type Quotient<Q1, Q2> = <Q1 as core::ops::Div<Q2>>::Output;
 
 pub use diman_lib::ratio::Ratio;
+pub use diman_lib::runtime_unit_storage;
