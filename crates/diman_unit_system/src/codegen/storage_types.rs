@@ -2,7 +2,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::Type;
 
-use crate::types::Defs;
+use super::Codegen;
 
 pub struct VectorType {
     pub name: Type,
@@ -71,7 +71,7 @@ impl StorageType for FloatType {
     }
 }
 
-impl Defs {
+impl Codegen {
     pub fn storage_types(&self) -> impl Iterator<Item = Box<dyn StorageType>> {
         self.float_types()
             .into_iter()

@@ -1,16 +1,13 @@
-use crate::{dimension_math::BaseDimensions, types::Defs};
+use crate::dimension_math::BaseDimensions;
 use proc_macro2::TokenStream;
 use quote::{quote, quote_spanned};
 
-use super::storage_types::StorageType;
+use super::{storage_types::StorageType, Codegen};
 
-impl Defs {
+impl Codegen {
     pub(crate) fn gen_quantity(&self) -> TokenStream {
-        let Self {
-            quantity_type,
-            dimension_type,
-            ..
-        } = &self;
+        let dimension_type = &self.defs.dimension_type;
+        let quantity_type = &self.defs.quantity_type;
         let span = quantity_type.span();
         let functions = self.quantity_functions();
         quote_spanned! {span =>
@@ -22,11 +19,8 @@ impl Defs {
     }
 
     fn quantity_functions(&self) -> TokenStream {
-        let Self {
-            quantity_type,
-            dimension_type,
-            ..
-        } = &self;
+        let dimension_type = &self.defs.dimension_type;
+        let quantity_type = &self.defs.quantity_type;
         quote! {
             impl<S> #quantity_type<S, { #dimension_type::none() }> {
                 /// Get the value of a dimensionless quantity
@@ -67,13 +61,13 @@ impl Defs {
     }
 
     pub fn get_dimension_expr(&self, dim: &BaseDimensions) -> TokenStream {
-        let dimension_type = &self.dimension_type;
+        let dimension_type = &self.defs.dimension_type;
         let field_updates: TokenStream = dim
             .fields()
             .map(|(field, value)| self.get_base_dimension_entry(field, value))
             .collect();
-        let span = self.quantity_type.span();
-        let none_update = if dim.num_fields() < self.base_dimensions.len() {
+        let span = self.defs.quantity_type.span();
+        let none_update = if dim.num_fields() < self.defs.base_dimensions.len() {
             quote! { ..#dimension_type::none() }
         } else {
             quote! {}
@@ -98,39 +92,25 @@ impl Defs {
             .collect()
     }
 
-    #[cfg(feature = "rational-dimensions")]
-    fn use_ratio(&self) -> TokenStream {
-        quote! { use super::Ratio; }
-    }
-
-    #[cfg(not(feature = "rational-dimensions"))]
-    fn use_ratio(&self) -> TokenStream {
-        quote! {}
-    }
-
     fn definitions_for_storage_type(
         &self,
         type_: &dyn StorageType,
         module_name: &TokenStream,
         gen_constants: bool,
     ) -> TokenStream {
-        let Self {
-            dimension_type,
-            quantity_type,
-            ..
-        } = &self;
+        let dimension_type = &self.defs.dimension_type;
+        let quantity_type = &self.defs.quantity_type;
         let quantities = self.quantity_definitions_for_storage_type(type_);
         let constants = if gen_constants {
             self.constant_definitions_for_storage_type(type_)
         } else {
             quote! {}
         };
-        let use_ratio = self.use_ratio();
         quote! {
             pub mod #module_name {
                 use super::#dimension_type;
                 use super::#quantity_type;
-                #use_ratio
+                use super::Ratio;
                 #quantities
                 #constants
             }
@@ -138,14 +118,15 @@ impl Defs {
     }
 
     fn quantity_definitions_for_storage_type(&self, type_: &dyn StorageType) -> TokenStream {
-        self.dimensions
+        self.defs
+            .dimensions
             .iter()
             .map(|quantity| {
                 let dimension = self.get_dimension_expr(&quantity.dimensions);
-                let quantity_type = &self.quantity_type;
+                let quantity_type = &self.defs.quantity_type;
                 let quantity_name = &quantity.name;
                 let type_ = type_.name();
-                let span = self.dimension_type.span();
+                let span = self.defs.dimension_type.span();
                 quote_spanned! {span =>
                     pub type #quantity_name = #quantity_type::<#type_, { #dimension }>;
                 }
@@ -155,11 +136,11 @@ impl Defs {
 
     fn constant_definitions_for_storage_type(&self, type_: &dyn StorageType) -> TokenStream {
         self
-            .constants
+            .defs.constants
             .iter()
             .map(|constant| {
                 let dimension = self.get_dimension_expr(&constant.dimensions);
-                let quantity_type = &self.quantity_type;
+                let quantity_type = &self.defs.quantity_type;
                 let constant_name = &constant.name;
                 let value = constant.magnitude;
                 let float_type = &type_.base_storage().name;

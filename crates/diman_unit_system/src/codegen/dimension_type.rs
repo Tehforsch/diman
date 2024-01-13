@@ -1,14 +1,15 @@
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 
-use crate::types::Defs;
+use super::{CallerType, Codegen};
 
-impl Defs {
+impl Codegen {
     pub(crate) fn gen_dimension(&self) -> TokenStream {
-        let name = &self.dimension_type;
+        let name = &self.defs.dimension_type;
 
         let dim_type = self.base_dimension_type();
         let dimensions: proc_macro2::TokenStream = self
+            .defs
             .base_dimensions
             .iter()
             .map(|dim| {
@@ -19,8 +20,9 @@ impl Defs {
             })
             .collect();
         let methods_impl: proc_macro2::TokenStream = self.dimension_methods_impl();
+        let use_ratio = self.use_ratio();
         quote! {
-            use ::diman::Ratio;
+            #use_ratio
 
             #[derive(::core::cmp::PartialEq, ::core::cmp::Eq, ::core::clone::Clone, ::core::fmt::Debug, ::core::marker::ConstParamTy)]
             pub struct #name {
@@ -31,10 +33,22 @@ impl Defs {
         }
     }
 
+    fn use_ratio(&self) -> TokenStream {
+        match self.caller_type {
+            CallerType::External => {
+                quote! { use ::diman::Ratio; }
+            }
+            CallerType::Internal => {
+                quote! { use ::diman_lib::ratio::Ratio; }
+            }
+        }
+    }
+
     fn dimension_methods_impl(&self) -> TokenStream {
-        let type_name = &self.dimension_type;
-        let gen = |f: &dyn Fn(&Defs, &Ident) -> TokenStream| {
-            self.base_dimensions()
+        let type_name = &self.defs.dimension_type;
+        let gen = |f: &dyn Fn(&Codegen, &Ident) -> TokenStream| {
+            self.defs
+                .base_dimensions()
                 .map(|ident| f(self, ident))
                 .collect::<TokenStream>()
         };

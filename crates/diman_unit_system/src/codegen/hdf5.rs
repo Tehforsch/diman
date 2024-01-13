@@ -3,9 +3,9 @@ use quote::quote;
 
 use super::join;
 use super::storage_types::{FloatType, VectorType};
-use crate::types::Defs;
+use super::Codegen;
 
-impl Defs {
+impl Codegen {
     pub fn gen_hdf5_impl(&self) -> TokenStream {
         join([self.hdf5_floats_impl(), self.hdf5_vectors_impl()])
     }
@@ -20,11 +20,8 @@ impl Defs {
     fn hdf5_float_impl(&self, float_type: &FloatType) -> TokenStream {
         let float_type_name = &float_type.name;
         let hdf5_type = &float_type.hdf5_type;
-        let Defs {
-            dimension_type,
-            quantity_type,
-            ..
-        } = self;
+        let dimension_type = &self.defs.dimension_type;
+        let quantity_type = &self.defs.quantity_type;
         quote! {
             unsafe impl<const D: #dimension_type> hdf5::H5Type for #quantity_type<#float_type_name, D> {
                 fn type_descriptor() -> hdf5::types::TypeDescriptor {
@@ -45,11 +42,8 @@ impl Defs {
         let vector_type_name = &vector_type.name;
         let hdf5_type = &vector_type.float_type.hdf5_type;
         let num_dims = vector_type.num_dims;
-        let Defs {
-            dimension_type,
-            quantity_type,
-            ..
-        } = self;
+        let dimension_type = &self.defs.dimension_type;
+        let quantity_type = &self.defs.quantity_type;
         quote! {
             unsafe impl<const D: #dimension_type> hdf5::H5Type for #quantity_type<#vector_type_name, D> {
                 fn type_descriptor() -> hdf5::types::TypeDescriptor {

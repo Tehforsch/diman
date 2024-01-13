@@ -1,10 +1,11 @@
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 
-use crate::types::{BaseDimensionExponent, Defs};
+use super::Codegen;
+use crate::types::BaseDimensionExponent;
 
 #[cfg(feature = "rational-dimensions")]
-impl Defs {
+impl Codegen {
     pub fn get_base_dimension_entry(
         &self,
         field: &Ident,
@@ -78,7 +79,7 @@ impl Defs {
 }
 
 #[cfg(not(feature = "rational-dimensions"))]
-impl Defs {
+impl Codegen {
     pub fn get_base_dimension_entry(
         &self,
         field: &Ident,

@@ -81,7 +81,7 @@ The `unit_system!` macro also allows defining derived dimensions and units:
 ```rust ignore
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs, adt_const_params)]
-use diman_unit_system::unit_system;
+use diman::unit_system;
 unit_system!(
     quantity_type Quantity;
     dimension_type Dimension;

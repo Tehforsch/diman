@@ -1,11 +1,9 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::types::Defs;
+use super::{join, storage_types::FloatType, Codegen};
 
-use super::{join, storage_types::FloatType};
-
-impl Defs {
+impl Codegen {
     fn ensure_float_traits(&self) -> TokenStream {
         if cfg!(feature = "num-traits-libm") {
             quote! {
@@ -24,11 +22,8 @@ impl Defs {
         method_name: &TokenStream,
     ) -> TokenStream {
         let float_type_name = &float_type.name;
-        let Self {
-            dimension_type,
-            quantity_type,
-            ..
-        } = &self;
+        let dimension_type = &self.defs.dimension_type;
+        let quantity_type = &self.defs.quantity_type;
         quote! {
             impl #quantity_type<#float_type_name, {#dimension_type::none()} > {
                 pub fn #method_name(&self) -> #quantity_type<#float_type_name, {#dimension_type::none()}> {
@@ -96,11 +91,8 @@ impl Defs {
 
     fn specific_float_methods(&self, float_type: &FloatType) -> TokenStream {
         let float_type = &float_type.name;
-        let Self {
-            dimension_type,
-            quantity_type,
-            ..
-        } = &self;
+        let dimension_type = &self.defs.dimension_type;
+        let quantity_type = &self.defs.quantity_type;
         quote! {
             impl<const D: #dimension_type> #quantity_type<#float_type, D> {
                 pub fn squared(&self) -> #quantity_type<#float_type, { D.mul(2) }>

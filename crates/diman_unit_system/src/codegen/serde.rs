@@ -2,11 +2,12 @@ use proc_macro2::TokenStream;
 use quote::quote;
 
 use super::storage_types::{FloatType, VectorType};
-use crate::types::Defs;
 
 use super::join;
 
-impl Defs {
+use super::Codegen;
+
+impl Codegen {
     pub fn gen_serde_impl(&self) -> TokenStream {
         join([
             self.serde_helpers_impl(),
@@ -16,13 +17,9 @@ impl Defs {
     }
 
     fn serde_helpers_impl(&self) -> TokenStream {
-        let Defs {
-            dimension_type,
-            quantity_type,
-            ..
-        } = self;
-
-        let units = self.units_array(self.units.iter());
+        let dimension_type = &self.defs.dimension_type;
+        let quantity_type = &self.defs.quantity_type;
+        let units = self.units_array(self.defs.units.iter());
 
         quote! {
             use std::marker::PhantomData;
@@ -98,12 +95,9 @@ impl Defs {
     }
 
     fn serde_float_impl(&self, float_type: &FloatType) -> TokenStream {
-        let Defs {
-            dimension_type,
-            quantity_type,
-            ..
-        } = self;
-        let units = self.units_array(self.units.iter());
+        let dimension_type = &self.defs.dimension_type;
+        let quantity_type = &self.defs.quantity_type;
+        let units = self.units_array(self.defs.units.iter());
         let serialize_method = &float_type.serialize_method;
         let float_type = &float_type.name;
         quote! {
@@ -224,12 +218,9 @@ impl Defs {
         let float_type = &vector_type.float_type.name;
         let num_dims = vector_type.num_dims;
         let vector_type = &vector_type.name;
-        let Defs {
-            dimension_type,
-            quantity_type,
-            ..
-        } = self;
-        let units = self.units_array(self.units.iter());
+        let dimension_type = &self.defs.dimension_type;
+        let quantity_type = &self.defs.quantity_type;
+        let units = self.units_array(self.defs.units.iter());
         quote! {
             impl<'de, const D: #dimension_type> serde::Deserialize<'de> for #quantity_type<#vector_type, D> {
                 fn deserialize<DE>(deserializer: DE) -> Result<#quantity_type<#vector_type, D>, DE::Error>

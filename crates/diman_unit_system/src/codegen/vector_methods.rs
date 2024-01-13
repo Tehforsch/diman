@@ -1,11 +1,9 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::types::Defs;
+use super::{storage_types::VectorType, Codegen};
 
-use super::storage_types::VectorType;
-
-impl Defs {
+impl Codegen {
     pub fn gen_vector_methods(&self) -> TokenStream {
         self.vector_types()
             .iter()
@@ -14,11 +12,8 @@ impl Defs {
     }
 
     fn impl_vector_methods(&self, vector_type: &VectorType) -> TokenStream {
-        let Defs {
-            dimension_type,
-            quantity_type,
-            ..
-        } = self;
+        let dimension_type = &self.defs.dimension_type;
+        let quantity_type = &self.defs.quantity_type;
         let VectorType {
             name: vector_type_name,
             float_type,
