@@ -148,7 +148,7 @@ impl core::ops::Div for DimensionsAndMagnitude {
 impl MulDiv for DimensionsAndMagnitude {
     fn pow(self, pow: BaseDimensionExponent) -> Self {
         Self {
-            magnitude: BaseDimensionExponent::pow(self.magnitude, pow),
+            magnitude: BaseDimensionExponent::float_pow(self.magnitude, pow),
             dimensions: self.dimensions.pow(pow),
         }
     }

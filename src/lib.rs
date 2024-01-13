@@ -3,6 +3,10 @@
 #![feature(generic_const_exprs, adt_const_params)]
 #![doc = include_str!("../README.md")]
 
+// This ensures we don't have to differentiate between
+// imports via `crate::` and `diman::` in the proc macro.
+extern crate self as diman;
+
 #[cfg(all(
     feature = "rational-dimensions",
     not(any(feature = "std", feature = "num-traits-libm"))
@@ -129,3 +133,5 @@ pub type Product<Q1, Q2> = <Q1 as ::core::ops::Mul<Q2>>::Output;
 /// let x: Quotient<Length, Time> = Length::meters(10.0) / Time::seconds(2.0);
 /// ```
 pub type Quotient<Q1, Q2> = <Q1 as core::ops::Div<Q2>>::Output;
+
+pub use diman_lib::ratio::Ratio;

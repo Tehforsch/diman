@@ -176,10 +176,7 @@ impl Parse for DimensionFactor {
 
 #[cfg(feature = "rational-dimensions")]
 fn read_exponent(e: Exponent) -> BaseDimensionExponent {
-    BaseDimensionExponent {
-        num: e.num.int,
-        denom: e.denom.map(|denom| denom.int).unwrap_or(1),
-    }
+    BaseDimensionExponent::new(e.num.int, e.denom.map(|denom| denom.int).unwrap_or(1))
 }
 
 #[cfg(not(feature = "rational-dimensions"))]

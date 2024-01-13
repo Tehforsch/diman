@@ -10,9 +10,9 @@ impl Defs {
         field: &Ident,
         value: &BaseDimensionExponent,
     ) -> TokenStream {
-        let num = value.num;
-        let denom = value.denom;
-        quote! { #field: Ratio { num: #num, denom: #denom }, }
+        let num = value.num();
+        let denom = value.denom();
+        quote! { #field: Ratio::new(#num, #denom), }
     }
 
     pub fn base_dimension_type(&self) -> TokenStream {
