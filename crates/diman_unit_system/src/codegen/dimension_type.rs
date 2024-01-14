@@ -148,7 +148,7 @@ impl Codegen {
             })
             .collect();
         let methods_impl: proc_macro2::TokenStream = self.dimension_methods_impl();
-        let use_exponent = self.use_exponent_and_base_dimension_exponent_trait();
+        let use_exponent = self.use_exponent_and_dimension_exponent_trait();
         quote! {
             #use_exponent
 
@@ -161,7 +161,7 @@ impl Codegen {
         }
     }
 
-    fn use_exponent_and_base_dimension_exponent_trait(&self) -> TokenStream {
+    fn use_exponent_and_dimension_exponent_trait(&self) -> TokenStream {
         let use_exponent = match self.caller_type {
             CallerType::External => {
                 #[cfg(feature = "rational-dimensions")]
@@ -176,17 +176,17 @@ impl Codegen {
                 quote! { use i64 as Exponent; }
             }
         };
-        let use_base_dimension_exponent_trait = match self.caller_type {
+        let use_dimension_exponent_trait = match self.caller_type {
             CallerType::External => {
-                quote! { use ::diman::internal::BaseDimensionExponent; }
+                quote! { use ::diman::internal::DimensionExponent; }
             }
             CallerType::Internal => {
-                quote! { use ::diman_lib::base_dimension_exponent::BaseDimensionExponent; }
+                quote! { use ::diman_lib::dimension_exponent::DimensionExponent; }
             }
         };
         quote! {
             #use_exponent
-            #use_base_dimension_exponent_trait
+            #use_dimension_exponent_trait
         }
     }
 

@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use diman_lib::base_dimension_exponent::BaseDimensionExponent;
+use diman_lib::dimension_exponent::DimensionExponent;
 use proc_macro::{Diagnostic, Level};
 use proc_macro2::Span;
 use syn::Ident;

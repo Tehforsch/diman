@@ -1,4 +1,4 @@
-use crate::base_dimension_exponent::BaseDimensionExponent;
+use crate::dimension_exponent::DimensionExponent;
 
 #[derive(
     ::core::cmp::PartialEq,
@@ -84,7 +84,7 @@ impl Ratio {
     }
 }
 
-impl BaseDimensionExponent for Ratio {
+impl DimensionExponent for Ratio {
     fn one() -> Self {
         Self { num: 1, denom: 1 }
     }
