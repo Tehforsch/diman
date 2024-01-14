@@ -17,6 +17,7 @@ mod units;
 mod vector_methods;
 
 use proc_macro2::TokenStream;
+use quote::quote;
 
 use crate::types::Defs;
 
@@ -28,6 +29,15 @@ pub enum CallerType {
     /// The macro is called from somewhere else (`diman` or a user's crate)
     /// and imports need to be from `diman`.
     External,
+}
+
+impl CallerType {
+    fn path_prefix(&self) -> TokenStream {
+        match self {
+            CallerType::Internal => quote! { ::diman_lib },
+            CallerType::External => quote! { ::diman::internal },
+        }
+    }
 }
 
 pub struct Codegen {
