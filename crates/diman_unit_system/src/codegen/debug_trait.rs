@@ -13,11 +13,13 @@ impl Codegen {
     pub fn runtime_unit_storage<'a>(&self, units: impl Iterator<Item = &'a Unit>) -> TokenStream {
         let runtime_unit_storage = match self.caller_type {
             CallerType::Internal => quote! { diman_lib::runtime_unit_storage::RuntimeUnitStorage },
-            CallerType::External => quote! { ::diman::runtime_unit_storage::RuntimeUnitStorage },
+            CallerType::External => {
+                quote! { ::diman::internal::runtime_unit_storage::RuntimeUnitStorage }
+            }
         };
         let runtime_unit = match self.caller_type {
             CallerType::Internal => quote! { diman_lib::runtime_unit_storage::RuntimeUnit },
-            CallerType::External => quote! { ::diman::runtime_unit_storage::RuntimeUnit },
+            CallerType::External => quote! { ::diman::internal::runtime_unit_storage::RuntimeUnit },
         };
         let units: TokenStream = units
             .filter_map(|unit| {
@@ -70,14 +72,12 @@ impl Codegen {
     fn get_base_dimension_symbol(&self, base_dim: &BaseDimension) -> TokenStream {
         let dim = self.get_dimension_expr(&BaseDimensions::for_base_dimension(base_dim.clone()));
         // We know that symbols exist for base dimensions, so we can unwrap here.
-        let base_dimension_type_zero = self.base_dimension_type_zero();
-        let base_dimension_type_one = self.base_dimension_type_one();
         let base_dim = &base_dim.0;
         quote! {
-            if D.#base_dim == #base_dimension_type_one {
+            if D.#base_dim == Exponent::one() {
                 write!(f, " {}", units.get_first_symbol(#dim).unwrap())?;
             }
-            else if D.#base_dim != #base_dimension_type_zero {
+            else if D.#base_dim != Exponent::zero() {
                 write!(f, " {}^{}", units.get_first_symbol(#dim).unwrap(), D.#base_dim)?;
             }
         }

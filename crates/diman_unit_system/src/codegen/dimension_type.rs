@@ -20,9 +20,9 @@ impl Codegen {
             })
             .collect();
         let methods_impl: proc_macro2::TokenStream = self.dimension_methods_impl();
-        let use_ratio = self.use_ratio();
+        let use_exponent = self.use_exponent_and_base_dimension_exponent_trait();
         quote! {
-            #use_ratio
+            #use_exponent
 
             #[derive(::core::cmp::PartialEq, ::core::cmp::Eq, ::core::clone::Clone, ::core::fmt::Debug, ::core::marker::ConstParamTy)]
             pub struct #name {
@@ -33,15 +33,40 @@ impl Codegen {
         }
     }
 
-    fn use_ratio(&self) -> TokenStream {
-        match self.caller_type {
+    fn use_exponent_and_base_dimension_exponent_trait(&self) -> TokenStream {
+        let use_exponent = match self.caller_type {
             CallerType::External => {
-                quote! { use ::diman::Ratio; }
+                #[cfg(feature = "rational-dimensions")]
+                quote! { use ::diman::internal::Ratio as Exponent; }
+                #[cfg(not(feature = "rational-dimensions"))]
+                quote! { use i64 as Exponent; }
             }
             CallerType::Internal => {
-                quote! { use ::diman_lib::ratio::Ratio; }
+                #[cfg(feature = "rational-dimensions")]
+                quote! { use ::diman_lib::ratio::Ratio as Exponent; }
+                #[cfg(not(feature = "rational-dimensions"))]
+                quote! { use i64 as Exponent; }
             }
+        };
+        let use_base_dimension_exponent_trait = match self.caller_type {
+            CallerType::External => {
+                quote! { use ::diman::internal::BaseDimensionExponent; }
+            }
+            CallerType::Internal => {
+                quote! { use ::diman_lib::base_dimension_exponent::BaseDimensionExponent; }
+            }
+        };
+        quote! {
+            #use_exponent
+            #use_base_dimension_exponent_trait
         }
+    }
+
+    fn zero_entry(&self, ident: &Ident) -> TokenStream {
+        #[cfg(feature = "rational-dimensions")]
+        quote! { #ident: Exponent::int(0), }
+        #[cfg(not(feature = "rational-dimensions"))]
+        quote! { #ident: 0, }
     }
 
     fn dimension_methods_impl(&self) -> TokenStream {

@@ -9,24 +9,11 @@ impl Codegen {
     pub fn get_base_dimension_entry(&self, field: &Ident, value: &Exponent) -> TokenStream {
         let num = value.num();
         let denom = value.denom();
-        quote! { #field: Ratio::new(#num, #denom), }
+        quote! { #field: Exponent::new(#num, #denom), }
     }
 
     pub fn base_dimension_type(&self) -> TokenStream {
-        quote! { Ratio }
-    }
-
-    pub fn base_dimension_type_zero(&self) -> TokenStream {
-        quote! { Ratio::int(0i64) }
-    }
-
-    pub fn base_dimension_type_one(&self) -> TokenStream {
-        quote! { Ratio::int(1i64) }
-    }
-
-    pub fn zero_entry(&self, ident: &Ident) -> TokenStream {
-        let zero = self.base_dimension_type_zero();
-        quote! { #ident: #zero, }
+        quote! { Exponent }
     }
 
     pub fn add_entry(&self, ident: &Ident) -> TokenStream {
@@ -49,19 +36,19 @@ impl Codegen {
 
     pub fn mul_entry(&self, ident: &Ident) -> TokenStream {
         quote! {
-            #ident: self.#ident.mul(Ratio::int(other as i64)),
+            #ident: self.#ident.mul(Exponent::int(other as i64)),
         }
     }
 
     pub fn sqrt_entry(&self, ident: &Ident) -> TokenStream {
         quote! {
-            #ident: self.#ident.div(Ratio::int(2)),
+            #ident: self.#ident.div(Exponent::int(2)),
         }
     }
 
     pub fn cbrt_entry(&self, ident: &Ident) -> TokenStream {
         quote! {
-            #ident: self.#ident.div(Ratio::int(3)),
+            #ident: self.#ident.div(Exponent::int(3)),
         }
     }
 
@@ -82,19 +69,6 @@ impl Codegen {
 
     pub fn base_dimension_type(&self) -> TokenStream {
         quote! { i64 }
-    }
-
-    pub fn base_dimension_type_zero(&self) -> TokenStream {
-        quote! { 0i64 }
-    }
-
-    pub fn base_dimension_type_one(&self) -> TokenStream {
-        quote! { 1i64 }
-    }
-
-    pub fn zero_entry(&self, ident: &Ident) -> TokenStream {
-        let zero = self.base_dimension_type_zero();
-        quote! { #ident: #zero, }
     }
 
     pub fn add_entry(&self, ident: &Ident) -> TokenStream {
