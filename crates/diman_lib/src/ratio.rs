@@ -96,6 +96,10 @@ impl DimensionExponent for Ratio {
     fn float_pow(num: f64, exponent: Self) -> f64 {
         num.powf(exponent.num as f64 / exponent.denom as f64)
     }
+
+    fn from_int(i: i32) -> Self {
+        Ratio::int(i as i64)
+    }
 }
 
 impl core::fmt::Display for Ratio {

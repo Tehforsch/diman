@@ -57,8 +57,8 @@ impl Codegen {
                 fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
                     #units_storage
                     self.0.fmt(f)?;
-                    if let Some(symbol) = units.get_first_symbol(D) {
-                        write!(f, " {}", symbol)
+                    if let Some(unit) = units.get_first_unit_for_dimension(D) {
+                        write!(f, " {}", unit.symbol)
                     }
                     else {
                         #get_base_dimension_symbols
@@ -75,10 +75,10 @@ impl Codegen {
         let base_dim = &base_dim.0;
         quote! {
             if D.#base_dim == Exponent::one() {
-                write!(f, " {}", units.get_first_symbol(#dim).unwrap())?;
+                write!(f, " {}", units.get_first_unit_for_dimension(#dim).unwrap().symbol)?;
             }
             else if D.#base_dim != Exponent::zero() {
-                write!(f, " {}^{}", units.get_first_symbol(#dim).unwrap(), D.#base_dim)?;
+                write!(f, " {}^{}", units.get_first_unit_for_dimension(#dim).unwrap().symbol, D.#base_dim)?;
             }
         }
     }

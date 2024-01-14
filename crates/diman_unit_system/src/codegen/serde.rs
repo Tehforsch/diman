@@ -19,7 +19,7 @@ impl Codegen {
     fn serde_helpers_impl(&self) -> TokenStream {
         let dimension_type = &self.defs.dimension_type;
         let quantity_type = &self.defs.quantity_type;
-        let units = self.units_array(self.defs.units.iter());
+        let all_units_storage = self.runtime_unit_storage(self.defs.units.iter());
 
         quote! {
             use std::marker::PhantomData;
@@ -74,14 +74,13 @@ impl Codegen {
                 } else {
                     (unit_str, 1)
                 };
-                let units: &[(#dimension_type, &str, f64)] = &#units;
-                let (dimension, _, factor) = units
-                    .iter()
-                    .find(|(_, known_unit_name, _)| &unit == known_unit_name)
+                #all_units_storage
+                let unit = units
+                    .get_unit_by_symbol(unit)
                     .ok_or_else(|| E::custom(format!("unknown unit: {}", &unit)))?;
                 Ok((
-                    dimension.clone().mul(exponent),
-                    factor.powi(exponent),
+                    unit.dimension.clone().mul(exponent),
+                    Exponent::float_pow(unit.magnitude, Exponent::from_int(exponent)),
                 ))
             }
         }
@@ -97,8 +96,6 @@ impl Codegen {
     fn serde_float_impl(&self, float_type: &FloatType) -> TokenStream {
         let dimension_type = &self.defs.dimension_type;
         let quantity_type = &self.defs.quantity_type;
-        let units = self.units_array(self.defs.units.iter());
-        let serialize_method = &float_type.serialize_method;
         let float_type = &float_type.name;
         quote! {
             impl<'de, const D: #dimension_type> serde::Deserialize<'de> for #quantity_type<#float_type, D> {
@@ -187,21 +184,7 @@ impl Codegen {
                 where
                     S: serde::Serializer,
                 {
-                    let units: &[(#dimension_type, &str, f64)] = &#units;
-                    if D == #dimension_type::none() {
-                        serializer.#serialize_method(self.0)
-                    } else {
-                        let unit_name = units
-                            .iter()
-                            .filter(|(d, _, _)| d == &D)
-                            .filter(|(_, _, val)| *val == 1.0)
-                            .map(|(_, name, _)| name)
-                            .next()
-                            .unwrap_or_else(|| {
-                                panic!("Attempt to serialize quantity with dimension: {D:?}. Make sure that the unit with conversion factor 1 for this dimension is named.")
-                            });
-                        serializer.serialize_str(&format!("{} {}", self.0.to_string(), unit_name))
-                    }
+                    serializer.serialize_str(&format!("{:?}", self))
                 }
             }
         }
@@ -220,7 +203,6 @@ impl Codegen {
         let vector_type = &vector_type.name;
         let dimension_type = &self.defs.dimension_type;
         let quantity_type = &self.defs.quantity_type;
-        let units = self.units_array(self.defs.units.iter());
         quote! {
             impl<'de, const D: #dimension_type> serde::Deserialize<'de> for #quantity_type<#vector_type, D> {
                 fn deserialize<DE>(deserializer: DE) -> Result<#quantity_type<#vector_type, D>, DE::Error>
@@ -283,24 +265,10 @@ impl Codegen {
                 where
                     S: serde::Serializer,
                 {
-                    let vec_to_string = |vec: #vector_type| {
-                        vec.to_string().replace("[", "(").replace("]", ")").replace(",", "")
-                    };
-                    if D == #dimension_type::none() {
-                        serializer.serialize_str(&vec_to_string(self.0))
-                    } else {
-                        let units: &[(#dimension_type, &str, f64)] = &#units;
-                        let unit_name = units
-                            .iter()
-                            .filter(|(d, _, _)| d == &D)
-                            .filter(|(_, _, val)| *val == 1.0)
-                            .map(|(_, name, _)| name)
-                            .next()
-                            .unwrap_or_else(|| {
-                                panic!("Attempt to serialize quantity with dimension: {D:?}. Make sure that the unit with conversion factor 1 for this dimension is named.")
-                            });
-                        serializer.serialize_str(&format!("{} {}", vec_to_string(self.0), unit_name))
-                    }
+                    // yaml syntax struggles with comma delimited [] entries because
+                    // they look like lists, so do this ugly stuff
+                    let vec_str = format!("{:?}", self);
+                    serializer.serialize_str(&vec_str.replace("[", "(").replace("]", ")").replace(",", ""))
                 }
             }
         }
