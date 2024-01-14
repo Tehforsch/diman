@@ -1,12 +1,13 @@
 use std::collections::HashSet;
 
+use diman_lib::base_dimension_exponent::BaseDimensionExponent;
 use proc_macro::{Diagnostic, Level};
 use proc_macro2::Span;
 use syn::Ident;
 
 use crate::{
     dimension_math::BaseDimensions,
-    types::{BaseDimensionExponent, Unit},
+    types::{Exponent, Unit},
 };
 
 use super::ident_storage::Kind;
@@ -113,7 +114,7 @@ fn format_lhs_rhs_dimensions(lhs: &BaseDimensions, rhs: &BaseDimensions) -> (Str
         available_dims
             .iter()
             .map(|dim| {
-                let value = *dims.get(dim).unwrap_or(&BaseDimensionExponent::zero());
+                let value = *dims.get(dim).unwrap_or(&Exponent::zero());
                 format!("{}^{}", dim.0, value)
             })
             .collect::<Vec<_>>()

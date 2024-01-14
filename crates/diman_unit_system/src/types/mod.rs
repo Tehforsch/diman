@@ -1,5 +1,4 @@
 pub mod base_dimension;
-mod base_dimension_exponent;
 pub mod expression;
 pub mod prefixes;
 
@@ -13,7 +12,11 @@ use self::{
 };
 use crate::dimension_math::BaseDimensions;
 
-pub use base_dimension_exponent::BaseDimensionExponent;
+#[cfg(feature = "rational-dimensions")]
+pub use diman_lib::ratio::Ratio as Exponent;
+
+#[cfg(not(feature = "rational-dimensions"))]
+pub use i64 as Exponent;
 
 #[derive(Clone)]
 pub enum Factor<C> {
@@ -33,7 +36,7 @@ impl<C1: Clone> Factor<C1> {
 #[derive(Clone)]
 pub enum Definition<Base, C> {
     Base(Base),
-    Expression(Expr<Factor<C>, BaseDimensionExponent>),
+    Expression(Expr<Factor<C>, Exponent>),
 }
 
 pub type DimensionFactor = Factor<One>;
@@ -69,7 +72,7 @@ pub struct Symbol(pub Ident);
 #[derive(Clone)]
 pub struct ConstantEntry {
     pub name: Ident,
-    pub rhs: Expr<Factor<f64>, BaseDimensionExponent>,
+    pub rhs: Expr<Factor<f64>, Exponent>,
     pub dimension_annotation: Option<Ident>,
 }
 

@@ -11,7 +11,7 @@ use crate::{
     parse::attributes::Attributes,
     types::expression::{BinaryOperator, Expr, Factor, Operator},
     types::prefixes::{ExplicitPrefixes, MetricPrefixes},
-    types::{Alias, BaseAttribute, BaseDimensionExponent, Definition, One, UnresolvedTemplates},
+    types::{Alias, BaseAttribute, Definition, One, UnresolvedTemplates},
 };
 
 use self::{
@@ -175,16 +175,18 @@ impl Parse for DimensionFactor {
 }
 
 #[cfg(feature = "rational-dimensions")]
-fn read_exponent(e: Exponent) -> BaseDimensionExponent {
-    BaseDimensionExponent::new(e.num.int, e.denom.map(|denom| denom.int).unwrap_or(1))
+fn read_exponent(e: Exponent) -> crate::types::Exponent {
+    crate::types::Exponent::new(e.num.int, e.denom.map(|denom| denom.int).unwrap_or(1))
 }
 
 #[cfg(not(feature = "rational-dimensions"))]
-fn read_exponent(e: Exponent) -> BaseDimensionExponent {
-    BaseDimensionExponent(e.0)
+fn read_exponent(e: Exponent) -> crate::types::Exponent {
+    e.0
 }
 
-fn parse_int_exponent_expr<T: Parse>(input: ParseStream) -> Result<Expr<T, BaseDimensionExponent>> {
+fn parse_int_exponent_expr<T: Parse>(
+    input: ParseStream,
+) -> Result<Expr<T, crate::types::Exponent>> {
     let expr: Expr<T, Exponent> = input.parse()?;
     Ok(expr.map_exp(read_exponent))
 }
