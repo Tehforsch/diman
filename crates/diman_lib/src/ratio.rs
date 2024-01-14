@@ -1,4 +1,4 @@
-use crate::dimension_exponent::DimensionExponent;
+use crate::{dimension_exponent::DimensionExponent, magnitude::Magnitude};
 
 #[derive(
     ::core::cmp::PartialEq,
@@ -93,8 +93,8 @@ impl DimensionExponent for Ratio {
         Self { num: 0, denom: 1 }
     }
 
-    fn float_pow(num: f64, exponent: Self) -> f64 {
-        num.powf(exponent.num as f64 / exponent.denom as f64)
+    fn float_pow(num: Magnitude, exponent: Self) -> Magnitude {
+        num.pow_rational(exponent.num, exponent.denom)
     }
 
     fn from_int(i: i32) -> Self {

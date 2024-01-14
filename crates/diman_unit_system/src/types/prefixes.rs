@@ -1,3 +1,5 @@
+use diman_lib::magnitude::Magnitude;
+
 macro_rules! make_prefix_enum {
     ($enum_name: ident, $(($variant_name: ident, $lowercase_name: ident, $name: literal, $short: literal, $factor: literal)),*) => {
         #[derive(Clone, Copy, PartialEq)]
@@ -24,10 +26,10 @@ macro_rules! make_prefix_enum {
                 }
             }
 
-            pub fn factor(self) -> f64 {
+            pub fn factor(self) -> Magnitude {
                 match self {
                     $(
-                        Self::$variant_name => $factor,
+                        Self::$variant_name => Magnitude::new($factor),
                     )*
                 }
             }

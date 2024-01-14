@@ -52,7 +52,7 @@ impl Codegen {
         let quantity_type = &self.defs.quantity_type;
         let unit_name = &unit.name;
         let conversion_method_name = format_ident!("in_{}", unit_name);
-        let magnitude = unit.magnitude;
+        let magnitude = unit.magnitude.as_f64();
         let base_type = &base_type.name;
         quote! {
             impl #quantity_type<#storage_type, {#dimension}> {
@@ -72,24 +72,22 @@ impl Codegen {
     ) -> TokenStream {
         let dimension_type = &self.defs.dimension_type;
         let quantity_type = &self.defs.quantity_type;
-        let Unit {
-            name: unit_name,
-            magnitude,
-            ..
-        } = unit;
+        let unit_name = &unit.name;
+        let magnitude = unit.magnitude;
         let name = &float_type.name;
         let span = dimension_type.span();
         // Without const_fn_floating_point_arithmetic (https://github.com/rust-lang/rust/issues/57241)
         // we cannot make unit constructors a const fn in general (since it requires the unstable
         // const_fn_floating_point_arithmetic feature). The following allows the constructor with 1.0
         // conversion factor to be const.
-        let const_fn = *magnitude == 1.0;
+        let const_fn = magnitude.is_one();
+        let magnitude = magnitude.as_f64();
         let fn_def = if const_fn {
             quote! { const fn }
         } else {
             quote! { fn }
         };
-        let value = if const_fn {
+        let magnitude = if const_fn {
             quote! { val }
         } else {
             quote! { val * #magnitude as #name }
@@ -97,7 +95,7 @@ impl Codegen {
         quote_spanned! {span =>
             impl #quantity_type<#name, {#quantity_dimension}> {
                 pub #fn_def #unit_name(val: #name) -> #quantity_type<#name, {#quantity_dimension}> {
-                    #quantity_type::<#name, {#quantity_dimension}>(#value)
+                    #quantity_type::<#name, {#quantity_dimension}>(#magnitude)
                 }
             }
         }
@@ -111,11 +109,8 @@ impl Codegen {
     ) -> TokenStream {
         let dimension_type = &self.defs.dimension_type;
         let quantity_type = &self.defs.quantity_type;
-        let Unit {
-            name: unit_name,
-            magnitude,
-            ..
-        } = unit;
+        let unit_name = &unit.name;
+        let magnitude = unit.magnitude.as_f64();
         let VectorType {
             name,
             float_type,

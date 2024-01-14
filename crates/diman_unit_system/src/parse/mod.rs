@@ -1,5 +1,6 @@
 mod attributes;
 
+use diman_lib::magnitude::Magnitude;
 use syn::{
     parenthesized,
     parse::{Parse, ParseStream},
@@ -148,14 +149,14 @@ impl Parse for Exponent {
     }
 }
 
-impl Parse for crate::types::Factor<f64> {
+impl Parse for crate::types::Factor<Magnitude> {
     fn parse(input: ParseStream) -> Result<Self> {
         let lookahead = input.lookahead1();
         if lookahead.peek(Ident) {
             Ok(Self::Other(input.parse()?))
         } else if lookahead.peek(Lit) {
             let factor: Number = input.parse()?;
-            Ok(Self::Concrete(factor.float))
+            Ok(Self::Concrete(Magnitude::new(factor.float)))
         } else {
             Err(lookahead.error())
         }

@@ -142,7 +142,7 @@ impl Codegen {
                 let dimension = self.get_dimension_expr(&constant.dimensions);
                 let quantity_type = &self.defs.quantity_type;
                 let constant_name = &constant.name;
-                let value = constant.magnitude;
+                let magnitude = constant.magnitude.as_f64();
                 let float_type = &type_.base_storage().name;
                 let type_ = type_.name();
                 // TODO(minor): The allow(clippy::approx_constant)
@@ -153,7 +153,7 @@ impl Codegen {
                 // macro, but this is an easy fix for now.
                 quote! {
                     #[allow(clippy::approx_constant)]
-                    pub const #constant_name: #quantity_type::<#type_, { #dimension }> = #quantity_type::<#type_, { #dimension }>(#value as #float_type);
+                    pub const #constant_name: #quantity_type::<#type_, { #dimension }> = #quantity_type::<#type_, { #dimension }>(#magnitude as #float_type);
                 }
             })
             .collect()
