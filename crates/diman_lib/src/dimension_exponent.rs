@@ -19,7 +19,7 @@ impl DimensionExponent for i64 {
     }
 
     fn float_pow(num: Magnitude, exponent: Self) -> Magnitude {
-        num.powi(exponent as i32)
+        num.powi(exponent as i64)
     }
 
     fn from_int(i: i32) -> Self {
