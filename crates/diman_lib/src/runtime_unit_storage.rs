@@ -24,16 +24,10 @@ impl<'a, D: PartialEq> RuntimeUnitStorage<'a, D> {
     }
 
     pub fn get_first_unit_for_dimension(&self, dim: D) -> Option<&'a RuntimeUnit<'a, D>> {
-        self.units
-            .iter()
-            .filter(|unit| unit.dimension == dim)
-            .next()
+        self.units.iter().find(|unit| unit.dimension == dim)
     }
 
     pub fn get_unit_by_symbol(&self, symbol: &str) -> Option<&'a RuntimeUnit<'a, D>> {
-        self.units
-            .iter()
-            .filter(|unit| unit.symbol == symbol)
-            .next()
+        self.units.iter().find(|unit| unit.symbol == symbol)
     }
 }
