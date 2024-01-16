@@ -162,26 +162,27 @@ impl Codegen {
     }
 
     fn use_exponent_and_dimension_exponent_trait(&self) -> TokenStream {
+        let path_prefix = self.caller_type.path_prefix();
         let use_exponent = match self.caller_type {
             CallerType::External => {
                 #[cfg(feature = "rational-dimensions")]
-                quote! { use ::diman::internal::Ratio as Exponent; }
+                quote! { use #path_prefix::ratio::Ratio as Exponent; }
                 #[cfg(not(feature = "rational-dimensions"))]
                 quote! { use i64 as Exponent; }
             }
             CallerType::Internal => {
                 #[cfg(feature = "rational-dimensions")]
-                quote! { use ::diman_lib::ratio::Ratio as Exponent; }
+                quote! { use #path_prefix::::ratio::Ratio as Exponent; }
                 #[cfg(not(feature = "rational-dimensions"))]
                 quote! { use i64 as Exponent; }
             }
         };
         let use_dimension_exponent_trait = match self.caller_type {
             CallerType::External => {
-                quote! { use ::diman::internal::DimensionExponent; }
+                quote! { use #path_prefix::dimension_exponent::DimensionExponent; }
             }
             CallerType::Internal => {
-                quote! { use ::diman_lib::dimension_exponent::DimensionExponent; }
+                quote! { use #path_prefix::dimension_exponent::DimensionExponent; }
             }
         };
         quote! {
