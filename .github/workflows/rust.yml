@@ -60,8 +60,6 @@ jobs:
         sudo apt-get update
         sudo apt-get install mpich
     - name: Run clippy on all targets
-      run: cargo clippy --version
-    - name: Run clippy on all targets
       run: cargo clippy --all-targets --all-features -- -D warnings
 
   rustfmt:
