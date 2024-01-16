@@ -8,11 +8,13 @@ mod hdf5;
 #[cfg(feature = "mpi")]
 mod mpi;
 mod num_traits;
+mod quantity_type;
 #[cfg(feature = "rand")]
 mod rand;
 #[cfg(feature = "serde")]
 mod serde;
 mod storage_types;
+mod unit_type;
 mod units;
 mod vector_methods;
 
@@ -55,7 +57,7 @@ impl Codegen {
             self.gen_dimension(),
             self.gen_quantity(),
             self.gen_definitions_for_storage_types(),
-            self.gen_unit_constructors(),
+            self.gen_units(),
             self.gen_numeric_trait_impls(),
             self.gen_debug_trait_impl(),
             self.gen_float_methods(),

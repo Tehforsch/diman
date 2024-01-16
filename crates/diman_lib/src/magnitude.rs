@@ -5,9 +5,9 @@ use std::{
 
 #[derive(Clone, Copy, PartialEq, Eq, ConstParamTy, Debug)]
 pub struct Magnitude {
-    mantissa: u64,
-    exponent: i16,
-    sign: i8,
+    pub mantissa: u64,
+    pub exponent: i16,
+    pub sign: i8,
 }
 
 // From num-traits
@@ -59,7 +59,7 @@ impl Magnitude {
         Self::new(self.as_f64().powf(num as f64 / denom as f64))
     }
 
-    pub fn mul(self, other: Magnitude) -> Self {
+    pub const fn mul(self, other: Magnitude) -> Self {
         let m1: u32 = (self.mantissa >> 26) as u32;
         let m2: u32 = (other.mantissa >> 26) as u32;
         let mantissa = (m1 as u64) * (m2 as u64);
@@ -71,10 +71,14 @@ impl Magnitude {
     }
 
     pub const fn div(self, other: Magnitude) -> Self {
+        let m1: u32 = (self.mantissa >> 26) as u32;
+        let m2: u32 = (other.mantissa >> 26) as u32;
+        let mantissa = (m1 as u64) / (m2 as u64);
+        let mantissa = self.mantissa / other.mantissa;
         Self {
-            mantissa: 0,
-            exponent: 0,
-            sign: 0,
+            mantissa,
+            exponent: (self.exponent + 52) - (other.exponent + 52),
+            sign: self.sign * other.sign,
         }
     }
 }
@@ -105,7 +109,7 @@ impl Mul<Magnitude> for f64 {
 impl Div<Magnitude> for f64 {
     type Output = Self;
     fn div(self, rhs: Magnitude) -> Self::Output {
-        self * rhs.as_f64()
+        self / rhs.as_f64()
     }
 }
 
@@ -127,23 +131,42 @@ impl Div<Magnitude> for f32 {
 mod tests {
     use crate::magnitude::Magnitude;
 
+    fn operator_test_cases() -> impl Iterator<Item = (f64, f64)> {
+        let mut vals = vec![(1.0, 1.0), (1.5, 1.0), (1.0, 1.5), (2.0, 2.0)];
+        for exp in -100..100 {
+            let x = 2.0f64.powi(exp);
+            let y = 2.0f64.powi(-exp);
+            vals.push((x, x));
+            vals.push((x, x));
+            vals.push((x, y));
+            vals.push((y, x));
+            vals.push((1.1 * x, y));
+        }
+        vals.into_iter()
+    }
+
     #[test]
     fn magnitude_mul() {
         let check_equality = |x: f64, y: f64| {
             let product = (Magnitude::new(x) * Magnitude::new(y)).as_f64();
             assert_eq!(product, x * y);
         };
-        check_equality(1.0, 1.0);
-        check_equality(1.5, 1.0);
-        check_equality(1.0, 1.5);
-        check_equality(2.0, 2.0);
-        for exp in -100..100 {
-            let x = 2.0f64.powi(exp);
-            let y = 2.0f64.powi(-exp);
-            check_equality(x, x);
+        for (x, y) in operator_test_cases() {
             check_equality(x, y);
-            check_equality(y, x);
-            check_equality(1.1 * x, y);
+        }
+    }
+
+    #[test]
+    fn magnitude_div() {
+        let check_equality = |x: f64, y: f64| {
+            let product = (Magnitude::new(x) / Magnitude::new(y)).as_f64();
+            dbg!(Magnitude::new(x));
+            dbg!(Magnitude::new(y));
+            dbg!(Magnitude::new(x) / Magnitude::new(y));
+            assert_eq!(product, x / y);
+        };
+        for (x, y) in operator_test_cases() {
+            check_equality(x, y);
         }
     }
 
