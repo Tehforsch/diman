@@ -9,8 +9,8 @@ use crate::{
         expression::{self, Expr},
     },
     types::{
-        BaseDimensionExponent, Constant, ConstantEntry, Definition, Dimension, DimensionEntry,
-        Factor, Unit, UnitEntry,
+        Constant, ConstantEntry, Definition, Dimension, DimensionEntry, Exponent, Factor, Unit,
+        UnitEntry,
     },
 };
 
@@ -43,7 +43,7 @@ impl Kind {
 
 #[derive(Clone)]
 pub struct Item {
-    expr: Expr<Factor<DimensionsAndMagnitude>, BaseDimensionExponent>,
+    expr: Expr<Factor<DimensionsAndMagnitude>, Exponent>,
     type_: ItemType,
 }
 

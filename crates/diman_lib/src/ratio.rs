@@ -1,3 +1,5 @@
+use crate::dimension_exponent::DimensionExponent;
+
 #[derive(
     ::core::cmp::PartialEq,
     ::core::cmp::Eq,
@@ -21,14 +23,6 @@ const fn gcd(mut a: i64, mut b: i64) -> i64 {
 }
 
 impl Ratio {
-    pub fn one() -> Self {
-        Self { num: 1, denom: 1 }
-    }
-
-    pub fn zero() -> Self {
-        Self { num: 0, denom: 1 }
-    }
-
     pub const fn int(num: i64) -> Self {
         Self { num, denom: 1 }
     }
@@ -88,9 +82,23 @@ impl Ratio {
             denom: self.num,
         }
     }
+}
 
-    pub fn float_pow(num: f64, exponent: Self) -> f64 {
+impl DimensionExponent for Ratio {
+    fn one() -> Self {
+        Self { num: 1, denom: 1 }
+    }
+
+    fn zero() -> Self {
+        Self { num: 0, denom: 1 }
+    }
+
+    fn float_pow(num: f64, exponent: Self) -> f64 {
         num.powf(exponent.num as f64 / exponent.denom as f64)
+    }
+
+    fn from_int(i: i32) -> Self {
+        Ratio::int(i as i64)
     }
 }
 

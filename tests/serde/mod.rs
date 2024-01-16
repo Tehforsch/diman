@@ -1,3 +1,54 @@
+#[cfg(any(feature = "f32", feature = "f64"))]
+macro_rules! gen_tests_for_float {
+    ($float_name: ident, $assert_is_close: path) => {
+        mod $float_name {
+            use crate::example_system::$float_name::Energy;
+            use crate::example_system::$float_name::Length;
+            use crate::example_system::$float_name::Time;
+            use crate::example_system::$float_name::Velocity;
+            use $assert_is_close as assert_is_close;
+
+            #[test]
+            fn deserialize_float() {
+                let q: Length = serde_yaml::from_str("5.0 km").unwrap();
+                assert_is_close(q, Length::kilometers(5.0));
+                let q: Velocity = serde_yaml::from_str("5.0 km s^-1").unwrap();
+                assert_is_close(q, Length::kilometers(5.0) / Time::seconds(1.0));
+            }
+
+            #[test]
+            #[should_panic(expected = "mismatch in dimensions")]
+            fn deserialize_float_dimension_mismatch() {
+                let q: Length = serde_yaml::from_str("5.0 kg").unwrap();
+                assert_is_close(q, Length::kilometers(5.0));
+            }
+
+            #[test]
+            fn serialize_float() {
+                assert_eq!(
+                    serde_yaml::to_string(&Length::kilometers(5.0))
+                        .unwrap()
+                        .trim(),
+                    "5000 m"
+                );
+                assert_eq!(
+                    serde_yaml::to_string(&Energy::joules(5.0)).unwrap().trim(),
+                    "5 J"
+                );
+            }
+
+            #[test]
+            fn serialize_float_unnamed_dimension() {
+                let unnamed_dimension = Energy::joules(5.0) * Length::meters(1.0);
+                assert_eq!(
+                    serde_yaml::to_string(&unnamed_dimension).unwrap().trim(),
+                    "5 m^3 s^-2 kg"
+                );
+            }
+        }
+    };
+}
+
 #[cfg(any(feature = "glam-vec2", feature = "glam-dvec2"))]
 macro_rules! gen_tests_for_vector_2 {
     ($float_name: ident, $mod_name: ident, $vec_name: ty, $assert_is_close: path) => {
@@ -88,6 +139,12 @@ macro_rules! gen_tests_for_vector_3 {
         }
     };
 }
+
+#[cfg(feature = "f32")]
+gen_tests_for_float!(f32, crate::utils::assert_is_close_f32);
+
+#[cfg(feature = "f64")]
+gen_tests_for_float!(f64, crate::utils::assert_is_close_f64);
 
 #[cfg(all(feature = "f32", feature = "glam-vec2"))]
 gen_tests_for_vector_2!(f32, vec2, glam::Vec2, crate::utils::assert_is_close_f32);

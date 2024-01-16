@@ -1,15 +1,16 @@
 use std::collections::HashMap;
 
+use diman_lib::dimension_exponent::DimensionExponent;
 use proc_macro2::Ident;
 
 use crate::{
     types::expression::MulDiv,
-    types::{base_dimension::BaseDimension, BaseDimensionExponent},
+    types::{base_dimension::BaseDimension, Exponent},
 };
 
 #[derive(Clone)]
 pub struct BaseDimensions {
-    fields: HashMap<BaseDimension, BaseDimensionExponent>,
+    fields: HashMap<BaseDimension, Exponent>,
 }
 
 #[derive(Clone)]
@@ -38,11 +39,11 @@ impl BaseDimensions {
 
     pub fn for_base_dimension(base_dim: BaseDimension) -> Self {
         let mut fields = HashMap::new();
-        fields.insert(base_dim, BaseDimensionExponent::one());
+        fields.insert(base_dim, Exponent::one());
         Self { fields }
     }
 
-    pub(crate) fn fields(&self) -> impl Iterator<Item = (&Ident, &BaseDimensionExponent)> {
+    pub(crate) fn fields(&self) -> impl Iterator<Item = (&Ident, &Exponent)> {
         self.fields.iter().map(|(dim, exp)| (&dim.0, exp))
     }
 
@@ -54,7 +55,7 @@ impl BaseDimensions {
         self.fields.len()
     }
 
-    pub(crate) fn get(&self, dim: &BaseDimension) -> Option<&BaseDimensionExponent> {
+    pub(crate) fn get(&self, dim: &BaseDimension) -> Option<&Exponent> {
         self.fields.get(dim)
     }
 }
@@ -96,7 +97,7 @@ impl core::ops::Div for BaseDimensions {
 }
 
 impl MulDiv for BaseDimensions {
-    fn pow(self, pow: BaseDimensionExponent) -> Self {
+    fn pow(self, pow: Exponent) -> Self {
         BaseDimensions {
             fields: self
                 .fields
@@ -146,9 +147,9 @@ impl core::ops::Div for DimensionsAndMagnitude {
 }
 
 impl MulDiv for DimensionsAndMagnitude {
-    fn pow(self, pow: BaseDimensionExponent) -> Self {
+    fn pow(self, pow: Exponent) -> Self {
         Self {
-            magnitude: BaseDimensionExponent::float_pow(self.magnitude, pow),
+            magnitude: Exponent::float_pow(self.magnitude, pow),
             dimensions: self.dimensions.pow(pow),
         }
     }

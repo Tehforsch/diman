@@ -2,7 +2,135 @@ use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 
 use super::{CallerType, Codegen};
+use crate::types::Exponent;
 
+// The following impls are all really ugly, and I'd prefer
+// if they were just part of a trait. However they need to be
+// const, so we'd need a const trait - this certainly isn't worth
+// adding an unstable feature for.
+// There is also an option of using a custom type instead of i64
+// for the integer exponents, but this still doesn't solve all problems
+// and also requires all the methods to "magically" exist.
+
+#[cfg(feature = "rational-dimensions")]
+impl Codegen {
+    pub fn get_base_dimension_entry(&self, field: &Ident, value: &Exponent) -> TokenStream {
+        let num = value.num();
+        let denom = value.denom();
+        quote! { #field: Exponent::new(#num, #denom), }
+    }
+
+    fn base_dimension_type(&self) -> TokenStream {
+        quote! { Exponent }
+    }
+
+    fn add_entry(&self, ident: &Ident) -> TokenStream {
+        quote! {
+            #ident: self.#ident.add(other.#ident),
+        }
+    }
+
+    fn sub_entry(&self, ident: &Ident) -> TokenStream {
+        quote! {
+            #ident: self.#ident.sub(other.#ident),
+        }
+    }
+
+    fn neg_entry(&self, ident: &Ident) -> TokenStream {
+        quote! {
+            #ident: self.#ident.neg(),
+        }
+    }
+
+    fn mul_entry(&self, ident: &Ident) -> TokenStream {
+        quote! {
+            #ident: self.#ident.mul(Exponent::int(other as i64)),
+        }
+    }
+
+    fn sqrt_entry(&self, ident: &Ident) -> TokenStream {
+        quote! {
+            #ident: self.#ident.div(Exponent::int(2)),
+        }
+    }
+
+    fn cbrt_entry(&self, ident: &Ident) -> TokenStream {
+        quote! {
+            #ident: self.#ident.div(Exponent::int(3)),
+        }
+    }
+
+    fn sqrt_safety(&self, _ident: &Ident) -> TokenStream {
+        quote! {}
+    }
+
+    fn cbrt_safety(&self, _ident: &Ident) -> TokenStream {
+        quote! {}
+    }
+}
+
+#[cfg(not(feature = "rational-dimensions"))]
+impl Codegen {
+    pub fn get_base_dimension_entry(&self, field: &Ident, value: &Exponent) -> TokenStream {
+        quote! { #field: #value, }
+    }
+
+    fn base_dimension_type(&self) -> TokenStream {
+        quote! { i64 }
+    }
+
+    fn add_entry(&self, ident: &Ident) -> TokenStream {
+        quote! {
+            #ident: self.#ident + other.#ident,
+        }
+    }
+
+    fn sub_entry(&self, ident: &Ident) -> TokenStream {
+        quote! {
+            #ident: self.#ident - other.#ident,
+        }
+    }
+
+    fn neg_entry(&self, ident: &Ident) -> TokenStream {
+        quote! {
+            #ident: -self.#ident,
+        }
+    }
+
+    fn mul_entry(&self, ident: &Ident) -> TokenStream {
+        quote! {
+            #ident: self.#ident * other as i64,
+        }
+    }
+
+    fn sqrt_entry(&self, ident: &Ident) -> TokenStream {
+        quote! {
+            #ident: self.#ident / 2,
+        }
+    }
+
+    fn cbrt_entry(&self, ident: &Ident) -> TokenStream {
+        quote! {
+            #ident: self.#ident / 3,
+        }
+    }
+
+    fn sqrt_safety(&self, ident: &Ident) -> TokenStream {
+        quote! {
+            if self.#ident % 2 != 0 {
+                panic!("Cannot take square root of quantity with a dimension that is not divisible by 2 in all components.");
+            }
+        }
+    }
+
+    fn cbrt_safety(&self, ident: &Ident) -> TokenStream {
+        quote! {
+            if self.#ident % 3 != 0 {
+                panic!("Cannot take cubic root of quantity with a dimension that is not divisible by 3 in all components.");
+            }
+        }
+    }
+}
 impl Codegen {
     pub(crate) fn gen_dimension(&self) -> TokenStream {
         let name = &self.defs.dimension_type;
@@ -20,9 +148,9 @@ impl Codegen {
             })
             .collect();
         let methods_impl: proc_macro2::TokenStream = self.dimension_methods_impl();
-        let use_ratio = self.use_ratio();
+        let use_exponent = self.use_exponent_and_dimension_exponent_trait();
         quote! {
-            #use_ratio
+            #use_exponent
 
             #[derive(::core::cmp::PartialEq, ::core::cmp::Eq, ::core::clone::Clone, ::core::fmt::Debug, ::core::marker::ConstParamTy)]
             pub struct #name {
@@ -33,15 +161,40 @@ impl Codegen {
         }
     }
 
-    fn use_ratio(&self) -> TokenStream {
-        match self.caller_type {
+    fn use_exponent_and_dimension_exponent_trait(&self) -> TokenStream {
+        let use_exponent = match self.caller_type {
             CallerType::External => {
-                quote! { use ::diman::Ratio; }
+                #[cfg(feature = "rational-dimensions")]
+                quote! { use ::diman::internal::Ratio as Exponent; }
+                #[cfg(not(feature = "rational-dimensions"))]
+                quote! { use i64 as Exponent; }
             }
             CallerType::Internal => {
-                quote! { use ::diman_lib::ratio::Ratio; }
+                #[cfg(feature = "rational-dimensions")]
+                quote! { use ::diman_lib::ratio::Ratio as Exponent; }
+                #[cfg(not(feature = "rational-dimensions"))]
+                quote! { use i64 as Exponent; }
             }
+        };
+        let use_dimension_exponent_trait = match self.caller_type {
+            CallerType::External => {
+                quote! { use ::diman::internal::DimensionExponent; }
+            }
+            CallerType::Internal => {
+                quote! { use ::diman_lib::dimension_exponent::DimensionExponent; }
+            }
+        };
+        quote! {
+            #use_exponent
+            #use_dimension_exponent_trait
         }
+    }
+
+    fn zero_entry(&self, ident: &Ident) -> TokenStream {
+        #[cfg(feature = "rational-dimensions")]
+        quote! { #ident: Exponent::int(0), }
+        #[cfg(not(feature = "rational-dimensions"))]
+        quote! { #ident: 0, }
     }
 
     fn dimension_methods_impl(&self) -> TokenStream {

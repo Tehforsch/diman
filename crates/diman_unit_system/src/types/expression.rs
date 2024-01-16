@@ -1,4 +1,4 @@
-use super::BaseDimensionExponent;
+use super::Exponent;
 
 #[derive(Clone)]
 #[cfg_attr(test, derive(PartialEq, Debug))]
@@ -44,7 +44,7 @@ pub enum Factor<T, E> {
 pub trait MulDiv:
     core::ops::Mul<Output = Self> + core::ops::Div<Output = Self> + Sized + Clone
 {
-    fn pow(self, pow: BaseDimensionExponent) -> Self;
+    fn pow(self, pow: Exponent) -> Self;
 }
 
 impl<T, E> Expr<T, E> {
@@ -122,7 +122,7 @@ impl<T, E> Factor<T, E> {
     }
 }
 
-impl<T: MulDiv, I: Into<BaseDimensionExponent> + Clone> Expr<T, I> {
+impl<T: MulDiv, I: Into<Exponent> + Clone> Expr<T, I> {
     pub fn eval(&self) -> T {
         match self {
             Expr::Value(val) => val.eval(),
@@ -138,7 +138,7 @@ impl<T: MulDiv, I: Into<BaseDimensionExponent> + Clone> Expr<T, I> {
     }
 }
 
-impl<T: MulDiv, I: Into<BaseDimensionExponent> + Clone> Factor<T, I> {
+impl<T: MulDiv, I: Into<Exponent> + Clone> Factor<T, I> {
     pub fn eval(&self) -> T {
         match self {
             Factor::Value(val) => val.clone(),
@@ -154,7 +154,7 @@ mod tests {
     use crate::parse::tests::parse_expr;
     use crate::parse::tests::MyInt;
     use crate::types::expression::MulDiv;
-    use crate::types::BaseDimensionExponent;
+    use crate::types::Exponent;
 
     use quote::quote;
 
@@ -175,14 +175,14 @@ mod tests {
     }
 
     impl MulDiv for MyInt {
-        fn pow(self, pow: BaseDimensionExponent) -> Self {
-            Self(self.0.pow(pow.0 as u32))
+        fn pow(self, pow: Exponent) -> Self {
+            Self(self.0.pow(pow as u32))
         }
     }
 
-    impl From<MyInt> for BaseDimensionExponent {
+    impl From<MyInt> for Exponent {
         fn from(value: MyInt) -> Self {
-            BaseDimensionExponent(value.0.into())
+            value.0.into()
         }
     }
 

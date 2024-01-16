@@ -110,7 +110,7 @@ impl Codegen {
             pub mod #module_name {
                 use super::#dimension_type;
                 use super::#quantity_type;
-                use super::Ratio;
+                use super::Exponent;
                 #quantities
                 #constants
             }

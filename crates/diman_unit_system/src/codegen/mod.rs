@@ -1,4 +1,3 @@
-mod base_dimension_type;
 mod debug_trait;
 mod dimension_type;
 mod dimensions;

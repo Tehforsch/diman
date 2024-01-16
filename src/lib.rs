@@ -2,6 +2,8 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs, adt_const_params)]
 #![doc = include_str!("../README.md")]
+// clippy bug: https://github.com/rust-lang/rust-clippy/issues/12133
+#![allow(clippy::unconditional_recursion)]
 
 // This ensures we don't have to differentiate between
 // imports via `crate::` and `diman::` in the proc macro.
@@ -134,4 +136,8 @@ pub type Product<Q1, Q2> = <Q1 as ::core::ops::Mul<Q2>>::Output;
 /// ```
 pub type Quotient<Q1, Q2> = <Q1 as core::ops::Div<Q2>>::Output;
 
-pub use diman_lib::ratio::Ratio;
+pub mod internal {
+    pub use diman_lib::dimension_exponent::DimensionExponent;
+    pub use diman_lib::ratio::Ratio;
+    pub use diman_lib::runtime_unit_storage;
+}
