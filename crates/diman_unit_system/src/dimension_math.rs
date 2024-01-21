@@ -119,7 +119,7 @@ impl DimensionsAndMagnitude {
     pub(crate) fn dimensions(dimensions: BaseDimensions) -> Self {
         Self {
             dimensions,
-            magnitude: Magnitude::new(1.0),
+            magnitude: Magnitude::from_f64(1.0),
         }
     }
 }

@@ -16,29 +16,31 @@ impl Codegen {
     fn gen_unit_trait_impls(&self) -> TokenStream {
         quote! {
             use core::ops::{Mul, Div};
-            // Unit * Unit
-            impl<const DL: Dimension, const DR: Dimension, const FL: Magnitude, const FR: Magnitude>
-                Mul<Unit<DR, FR>> for Unit<DL, FL>
-            where
-                Unit<{ DL.add(DR) }, { FL.mul(FR) }>:,
-            {
-                type Output = Unit<{ DL.add(DR) }, { FL.mul(FR) }>;
-                fn mul(self, _: Unit<DR, FR>) -> Self::Output {
-                    Unit
-                }
-            }
+            // The following would be possible if
+            // Unit::mul / Unit::div could be made const.
+            // // Unit * Unit
+            // impl<const DL: Dimension, const DR: Dimension, const FL: Magnitude, const FR: Magnitude>
+            //     Mul<Unit<DR, FR>> for Unit<DL, FL>
+            // where
+            //     Unit<{ DL.add(DR) }, { FL.mul(FR) }>:,
+            // {
+            //     type Output = Unit<{ DL.add(DR) }, { FL.mul(FR) }>;
+            //     fn mul(self, _: Unit<DR, FR>) -> Self::Output {
+            //         Unit
+            //     }
+            // }
 
-            // Unit / Unit
-            impl<const DL: Dimension, const DR: Dimension, const FL: Magnitude, const FR: Magnitude>
-                Div<Unit<DR, FR>> for Unit<DL, FL>
-            where
-                Unit<{ DL.sub(DR) }, { FL.div(FR) }>:,
-            {
-                type Output = Unit<{ DL.sub(DR) }, { FL.div(FR) }>;
-                fn div(self, _: Unit<DR, FR>) -> Self::Output {
-                    Unit
-                }
-            }
+            // // Unit / Unit
+            // impl<const DL: Dimension, const DR: Dimension, const FL: Magnitude, const FR: Magnitude>
+            //     Div<Unit<DR, FR>> for Unit<DL, FL>
+            // where
+            //     Unit<{ DL.sub(DR) }, { FL.div(FR) }>:,
+            // {
+            //     type Output = Unit<{ DL.sub(DR) }, { FL.div(FR) }>;
+            //     fn div(self, _: Unit<DR, FR>) -> Self::Output {
+            //         Unit
+            //     }
+            // }
 
             // Unit * Quantity<S>
             impl<const DL: Dimension, const DR: Dimension, const FL: Magnitude, S> Mul<Quantity<S, DR>>
@@ -96,7 +98,7 @@ impl Codegen {
             impl<const D: Dimension, const F: Magnitude> Mul<Unit<D, F>> for f64 {
                 type Output = Quantity<f64, D>;
                 fn mul(self, _: Unit<D, F>) -> Self::Output {
-                    Quantity(self * F)
+                    Quantity(self * F.into_f64())
                 }
             }
 
@@ -104,7 +106,7 @@ impl Codegen {
             impl<const D: Dimension, const F: Magnitude> Div<Unit<D, F>> for f64 {
                 type Output = Quantity<f64, D>;
                 fn div(self, _: Unit<D, F>) -> Self::Output {
-                    Quantity(self / F)
+                    Quantity(self / F.into_f64())
                 }
             }
 
@@ -112,7 +114,7 @@ impl Codegen {
             impl<const D: Dimension, const F: Magnitude> Mul<f64> for Unit<D, F> {
                 type Output = Quantity<f64, D>;
                 fn mul(self, f: f64) -> Self::Output {
-                    Quantity(F.as_f64() * f)
+                    Quantity(F.into_f64() * f)
                 }
             }
 
@@ -120,7 +122,7 @@ impl Codegen {
             impl<const D: Dimension, const F: Magnitude> Div<f64> for Unit<D, F> {
                 type Output = Quantity<f64, D>;
                 fn div(self, f: f64) -> Self::Output {
-                    Quantity(F.as_f64() / f)
+                    Quantity(F.into_f64())
                 }
             }
 
@@ -128,7 +130,7 @@ impl Codegen {
             impl<const D: Dimension, const F: Magnitude> Mul<Unit<D, F>> for f32 {
                 type Output = Quantity<f32, D>;
                 fn mul(self, _: Unit<D, F>) -> Self::Output {
-                    Quantity(self * F)
+                    Quantity(self * F.into_f32())
                 }
             }
 
@@ -136,7 +138,7 @@ impl Codegen {
             impl<const D: Dimension, const F: Magnitude> Div<Unit<D, F>> for f32 {
                 type Output = Quantity<f32, D>;
                 fn div(self, _: Unit<D, F>) -> Self::Output {
-                    Quantity(self / F)
+                    Quantity(self / F.into_f32())
                 }
             }
 
@@ -144,7 +146,7 @@ impl Codegen {
             impl<const D: Dimension, const F: Magnitude> Mul<f32> for Unit<D, F> {
                 type Output = Quantity<f32, D>;
                 fn mul(self, f: f32) -> Self::Output {
-                    Quantity(F.as_f32() * f)
+                    Quantity(F.into_f32() * f)
                 }
             }
 
@@ -152,7 +154,7 @@ impl Codegen {
             impl<const D: Dimension, const F: Magnitude> Div<f32> for Unit<D, F> {
                 type Output = Quantity<f32, D>;
                 fn div(self, f: f32) -> Self::Output {
-                    Quantity(F.as_f32() / f)
+                    Quantity(F.into_f32() / f)
                 }
             }
 
@@ -161,7 +163,7 @@ impl Codegen {
                 where
                     S: Mul<f64, Output = S>,
                 {
-                    Quantity(val * F.as_f64())
+                    Quantity(val * F.into_f64())
                 }
             }
         }

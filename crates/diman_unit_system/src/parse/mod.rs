@@ -156,7 +156,7 @@ impl Parse for crate::types::Factor<Magnitude> {
             Ok(Self::Other(input.parse()?))
         } else if lookahead.peek(Lit) {
             let factor: Number = input.parse()?;
-            Ok(Self::Concrete(Magnitude::new(factor.float)))
+            Ok(Self::Concrete(Magnitude::from_f64(factor.float)))
         } else {
             Err(lookahead.error())
         }

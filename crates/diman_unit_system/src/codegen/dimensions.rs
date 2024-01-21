@@ -87,7 +87,7 @@ impl Codegen {
                 let dimension = self.get_dimension_expr(&constant.dimensions);
                 let quantity_type = &self.defs.quantity_type;
                 let constant_name = &constant.name;
-                let magnitude = constant.magnitude.as_f64();
+                let magnitude = constant.magnitude.into_f64();
                 let float_type = &type_.base_storage().name;
                 let type_ = type_.name();
                 // TODO(minor): The allow(clippy::approx_constant)

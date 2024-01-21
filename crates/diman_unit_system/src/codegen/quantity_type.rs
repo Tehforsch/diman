@@ -23,12 +23,12 @@ impl Codegen {
         let quantity_type = &self.defs.quantity_type;
         quote! {
             impl<S> #quantity_type<S, { #dimension_type::none() }> {
-                /// Get the value of a dimensionless quantity
+                /// Return the stored value of a dimensionless quantity.
                 pub fn value(self) -> S {
                     self.0
                 }
 
-                /// Get a reference to the value of a dimensionless quantity
+                /// Get a reference to the stored value of a dimensionless quantity.
                 pub fn value_ref(&self) -> &S {
                     &self.0
                 }
@@ -62,23 +62,9 @@ impl Codegen {
                 S: core::ops::Div<Magnitude, Output = S> + core::fmt::Debug,
             {
                 pub fn value_in<const R: Magnitude>(self, _: Unit<D, R>) -> S {
-                    dbg!(R.as_f64(), &self.value_unchecked_ref());
                     self.value_unchecked() / R
                 }
             }
-
-            impl<const D: #dimension_type> #quantity_type<f64, D> {
-                pub fn round_in<const R: Magnitude>(self, unit: Unit<D, R>) -> f64 {
-                    self.value_in(unit).round()
-                }
-            }
-
-            impl<const D: #dimension_type> #quantity_type<f32, D> {
-                pub fn round_in<const R: Magnitude>(self, unit: Unit<D, R>) -> f32 {
-                    self.value_in(unit).round()
-                }
-            }
-
 
             impl<S> core::ops::Deref for #quantity_type<S, { #dimension_type::none() }> {
                 type Target = S;

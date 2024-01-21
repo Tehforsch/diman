@@ -24,7 +24,7 @@ impl Codegen {
         let units: TokenStream = units
             .filter_map(|unit| {
                 let dim = self.get_dimension_expr(&unit.dimensions);
-                let magnitude = unit.magnitude.as_f64();
+                let magnitude = unit.magnitude.into_f64();
                 let symbol = &unit.symbol.as_ref()?.0.to_string();
                 Some(quote! {
                     #runtime_unit::new(

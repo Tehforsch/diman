@@ -132,7 +132,7 @@ impl UnitTemplate {
     ) -> Definition<Ident, Magnitude> {
         let factor = prefix
             .map(|prefix| prefix.factor())
-            .unwrap_or(Magnitude::new(1.0));
+            .unwrap_or(Magnitude::from_f64(1.0));
         if alias.is_none() && prefix.is_none() {
             self.definition.clone()
         } else {

@@ -29,7 +29,7 @@ macro_rules! make_prefix_enum {
             pub fn factor(self) -> Magnitude {
                 match self {
                     $(
-                        Self::$variant_name => Magnitude::new($factor),
+                        Self::$variant_name => Magnitude::from_f64($factor),
                     )*
                 }
             }
