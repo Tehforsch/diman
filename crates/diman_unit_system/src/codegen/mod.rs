@@ -56,7 +56,7 @@ impl Codegen {
         join([
             self.gen_dimension(),
             self.gen_quantity(),
-            self.gen_definitions_for_storage_types(),
+            self.gen_dimensions(),
             self.gen_units(),
             self.gen_numeric_trait_impls(),
             self.gen_debug_trait_impl(),

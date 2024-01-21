@@ -25,19 +25,10 @@ impl Codegen {
         }
     }
 
-    pub(crate) fn gen_definitions_for_storage_types(&self) -> TokenStream {
-        let defs: TokenStream = self
-            .storage_types()
-            .map(|type_| {
-                self.definitions_for_storage_type(
-                    &*type_,
-                    type_.module_name(),
-                    type_.generate_constants(),
-                )
-            })
-            .collect();
+    pub(crate) fn gen_dimensions(&self) -> TokenStream {
         let dimension_type = &self.defs.dimension_type;
         let quantity_type = &self.defs.quantity_type;
+        let defs = self.gen_dimension_definitions();
         quote! {
             pub mod dimensions {
                 use super::#dimension_type;
@@ -48,46 +39,26 @@ impl Codegen {
         }
     }
 
-    fn definitions_for_storage_type(
-        &self,
-        type_: &dyn StorageType,
-        module_name: &TokenStream,
-        gen_constants: bool,
-    ) -> TokenStream {
+    fn gen_dimension_definitions(&self) -> TokenStream {
         let dimension_type = &self.defs.dimension_type;
         let quantity_type = &self.defs.quantity_type;
-        let quantities = self.quantity_definitions_for_storage_type(type_);
-        let constants = if gen_constants {
-            self.constant_definitions_for_storage_type(type_)
-        } else {
-            quote! {}
-        };
-        quote! {
-            pub mod #module_name {
-                use super::#dimension_type;
-                use super::#quantity_type;
-                use super::Exponent;
-                #quantities
-                #constants
-            }
-        }
-    }
-
-    fn quantity_definitions_for_storage_type(&self, type_: &dyn StorageType) -> TokenStream {
-        self.defs
+        let dimensions: TokenStream = self
+            .defs
             .dimensions
             .iter()
             .map(|quantity| {
                 let dimension = self.get_dimension_expr(&quantity.dimensions);
                 let quantity_type = &self.defs.quantity_type;
                 let quantity_name = &quantity.name;
-                let type_ = type_.name();
                 let span = self.defs.dimension_type.span();
                 quote_spanned! {span =>
-                    pub type #quantity_name = #quantity_type::<#type_, { #dimension }>;
+                    pub type #quantity_name<S> = #quantity_type::<S, { #dimension }>;
                 }
             })
-            .collect()
+            .collect();
+        quote! {
+            #dimensions
+        }
     }
 
     fn constant_definitions_for_storage_type(&self, type_: &dyn StorageType) -> TokenStream {
