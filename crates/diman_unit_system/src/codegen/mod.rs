@@ -15,7 +15,7 @@ mod rand;
 mod serde;
 mod storage_types;
 mod unit_type;
-mod units;
+mod units_and_constants;
 mod vector_methods;
 
 use proc_macro2::TokenStream;
@@ -57,7 +57,7 @@ impl Codegen {
             self.gen_dimension(),
             self.gen_quantity(),
             self.gen_dimensions(),
-            self.gen_units(),
+            self.gen_units_and_constants(),
             self.gen_numeric_trait_impls(),
             self.gen_debug_trait_impl(),
             self.gen_float_methods(),

@@ -2,18 +2,29 @@ use proc_macro2::TokenStream;
 use quote::quote;
 
 use super::Codegen;
-use crate::types::Unit;
+use crate::types::{Constant, Unit};
 use diman_lib::magnitude::Magnitude;
 
 impl Codegen {
-    pub fn gen_units(&self) -> TokenStream {
+    pub fn gen_units_and_constants(&self) -> TokenStream {
         let def_unit_type = self.gen_unit_type();
         let units: TokenStream = self
             .defs
             .units
             .iter()
             .map(|unit| {
-                let unit = self.unit_const(unit);
+                let unit = self.gen_unit_def(unit);
+                quote! {
+                    #unit
+                }
+            })
+            .collect();
+        let constants: TokenStream = self
+            .defs
+            .constants
+            .iter()
+            .map(|unit| {
+                let unit = self.gen_constant_def(unit);
                 quote! {
                     #unit
                 }
@@ -36,10 +47,16 @@ impl Codegen {
                 use super::Dimension;
                 #units
             }
+            pub mod constants {
+                use super::Magnitude;
+                use super::Unit;
+                use super::Dimension;
+                #constants
+            }
         }
     }
 
-    fn unit_const(&self, unit: &Unit) -> TokenStream {
+    fn gen_unit_def(&self, unit: &Unit) -> TokenStream {
         let dimension = self.get_dimension_expr(&unit.dimensions);
         let name = &unit.name;
         let magnitude = self.get_magnitude_expr(unit.magnitude);
@@ -48,7 +65,16 @@ impl Codegen {
         }
     }
 
-    fn get_magnitude_expr(&self, magnitude: Magnitude) -> TokenStream {
+    fn gen_constant_def(&self, constant: &Constant) -> TokenStream {
+        let dimension = self.get_dimension_expr(&constant.dimensions);
+        let name = &constant.name;
+        let magnitude = self.get_magnitude_expr(constant.magnitude);
+        quote! {
+            pub const #name: Unit<{ #dimension }, { #magnitude }> = Unit;
+        }
+    }
+
+    pub fn get_magnitude_expr(&self, magnitude: Magnitude) -> TokenStream {
         let (mantissa, exponent, sign) = (magnitude.mantissa, magnitude.exponent, magnitude.sign);
         quote! {
             Magnitude {
