@@ -26,7 +26,8 @@ impl Codegen {
     }
 
     pub(crate) fn gen_definitions_for_storage_types(&self) -> TokenStream {
-        self.storage_types()
+        let defs: TokenStream = self
+            .storage_types()
             .map(|type_| {
                 self.definitions_for_storage_type(
                     &*type_,
@@ -34,7 +35,17 @@ impl Codegen {
                     type_.generate_constants(),
                 )
             })
-            .collect()
+            .collect();
+        let dimension_type = &self.defs.dimension_type;
+        let quantity_type = &self.defs.quantity_type;
+        quote! {
+            pub mod dimensions {
+                use super::#dimension_type;
+                use super::#quantity_type;
+                use super::Exponent;
+                #defs
+            }
+        }
     }
 
     fn definitions_for_storage_type(
