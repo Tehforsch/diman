@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{quote, quote_spanned};
 
 use super::Codegen;
 use crate::types::{Constant, Unit};
@@ -24,9 +24,9 @@ impl Codegen {
             .constants
             .iter()
             .map(|unit| {
-                let unit = self.gen_constant_def(unit);
+                let constant = self.gen_constant_def(unit);
                 quote! {
-                    #unit
+                    #constant
                 }
             })
             .collect();
@@ -60,7 +60,8 @@ impl Codegen {
         let dimension = self.get_dimension_expr(&unit.dimensions);
         let name = &unit.name;
         let magnitude = self.get_magnitude_expr(unit.magnitude);
-        quote! {
+        let span = self.defs.dimension_type.span();
+        quote_spanned! {span=>
             pub const #name: Unit<{ #dimension }, { #magnitude }> = Unit;
         }
     }
@@ -69,7 +70,8 @@ impl Codegen {
         let dimension = self.get_dimension_expr(&constant.dimensions);
         let name = &constant.name;
         let magnitude = self.get_magnitude_expr(constant.magnitude);
-        quote! {
+        let span = self.defs.dimension_type.span();
+        quote_spanned! {span=>
             pub const #name: Unit<{ #dimension }, { #magnitude }> = Unit;
         }
     }

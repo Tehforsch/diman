@@ -25,7 +25,7 @@ impl Codegen {
         }
     }
 
-    pub(crate) fn gen_dimensions(&self) -> TokenStream {
+    pub fn gen_dimensions(&self) -> TokenStream {
         let dimension_type = &self.defs.dimension_type;
         let quantity_type = &self.defs.quantity_type;
         let defs = self.gen_dimension_definitions();
