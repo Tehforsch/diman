@@ -161,9 +161,9 @@ impl Codegen {
             impl<const D: Dimension, const F: Magnitude> Unit<D, F> {
                 pub fn new<S>(self, val: S) -> Quantity<S, D>
                 where
-                    S: Mul<f64, Output = S>,
+                    S: Mul<Magnitude, Output = S>,
                 {
-                    Quantity(val * F.into_f64())
+                    Quantity(val * F)
                 }
             }
         }

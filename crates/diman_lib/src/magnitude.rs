@@ -108,6 +108,38 @@ impl Div<Magnitude> for f64 {
     }
 }
 
+impl Mul<f32> for Magnitude {
+    type Output = Self;
+
+    fn mul(self, rhs: f32) -> Self::Output {
+        Self::from_f64((self.into_f32() * rhs) as f64)
+    }
+}
+
+impl Div<f32> for Magnitude {
+    type Output = Self;
+
+    fn div(self, rhs: f32) -> Self::Output {
+        Self::from_f64((self.into_f32() / rhs) as f64)
+    }
+}
+
+impl Mul<Magnitude> for f32 {
+    type Output = Self;
+
+    fn mul(self, rhs: Magnitude) -> Self::Output {
+        self * rhs.into_f32()
+    }
+}
+
+impl Div<Magnitude> for f32 {
+    type Output = Self;
+
+    fn div(self, rhs: Magnitude) -> Self::Output {
+        self / rhs.into_f32()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::magnitude::Magnitude;
