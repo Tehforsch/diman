@@ -58,6 +58,7 @@ macro_rules! gen_tests_for_vector_2 {
 macro_rules! gen_tests_for_vector_3 {
     ($vec_mod_name: ident, $vec_name: ident) => {
         mod $vec_mod_name {
+            use crate::example_system::dimensions::Length;
             use crate::example_system::units::meters;
             use glam::$vec_name;
             use mpi::topology::Communicator;
@@ -65,8 +66,8 @@ macro_rules! gen_tests_for_vector_3 {
             #[test]
             fn pack_unpack_vec_quantity() {
                 let world = super::MPI_UNIVERSE.world();
-                let q1 = <$vec_name>::new(1.0, 2.0, 3.0) * meters;
-                let mut q2 = <$vec_name>::new(4.0, 5.0, 6.0) * meters;
+                let q1: Length<$vec_name> = <$vec_name>::new(1.0, 2.0, 3.0) * meters;
+                let mut q2: Length<$vec_name> = <$vec_name>::new(4.0, 5.0, 6.0) * meters;
                 let a = world.pack(&q1);
                 unsafe {
                     world.unpack_into(&a, &mut q2, 0);
