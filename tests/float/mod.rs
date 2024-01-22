@@ -8,44 +8,22 @@ macro_rules! gen_tests_for_float {
                 Dimensionless, Energy, Force, Length, Mass, Time, Velocity,
             };
             use crate::example_system::units;
+            use crate::make_annotated_unit_constructor;
             use $assert_is_close as assert_is_close;
             use $assert_is_close_float as assert_is_close_float;
 
-            // These help with what would otherwise require lots of
-            // type annotations for the float which are awkward to do
-            // because we can't write 1.0f64 or similar literals here
-
-            fn meters(x: $float_name) -> Length<$float_name> {
-                x * units::meters
-            }
-
-            fn kilometers(x: $float_name) -> Length<$float_name> {
-                x * units::kilometers
-            }
-
-            fn seconds(x: $float_name) -> Time<$float_name> {
-                x * units::seconds
-            }
-
-            fn kilograms(x: $float_name) -> Mass<$float_name> {
-                x * units::kilograms
-            }
-
-            fn dimensionless(x: $float_name) -> Dimensionless<$float_name> {
-                x * units::dimensionless
-            }
-
-            fn meters_per_second(x: $float_name) -> Velocity<$float_name> {
-                x * units::meters_per_second
-            }
-
-            fn newtons(x: $float_name) -> Force<$float_name> {
-                x * units::newtons
-            }
-
-            fn joules(x: $float_name) -> Energy<$float_name> {
-                x * units::joules
-            }
+            make_annotated_unit_constructor!(meters, Length<$float_name>, $float_name);
+            make_annotated_unit_constructor!(kilometers, Length<$float_name>, $float_name);
+            make_annotated_unit_constructor!(seconds, Time<$float_name>, $float_name);
+            make_annotated_unit_constructor!(kilograms, Mass<$float_name>, $float_name);
+            make_annotated_unit_constructor!(
+                dimensionless,
+                Dimensionless<$float_name>,
+                $float_name
+            );
+            make_annotated_unit_constructor!(meters_per_second, Velocity<$float_name>, $float_name);
+            make_annotated_unit_constructor!(newtons, Force<$float_name>, $float_name);
+            make_annotated_unit_constructor!(joules, Energy<$float_name>, $float_name);
 
             #[test]
             fn add_same_unit() {

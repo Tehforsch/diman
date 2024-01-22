@@ -8,12 +8,18 @@ macro_rules! gen_tests_for_float {
             use diman::Quotient;
 
             #[allow(unused)]
-            fn product_1(length: Length<$float_name>, time: Time<$float_name>) -> Product<Length<$float_name>, Time<$float_name>> {
+            fn product_1(
+                length: Length<$float_name>,
+                time: Time<$float_name>,
+            ) -> Product<Length<$float_name>, Time<$float_name>> {
                 length * time
             }
 
             #[allow(unused)]
-            fn quotient_1(length: Length<$float_name>, time: Time<$float_name>) -> Quotient<Length<$float_name>, Time<$float_name>> {
+            fn quotient_1(
+                length: Length<$float_name>,
+                time: Time<$float_name>,
+            ) -> Quotient<Length<$float_name>, Time<$float_name>> {
                 length / time
             }
         }
