@@ -35,8 +35,9 @@ impl Codegen {
                 })
             })
             .collect();
+        let dimension_type = &self.defs.dimension_type;
         quote! {
-            let units_array = &[#units];
+            let units_array: &[#runtime_unit::<#dimension_type>] = &[#units];
             let units = #runtime_unit_storage::new(units_array);
         }
     }

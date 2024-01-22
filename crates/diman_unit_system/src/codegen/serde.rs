@@ -25,7 +25,7 @@ impl Codegen {
             use core::marker::PhantomData;
             use std::str::SplitWhitespace;
 
-            use serde::de::{self};
+            use serde::de;
 
             #[derive(Default)]
             struct QuantityVisitor<S, const D: #dimension_type>(PhantomData<S>);
@@ -173,7 +173,7 @@ impl Codegen {
                     let (total_dimension, total_factor) = read_unit_str(split)?;
                     get_quantity_if_dimensions_match::<#float_type, D, E>(
                         value,
-                        (numerical_value * (total_factor as #float_type)),
+                        numerical_value * (total_factor as #float_type),
                         total_dimension,
                     )
                 }
