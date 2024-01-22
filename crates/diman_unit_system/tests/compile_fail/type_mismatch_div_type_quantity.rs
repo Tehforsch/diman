@@ -1,8 +1,8 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs, adt_const_params)]
 pub mod example_system;
-use example_system::f64::*;
+use example_system::units::dimensionless;
 
 fn main() {
-    let x: () = Dimensionless::dimensionless(1.0) / 1.0;
+    let x: () = dimensionless.new(1.0) / 1.0;
 }
