@@ -15,6 +15,7 @@ pub struct VectorType {
 pub struct FloatType {
     pub name: Type,
     pub module_name: TokenStream,
+    pub conversion_method: TokenStream,
     #[cfg(feature = "mpi")]
     pub mpi_type: TokenStream,
     #[cfg(feature = "hdf5")]
@@ -131,6 +132,7 @@ impl Codegen {
         FloatType {
             name: f32_ty,
             module_name: quote! { f32 },
+            conversion_method: quote! { into_f32 },
             #[cfg(feature = "mpi")]
             mpi_type: quote! { ::mpi::ffi::RSMPI_FLOAT },
             #[cfg(feature = "hdf5")]
@@ -146,6 +148,7 @@ impl Codegen {
         FloatType {
             name: f64_ty,
             module_name: quote! { f64 },
+            conversion_method: quote! { into_f64 },
             #[cfg(feature = "mpi")]
             mpi_type: quote! { ::mpi::ffi::RSMPI_DOUBLE },
             #[cfg(feature = "hdf5")]

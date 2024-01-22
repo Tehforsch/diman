@@ -1,5 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
+use syn::Type;
 
 use super::Codegen;
 
@@ -7,9 +8,11 @@ impl Codegen {
     pub fn gen_unit_type(&self) -> TokenStream {
         let dimension_type = &self.defs.dimension_type;
         let trait_impls = self.gen_unit_trait_impls();
+        let storage_type_impls = self.gen_unit_trait_impls_for_storage_types();
         quote! {
             pub struct Unit<const D: #dimension_type, const F: Magnitude>;
             #trait_impls
+            #storage_type_impls
         }
     }
 
@@ -94,70 +97,6 @@ impl Codegen {
                 }
             }
 
-            // f64 * Unit
-            impl<const D: Dimension, const F: Magnitude> Mul<Unit<D, F>> for f64 {
-                type Output = Quantity<f64, D>;
-                fn mul(self, _: Unit<D, F>) -> Self::Output {
-                    Quantity(self * F.into_f64())
-                }
-            }
-
-            // f64 / Unit
-            impl<const D: Dimension, const F: Magnitude> Div<Unit<D, F>> for f64 {
-                type Output = Quantity<f64, D>;
-                fn div(self, _: Unit<D, F>) -> Self::Output {
-                    Quantity(self / F.into_f64())
-                }
-            }
-
-            // Unit * f64
-            impl<const D: Dimension, const F: Magnitude> Mul<f64> for Unit<D, F> {
-                type Output = Quantity<f64, D>;
-                fn mul(self, f: f64) -> Self::Output {
-                    Quantity(F.into_f64() * f)
-                }
-            }
-
-            // Unit / f64
-            impl<const D: Dimension, const F: Magnitude> Div<f64> for Unit<D, F> {
-                type Output = Quantity<f64, D>;
-                fn div(self, f: f64) -> Self::Output {
-                    Quantity(F.into_f64())
-                }
-            }
-
-            // f32 * Unit
-            impl<const D: Dimension, const F: Magnitude> Mul<Unit<D, F>> for f32 {
-                type Output = Quantity<f32, D>;
-                fn mul(self, _: Unit<D, F>) -> Self::Output {
-                    Quantity(self * F.into_f32())
-                }
-            }
-
-            // f32 / Unit
-            impl<const D: Dimension, const F: Magnitude> Div<Unit<D, F>> for f32 {
-                type Output = Quantity<f32, D>;
-                fn div(self, _: Unit<D, F>) -> Self::Output {
-                    Quantity(self / F.into_f32())
-                }
-            }
-
-            // Unit * f32
-            impl<const D: Dimension, const F: Magnitude> Mul<f32> for Unit<D, F> {
-                type Output = Quantity<f32, D>;
-                fn mul(self, f: f32) -> Self::Output {
-                    Quantity(F.into_f32() * f)
-                }
-            }
-
-            // Unit / f32
-            impl<const D: Dimension, const F: Magnitude> Div<f32> for Unit<D, F> {
-                type Output = Quantity<f32, D>;
-                fn div(self, f: f32) -> Self::Output {
-                    Quantity(F.into_f32() / f)
-                }
-            }
-
             impl<const D: Dimension, const F: Magnitude> Unit<D, F> {
                 pub fn new<S>(self, val: S) -> Quantity<S, D>
                 where
@@ -167,5 +106,59 @@ impl Codegen {
                 }
             }
         }
+    }
+
+    fn gen_unit_trait_impls_for_storage_types(&self) -> TokenStream {
+        self.storage_types()
+            .map(|ty| {
+                let name = &ty.name();
+                let conversion_method = &ty.base_storage().conversion_method;
+                self.gen_unit_numeric_traits_impls_for_type(name, conversion_method)
+            })
+            .collect()
+    }
+
+    fn gen_unit_numeric_traits_impls_for_type(
+        &self,
+        name: &Type,
+        conversion_to_float: &TokenStream,
+    ) -> TokenStream {
+        let into = quote! {
+            F.#conversion_to_float()
+        };
+        let res = quote! {
+            // X * Unit
+            impl<const D: Dimension, const F: Magnitude> Mul<Unit<D, F>> for #name {
+                type Output = Quantity<#name, D>;
+                fn mul(self, _: Unit<D, F>) -> Self::Output {
+                    Quantity(self * #into)
+                }
+            }
+
+            // X / Unit
+            impl<const D: Dimension, const F: Magnitude> Div<Unit<D, F>> for #name {
+                type Output = Quantity<#name, D>;
+                fn div(self, _: Unit<D, F>) -> Self::Output {
+                    Quantity(self / #into)
+                }
+            }
+
+            // Unit * X
+            impl<const D: Dimension, const F: Magnitude> Mul<#name> for Unit<D, F> {
+                type Output = Quantity<#name, D>;
+                fn mul(self, f: #name) -> Self::Output {
+                    Quantity(#into * f)
+                }
+            }
+
+            // Unit / X
+            impl<const D: Dimension, const F: Magnitude> Div<#name> for Unit<D, F> {
+                type Output = Quantity<#name, D>;
+                fn div(self, f: #name) -> Self::Output {
+                    Quantity(#into / f)
+                }
+            }
+        };
+        res
     }
 }

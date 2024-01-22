@@ -2,42 +2,47 @@
 macro_rules! gen_tests_for_vector_2 {
     ($float_name: ident, $mod_name: ident, $vec_name: ty, $assert_is_close: path) => {
         mod $mod_name {
-            use crate::example_system::$float_name::Length;
-            use crate::example_system::$float_name::Time;
-            use crate::example_system::$mod_name::Length as VecLength;
-            use crate::example_system::$mod_name::Velocity as VecVelocity;
+            use crate::example_system::dimensions::{Length, Time};
+            use crate::example_system::units::{self, meters_per_second};
+            use crate::make_annotated_unit_constructor;
             use $assert_is_close as assert_is_close;
-            use $vec_name as Vec;
 
+            make_annotated_unit_constructor!(meters, Length<$float_name>, $float_name);
+            make_annotated_unit_constructor!(seconds, Time<$float_name>, $float_name);
+
+            use $vec_name as Vec;
             #[test]
             fn debug_vector_2() {
-                assert_eq!(format!("{:?}", VecLength::meters(1.0, 5.0)), "[1, 5] m");
+                assert_eq!(
+                    format!("{:?}", Vec::new(1.0, 5.0) * meters(1.0)),
+                    "[1, 5] m"
+                );
             }
 
             #[test]
             fn mul_vec2() {
-                let multiplied = Vec::new(1.0, 2.0) * Length::meters(5.0);
-                assert_is_close(multiplied.x(), Length::meters(5.0));
-                assert_is_close(multiplied.y(), Length::meters(10.0));
-                let multiplied = Length::meters(5.0) * Vec::new(1.0, 2.0);
-                assert_is_close(multiplied.x(), Length::meters(5.0));
-                assert_is_close(multiplied.y(), Length::meters(10.0));
+                let multiplied = Vec::new(1.0, 2.0) * meters(5.0);
+                assert_is_close(multiplied.x(), meters(5.0));
+                assert_is_close(multiplied.y(), meters(10.0));
+                let multiplied: Length<Vec> = meters(5.0) * Vec::new(1.0, 2.0);
+                assert_is_close(multiplied.x(), meters(5.0));
+                assert_is_close(multiplied.y(), meters(10.0));
             }
 
             #[test]
             fn mul_quantity_vec2() {
-                let multiplied = VecVelocity::meters_per_second(1.0, 2.0) * Time::seconds(5.0);
-                assert_is_close(multiplied.x(), Length::meters(5.0));
-                assert_is_close(multiplied.y(), Length::meters(10.0));
-                let multiplied = Time::seconds(5.0) * VecVelocity::meters_per_second(1.0, 2.0);
-                assert_is_close(multiplied.x(), Length::meters(5.0));
-                assert_is_close(multiplied.y(), Length::meters(10.0));
+                let multiplied = (Vec::new(1.0, 2.0) * meters_per_second) * seconds(5.0);
+                assert_is_close(multiplied.x(), meters(5.0));
+                assert_is_close(multiplied.y(), meters(10.0));
+                let multiplied = seconds(5.0) * (Vec::new(1.0, 2.0) * meters_per_second);
+                assert_is_close(multiplied.x(), meters(5.0));
+                assert_is_close(multiplied.y(), meters(10.0));
             }
 
             #[test]
             fn div_vec2() {
-                let divided = Vec::new(1.0, 2.0) / Length::meters(0.2);
-                let base = 1.0 / Length::meters(1.0);
+                let divided = Vec::new(1.0, 2.0) / meters(0.2);
+                let base = 1.0 / meters(1.0);
                 assert_is_close(divided.x(), 5.0 * base);
                 assert_is_close(divided.y(), 10.0 * base);
             }
@@ -49,67 +54,51 @@ macro_rules! gen_tests_for_vector_2 {
 macro_rules! gen_tests_for_vector_3 {
     ($float_name: ident, $mod_name: ident, $vec_name: ty, $assert_is_close: path) => {
         mod $mod_name {
-            use crate::example_system::$float_name::Length;
-            use crate::example_system::$float_name::Time;
-            use crate::example_system::$mod_name::Length as VecLength;
-            use crate::example_system::$mod_name::Velocity as VecVelocity;
+            use crate::example_system::dimensions::{Length, Time};
+            use crate::example_system::units::{self, meters_per_second};
+            use crate::make_annotated_unit_constructor;
             use $assert_is_close as assert_is_close;
-            use $vec_name as Vec;
 
+            make_annotated_unit_constructor!(meters, Length<$float_name>, $float_name);
+            make_annotated_unit_constructor!(seconds, Time<$float_name>, $float_name);
+
+            use $vec_name as Vec;
             #[test]
             fn debug_vector_3() {
                 assert_eq!(
-                    format!("{:?}", VecLength::meters(1.0, 5.0, 6.0)),
-                    "[1, 5, 6] m"
+                    format!("{:?}", Vec::new(1.0, 5.0, 10.0) * meters(1.0)),
+                    "[1, 5, 10] m"
                 );
             }
 
             #[test]
             fn mul_vec3() {
-                let multiplied = Vec::new(1.0, 2.0, 3.0) * Length::meters(5.0);
-                assert_is_close(multiplied.x(), Length::meters(5.0));
-                assert_is_close(multiplied.y(), Length::meters(10.0));
-                assert_is_close(multiplied.z(), Length::meters(15.0));
-                let multiplied = Length::meters(5.0) * Vec::new(1.0, 2.0, 3.0);
-                assert_is_close(multiplied.x(), Length::meters(5.0));
-                assert_is_close(multiplied.y(), Length::meters(10.0));
-                assert_is_close(multiplied.z(), Length::meters(15.0));
+                let multiplied = Vec::new(1.0, 2.0, 3.0) * meters(5.0);
+                assert_is_close(multiplied.x(), meters(5.0));
+                assert_is_close(multiplied.y(), meters(10.0));
+                assert_is_close(multiplied.z(), meters(15.0));
+                let multiplied: Length<Vec> = meters(5.0) * Vec::new(1.0, 2.0, 3.0);
+                assert_is_close(multiplied.x(), meters(5.0));
+                assert_is_close(multiplied.y(), meters(10.0));
+                assert_is_close(multiplied.z(), meters(15.0));
             }
-
-            // #[test]
-            // fn mul_assign_vec3() {
-            //     let mut vec = Vec3Length::meters(1.0, 2.0, 3.0);
-            //     vec *= 3.0;
-            //     assert_is_close(vec.x(), Length::meters(3.0));
-            //     assert_is_close(vec.y(), Length::meters(6.0));
-            //     assert_is_close(vec.z(), Length::meters(9.0));
-            // }
-
-            // #[test]
-            // fn div_assign_vec3() {
-            //     let mut vec = Vec3Length::meters(1.0, 2.0, 3.0);
-            //     vec /= 2.0;
-            //     assert_is_close(vec.x(), Length::meters(0.5));
-            //     assert_is_close(vec.y(), Length::meters(1.0));
-            //     assert_is_close(vec.z(), Length::meters(1.5));
-            // }
 
             #[test]
             fn mul_quantity_vec3() {
-                let multiplied = VecVelocity::meters_per_second(1.0, 2.0, 3.0) * Time::seconds(5.0);
-                assert_is_close(multiplied.x(), Length::meters(5.0));
-                assert_is_close(multiplied.y(), Length::meters(10.0));
-                assert_is_close(multiplied.z(), Length::meters(15.0));
-                let multiplied = Time::seconds(5.0) * VecVelocity::meters_per_second(1.0, 2.0, 3.0);
-                assert_is_close(multiplied.x(), Length::meters(5.0));
-                assert_is_close(multiplied.y(), Length::meters(10.0));
-                assert_is_close(multiplied.z(), Length::meters(15.0));
+                let multiplied = (Vec::new(1.0, 2.0, 3.0) * meters_per_second) * seconds(5.0);
+                assert_is_close(multiplied.x(), meters(5.0));
+                assert_is_close(multiplied.y(), meters(10.0));
+                assert_is_close(multiplied.z(), meters(15.0));
+                let multiplied = seconds(5.0) * (Vec::new(1.0, 2.0, 3.0) * meters_per_second);
+                assert_is_close(multiplied.x(), meters(5.0));
+                assert_is_close(multiplied.y(), meters(10.0));
+                assert_is_close(multiplied.z(), meters(15.0));
             }
 
             #[test]
             fn div_vec3() {
-                let divided = Vec::new(1.0, 2.0, 3.0) / Length::meters(0.2);
-                let base = 1.0 / Length::meters(1.0);
+                let divided = Vec::new(1.0, 2.0, 3.0) / meters(0.2);
+                let base = 1.0 / meters(1.0);
                 assert_is_close(divided.x(), 5.0 * base);
                 assert_is_close(divided.y(), 10.0 * base);
                 assert_is_close(divided.z(), 15.0 * base);
