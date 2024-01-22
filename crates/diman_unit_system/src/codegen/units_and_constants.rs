@@ -39,14 +39,17 @@ impl Codegen {
                 use super::Quantity;
                 #def_unit_type
             }
+            #[allow(unused)]
             pub use unit_type::Unit;
             #[allow(non_upper_case_globals)]
+            #[allow(unused)]
             pub mod units {
                 use super::Magnitude;
                 use super::Unit;
                 use super::Dimension;
                 #units
             }
+            #[allow(unused)]
             pub mod constants {
                 use super::Magnitude;
                 use super::Unit;

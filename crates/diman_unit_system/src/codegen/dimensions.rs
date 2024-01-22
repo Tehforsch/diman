@@ -30,6 +30,7 @@ impl Codegen {
         let quantity_type = &self.defs.quantity_type;
         let defs = self.gen_dimension_definitions();
         quote! {
+            #[allow(unused)]
             pub mod dimensions {
                 use super::#dimension_type;
                 use super::#quantity_type;

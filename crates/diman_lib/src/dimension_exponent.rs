@@ -1,4 +1,4 @@
-use std::ops::{AddAssign, Mul, Neg};
+use core::ops::{AddAssign, Mul, Neg};
 
 use crate::magnitude::Magnitude;
 
