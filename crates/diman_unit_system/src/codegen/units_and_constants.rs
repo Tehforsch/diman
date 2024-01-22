@@ -47,6 +47,7 @@ impl Codegen {
                 use super::Magnitude;
                 use super::Unit;
                 use super::Dimension;
+                use super::Exponent;
                 #units
             }
             #[allow(unused)]
@@ -54,6 +55,7 @@ impl Codegen {
                 use super::Magnitude;
                 use super::Unit;
                 use super::Dimension;
+                use super::Exponent;
                 #constants
             }
         }
