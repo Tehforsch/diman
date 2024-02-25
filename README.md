@@ -246,6 +246,7 @@ This is why the `Product` and `Quotient` types are provided:
 ```rust
 use diman::si::dimensions::{Length, Time};
 use diman::{Product, Quotient};
+
 fn foo(l: Length<f64>, t: Time<f64>) -> Product<Length<f64>, Time<f64>> {
     l * t
 }
@@ -258,8 +259,12 @@ fn bar(l: Length<f64>, t: Time<f64>) -> Quotient<Length<f64>, Time<f64>> {
 # Rational dimensions
 The `rational-dimensions` feature allows using quantities with rational exponents in their base dimensions, as opposed to just integer values. This allows expressing defining dimensions and units such as:
 ```rust
-dimension Sorptivity = Length Time^(-1/2);
-unit meters_per_sqrt_second: Sorptivity = meters / seconds^(1/2);
+unit_system!(
+    // ...
+    dimension Sorptivity = Length Time^(-1/2);
+    unit meters_per_sqrt_second: Sorptivity = meters / seconds^(1/2);
+    // ...
+);
 let l = 2.0 * micrometers;
 let t = 5.0 * milliseconds;
 let sorptivity: Sorptivity = l / t.sqrt();

@@ -312,6 +312,7 @@
 //! ```
 //! use diman::si::dimensions::{Length, Time};
 //! use diman::{Product, Quotient};
+//!
 //! fn foo(l: Length<f64>, t: Time<f64>) -> Product<Length<f64>, Time<f64>> {
 //!     l * t
 //! }
@@ -326,7 +327,7 @@
 //! ```ignore
 //! # mod surround {
 //! # use diman_unit_system::unit_system;
-//! # unit_system!(
+//! unit_system!(
 //! # quantity_type Quantity;
 //! # dimension_type Dimension;
 //! # dimension Length;
@@ -337,9 +338,11 @@
 //! # #[base(Time)]
 //! # #[symbol(s)]
 //! # unit seconds;
-//! dimension Sorptivity = Length Time^(-1/2);
-//! unit meters_per_sqrt_second: Sorptivity = meters / seconds^(1/2);
-//! # );
+//!     // ...
+//!     dimension Sorptivity = Length Time^(-1/2);
+//!     unit meters_per_sqrt_second: Sorptivity = meters / seconds^(1/2);
+//!     // ...
+//! );
 //! # }
 //! # use surround::dimensions::Sorptivity;
 //! # use surround::units::{micrometers,milliseconds};
