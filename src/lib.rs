@@ -123,6 +123,12 @@
 //! ```
 //! For a full list of the units supported by dimans `SI` module, see [the definitions](src/si.rs).
 //!
+//! Conversion into the underlying storage type can be done using the `value_in` function:
+//! ```
+//! # use diman::si::units::{kilometers, meters};
+//! let length = 2.0f64 * kilometers;
+//! assert_eq!(format!("{} m", length.value_in(meters)), "2000 m");
+//! ```
 //! For dimensionless quantities, `.value()` provides access to the underlying storage types. Alternatively, dimensionless quantities also implement `Deref` for the same operation.
 //! ```
 //! # #![feature(generic_const_exprs)]
@@ -134,6 +140,7 @@
 //! let ratio_deref: f64 = *(l1 / l2);
 //! assert_eq!(ratio_value, ratio_deref);
 //! ```
+//! ## Unchecked creation and conversion
 //! If absolutely required, `.value_unchecked()` provides access to the underlying storage type for all quantities. This is not unit-safe since the return value will depend on the unit system!
 //! ```
 //! # #![feature(generic_const_exprs)]
@@ -166,6 +173,7 @@
 //! let fooed = foo(unchecked);
 //! let result: Vec<_> = fooed.into_iter().map(|x| Length::new_unchecked(x)).collect();
 //! ```
+//! ## Debug
 //! `Debug` is implemented and will print the quantity in its base representation.
 //! ```
 //! # #![feature(generic_const_exprs)]
