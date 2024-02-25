@@ -90,19 +90,37 @@ assert_eq!(ratio_value, ratio_deref);
 If absolutely required, `.value_unchecked()` provides access to the underlying storage type for all quantities. This is not unit-safe since the return value will depend on the unit system!
 ```rust
 let length: Length<f64> = 5.0 * kilometers;
-let value: f64 = length.value_unchecked(); // In this case, returns 5000.0
+let value: f64 = length.value_unchecked();
+assert_eq!(value, 5000.0); // This only holds in SI units!
 ```
-`Debug` is implemented and will print the quantity in its representation of the "closest" unit. For example `Length::meters(100.0)` would be debug printed as `0.1 km`. If printing in a specific unit is required, conversion methods are available for each unit (such as `Length::in_meters`).
-* Similarly, new quantities can be constructed from storage types using `Quantity::new_unchecked`. This is also not unit-safe.
-
-Some other, more complex operations are also allowed:
+Similarly, new quantities can be constructed from storage types using `Quantity::new_unchecked`. This operation is also not unit-safe!
 ```rust
-let x = 3.0f64 * meters;
-let vol = x.cubed();
-assert_eq!(vol, 27.0 * cubic_meters)
+let length: Length<f64> = Length::new_unchecked(5000.0);
+assert_eq!(length, 5.0 * kilometers); // This only holds in SI units!
 ```
-This includes `squared`, `cubed`, `sqrt`, `cbrt` as well as `powi`.
-
+`Debug` is implemented and will print the quantity in its base representation.
+```rust
+let length: Length<f64> = 5.0 * kilometers;
+let time: Time<f64> = 1.0 * seconds;
+assert_eq!(format!("{:?}", length / time), "5000 m s^-1")
+```
+Exponentiation and related operations are supported via `squared`, `cubed`, `powi`, `sqrt`, `cbrt`:
+```rust
+let length = 2.0f64 * meters;
+let area = length.squared();
+assert_eq!(area, 4.0 * square_meters);
+assert_eq!(area.sqrt(), length);
+let vol = length.cubed();
+assert_eq!(vol, 8.0 * cubic_meters);
+assert_eq!(vol.cbrt(), length);
+let questionable = length.powi::<4>();
+```
+Note that unlike its float equivalent, `powi` receives its exponent as a generic instead of as a normal function argument. Exponentiation of dimensionful quantities with an non-constant integer is not supported, since the compiler cannot infer the dimension of the return type. However, dimensionless quantities can be raised to arbitrary powers using `powf`:
+```rust
+let l1 = 2.0f64 * meters;
+let l2 = 5.0f64 * kilometers;
+let x = (l1 / l2).powf(2.71);
+```
 
 # Design
  For example, in order to represent the [SI system of units](https://www.nist.gov/pml/owm/metric-si/si-units), the quantity type would be defined using the `unit_system!` macro as follows:
