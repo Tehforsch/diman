@@ -4,7 +4,7 @@ Diman is a library for zero-cost compile time unit checking.
 
 ```rust
 use diman::si::dimensions::{Length, Time, Velocity};
-use diman::si::units::{seconds, meters, kilometers, hours};
+use diman::si::units::{seconds, meters, kilometers, hours, hour};
 
 fn get_velocity(x: Length<f64>, t: Time<f64>) -> Velocity<f64> {
     x / t
@@ -14,9 +14,10 @@ let v1 = get_velocity(36.0 * kilometers, 1.0 * hours);
 let v2 = get_velocity(10.0 * meters, 1.0 * seconds);
 
 assert_eq!(v1, v2);
+assert_eq!(format!("{} km/h", v1.value_in(kilometers / hour)), "36 km/h");
 ```
 
-Let's try to add quantities with incompatible dimensions:
+Diman prevents unit errors at compile time:
 ```rust
 let time = 1.0 * seconds;
 let length = 10.0 * meters;
@@ -268,7 +269,7 @@ The unit system generated with `rational-dimensions` supports a superset of feat
 Still, this feature should be enabled only when necessary, since the compiler errors in case of dimension mismatches will be harder to read.
 
 # `serde`
-Serialization and deserialization of the units is provided via `serde` if the `serde` feature gate is enabled:
+Serialization and deserialization of the units is provided via [`serde`](https://crates.io/crates/serde) if the `serde` feature gate is enabled:
 ```rust
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 struct Parameters {
@@ -291,7 +292,7 @@ assert_eq!(
 ```
 
 # `rand`
-Diman allows generating random quantities via `rand` if the `rand` feature gate is enabled:
+Diman allows generating random quantities via [`rand`](https://crates.io/crates/rand) if the `rand` feature gate is enabled:
 ```rust
 
 let mut rng = rand::thread_rng();

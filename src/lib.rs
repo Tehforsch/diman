@@ -352,7 +352,7 @@
 //! Still, this feature should be enabled only when necessary, since the compiler errors in case of dimension mismatches will be harder to read.
 //!
 //! # `serde`
-//! Serialization and deserialization of the units is provided via `serde` if the `serde` feature gate is enabled:
+//! Serialization and deserialization of the units is provided via [`serde`](https://crates.io/crates/serde) if the `serde` feature gate is enabled:
 //! ```ignore
 //! # use diman::si::dimensions::{Length, Velocity};
 //! # use diman::si::units::{meters, meters_per_second};
@@ -378,7 +378,7 @@
 //! ```
 //!
 //! # `rand`
-//! Diman allows generating random quantities via `rand` if the `rand` feature gate is enabled:
+//! Diman allows generating random quantities via [`rand`](https://crates.io/crates/rand) if the `rand` feature gate is enabled:
 //! ```ignore
 //! # use rand::Rng;
 //! # use diman::si::units::{meters, kilometers};
