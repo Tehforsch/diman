@@ -52,8 +52,46 @@
 //! * Quantities implement the `Equivalence` trait so that they can be sent via MPI using [`mpi`](https://crates.io/crates/mpi) (behind the `mpi` feature gate).
 //! * Random quantities can be generated via [`rand`](https://crates.io/crates/rand) (behind the `rand` feature gate, see the official documentation for more info).
 //!
+//! # The `Quantity` type
+//! Physical quantities are represented by the `Quantity<S, D>` struct, where `S` is the underlying storage type (`f32`, `f64`, ...) and `D` is the  dimension of the quantity.
+//! `Quantity` should behave like its underlying storage type whenever allowed by the dimensions.
+//! ## Arithmetics
+//! * Addition and subtraction of two quantities with the same storage type is allowed if the dimensions match.
+//! ```
+//! # use diman::si::dimensions::{Length};
+//! # use diman::si::units::{kilometers, meters};
+//! let l: Length<f64> = 5.0 * meters + 10.0 * kilometers;
+//! ```
+//! * Multiplication and division of two quantities with the same storage type produces a new quantity:
+//! ```
+//! # #![feature(generic_const_exprs)]
+//! # use diman::si::dimensions::{Length, Time, Velocity};
+//! # use diman::si::units::{meters, seconds};
+//! let l: Length<f64> = 5.0 * meters;
+//! let t: Time<f64> = 2.0 * seconds;
+//! let v: Velocity<f64> = l / t;
+//! ```
+//! * Addition of `Quantity<Float, D>` and `Float` is possible if and only if `D` is dimensionless.
+//! * `Quantity` implements the dimensionless methods of `S`, such as `abs` for dimensionless quantities.
+//! * It implements `Deref` to `S` if and only if `D` is dimensionless.
+//! * `Debug` is implemented and will print the quantity in its representation of the "closest" unit. For example `Length::meters(100.0)` would be debug printed as `0.1 km`. If printing in a specific unit is required, conversion methods are available for each unit (such as `Length::in_meters`).
+//! * `.value()` provides access to the underlying storage type of a dimensionless quantity.
+//! * `.value_unchecked()` provides access to the underlying storage type for all quantities if absolutely required. This is not unit-safe since the value will depend on the unit system!
+//! * Similarly, new quantities can be constructed from storage types using `Quantity::new_unchecked`. This is also not unit-safe.
+//!
+//! Some other, more complex operations are also allowed:
+//! ```
+//! # use diman::si::dimensions::{Length, Volume};
+//! # use diman::si::units::{meters,cubic_meters};
+//! let x = 3.0f64 * meters;
+//! let vol = x.cubed();
+//! assert_eq!(vol, 27.0 * cubic_meters)
+//! ```
+//! This includes `squared`, `cubed`, `sqrt`, `cbrt` as well as `powi`.
+//!
+//!
 //! # Design
-//! Diman aims to make it as easy as possible to add compile-time unit safety to Rust code. Physical quantities are represented by the `Quantity<S, D>` struct, where `S` is the underlying storage type (`f32`, `f64`, ...) and `D` is the  dimension of the quantity. For example, in order to represent the [SI system of units](https://www.nist.gov/pml/owm/metric-si/si-units), the quantity type would be defined using the `unit_system!` macro as follows:
+//!  For example, in order to represent the [SI system of units](https://www.nist.gov/pml/owm/metric-si/si-units), the quantity type would be defined using the `unit_system!` macro as follows:
 //! ```
 //! # #![allow(incomplete_features)]
 //! # #![feature(generic_const_exprs, adt_const_params)]
@@ -126,28 +164,6 @@
 //! Other than this, there are no differences between base dimensions and dimensions or base units and units and they can be treated equally in user code.
 //! The macro also accepts more complex expressions such as `dimension Energy = Mass (Length / Time)^2`.
 //! The definitions do not have to be in any specific order.
-//!
-//! # The Quantity type
-//! The macro will automatically implement numerical traits such as `Add`, `Sub`, `Mul`, and various other methods of the underlying storage type for `Quantity<S, ...>`.
-//! `Quantity` should behave just like its underlying storage type whenever possible and allowed by the dimensions.
-//! For example:
-//! * Addition of `Quantity<Float, D>` and `Float` is possible if and only if `D` is dimensionless.
-//! * `Quantity` implements the dimensionless methods of `S`, such as `abs` for dimensionless quantities.
-//! * It implements `Deref` to `S` if and only if `D` is dimensionless.
-//! * `Debug` is implemented and will print the quantity in its representation of the "closest" unit. For example `Length::meters(100.0)` would be debug printed as `0.1 km`. If printing in a specific unit is required, conversion methods are available for each unit (such as `Length::in_meters`).
-//! * `.value()` provides access to the underlying storage type of a dimensionless quantity.
-//! * `.value_unchecked()` provides access to the underlying storage type for all quantities if absolutely required. This is not unit-safe since the value will depend on the unit system!
-//! * Similarly, new quantities can be constructed from storage types using `Quantity::new_unchecked`. This is also not unit-safe.
-//!
-//! Some other, more complex operations are also allowed:
-//! ```
-//! # use diman::si::dimensions::{Length, Volume};
-//! # use diman::si::units::{meters,cubic_meters};
-//! let x = 3.0f64 * meters;
-//! let vol = x.cubed();
-//! assert_eq!(vol, 27.0 * cubic_meters)
-//! ```
-//! This includes `squared`, `cubed`, `sqrt`, `cbrt` as well as `powi`.
 //!
 //! # Prefixes
 //! Unit prefixes can automatically be generated with the `#[prefix(...)]` attribute for unit statements.
