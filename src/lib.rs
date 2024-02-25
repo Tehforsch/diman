@@ -72,6 +72,15 @@
 //! let v: Velocity<f64> = l / t;
 //! ```
 //! * Addition of `Quantity<Float, D>` and `Float` is possible if and only if `D` is dimensionless.
+//! ```
+//! # #![feature(generic_const_exprs)]
+//! # use diman::si::dimensions::{Dimensionless, Length};
+//! # use diman::si::units::{kilometers, meters};
+//! let l1: Length<f64> = 5.0 * meters;
+//! let l2: Length<f64> = 10.0 * kilometers;
+//! let x = l1 / l2 - 0.5;
+//! let y = 0.5 + l1 / l2;
+//! ```
 //! * `Quantity` implements the dimensionless methods of `S`, such as `abs` for dimensionless quantities.
 //! * It implements `Deref` to `S` if and only if `D` is dimensionless.
 //! * `Debug` is implemented and will print the quantity in its representation of the "closest" unit. For example `Length::meters(100.0)` would be debug printed as `0.1 km`. If printing in a specific unit is required, conversion methods are available for each unit (such as `Length::in_meters`).

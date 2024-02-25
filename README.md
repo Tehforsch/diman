@@ -55,8 +55,11 @@ If you cannot use unstable Rust for your project or require a stable library, co
 # The `Quantity` type
 Physical quantities are represented by the `Quantity<S, D>` struct, where `S` is the underlying storage type (`f32`, `f64`, ...) and `D` is the  dimension of the quantity.
 `Quantity` should behave like its underlying storage type whenever allowed by the dimensions.
-For example:
+## Arithmetics
 * Addition and subtraction of two quantities with the same storage type is allowed if the dimensions match.
+```rust
+let l: Length<f64> = 5.0 * meters + 10.0 * kilometers;
+```
 * Multiplication and division of two quantities with the same storage type produces a new quantity:
 ```rust
 let l: Length<f64> = 5.0 * meters;
@@ -64,6 +67,12 @@ let t: Time<f64> = 2.0 * seconds;
 let v: Velocity<f64> = l / t;
 ```
 * Addition of `Quantity<Float, D>` and `Float` is possible if and only if `D` is dimensionless.
+```rust
+let l1: Length<f64> = 5.0 * meters;
+let l2: Length<f64> = 10.0 * kilometers;
+let x = l1 / l2 - 0.5;
+let y = 0.5 + l1 / l2;
+```
 * `Quantity` implements the dimensionless methods of `S`, such as `abs` for dimensionless quantities.
 * It implements `Deref` to `S` if and only if `D` is dimensionless.
 * `Debug` is implemented and will print the quantity in its representation of the "closest" unit. For example `Length::meters(100.0)` would be debug printed as `0.1 km`. If printing in a specific unit is required, conversion methods are available for each unit (such as `Length::in_meters`).
