@@ -16,6 +16,6 @@ unit_system_internal!(
 );
 
 fn main() {
-    use crate::f64::*;
-    let l = Length::meters(1.0);
+    use crate::units::meters;
+    let _ = 1.0 * meters;
 }

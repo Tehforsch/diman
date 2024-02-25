@@ -15,6 +15,7 @@ pub struct VectorType {
 pub struct FloatType {
     pub name: Type,
     pub module_name: TokenStream,
+    pub conversion_method: TokenStream,
     #[cfg(feature = "mpi")]
     pub mpi_type: TokenStream,
     #[cfg(feature = "hdf5")]
@@ -30,9 +31,6 @@ pub trait StorageType {
     /// For vector types, this represents the underlying storage of a
     /// single entry in the vector.
     fn base_storage(&self) -> &FloatType;
-
-    fn module_name(&self) -> &TokenStream;
-    fn generate_constants(&self) -> bool;
 }
 
 impl StorageType for VectorType {
@@ -43,14 +41,6 @@ impl StorageType for VectorType {
     fn base_storage(&self) -> &FloatType {
         &self.float_type
     }
-
-    fn module_name(&self) -> &TokenStream {
-        &self.module_name
-    }
-
-    fn generate_constants(&self) -> bool {
-        false
-    }
 }
 
 impl StorageType for FloatType {
@@ -60,14 +50,6 @@ impl StorageType for FloatType {
 
     fn base_storage(&self) -> &FloatType {
         self
-    }
-
-    fn module_name(&self) -> &TokenStream {
-        &self.module_name
-    }
-
-    fn generate_constants(&self) -> bool {
-        true
     }
 }
 
@@ -131,6 +113,7 @@ impl Codegen {
         FloatType {
             name: f32_ty,
             module_name: quote! { f32 },
+            conversion_method: quote! { into_f32 },
             #[cfg(feature = "mpi")]
             mpi_type: quote! { ::mpi::ffi::RSMPI_FLOAT },
             #[cfg(feature = "hdf5")]
@@ -146,6 +129,7 @@ impl Codegen {
         FloatType {
             name: f64_ty,
             module_name: quote! { f64 },
+            conversion_method: quote! { into_f64 },
             #[cfg(feature = "mpi")]
             mpi_type: quote! { ::mpi::ffi::RSMPI_DOUBLE },
             #[cfg(feature = "hdf5")]

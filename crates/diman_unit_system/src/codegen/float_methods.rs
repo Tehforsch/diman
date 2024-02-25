@@ -7,7 +7,7 @@ impl Codegen {
     fn ensure_float_traits(&self) -> TokenStream {
         let path_prefix = match self.caller_type {
             CallerType::Internal => quote! { ::num_traits::float },
-            CallerType::External => quote! { diman::internal::num_traits_reexport },
+            CallerType::External => quote! { ::diman::internal::num_traits_reexport },
         };
         if cfg!(feature = "num-traits-libm") {
             quote! {

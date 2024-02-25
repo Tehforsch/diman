@@ -22,10 +22,10 @@ impl Codegen {
         let all_units_storage = self.runtime_unit_storage(self.defs.units.iter());
 
         quote! {
-            use std::marker::PhantomData;
+            use core::marker::PhantomData;
             use std::str::SplitWhitespace;
 
-            use serde::de::{self};
+            use serde::de;
 
             #[derive(Default)]
             struct QuantityVisitor<S, const D: #dimension_type>(PhantomData<S>);
@@ -80,7 +80,7 @@ impl Codegen {
                     .ok_or_else(|| E::custom(format!("unknown unit: {}", &unit)))?;
                 Ok((
                     unit.dimension.clone().mul(exponent),
-                    Exponent::float_pow(unit.magnitude, Exponent::from_int(exponent)),
+                    Exponent::float_pow(Magnitude::from_f64(unit.magnitude), Exponent::from_int(exponent)).into_f64(),
                 ))
             }
         }
@@ -173,7 +173,7 @@ impl Codegen {
                     let (total_dimension, total_factor) = read_unit_str(split)?;
                     get_quantity_if_dimensions_match::<#float_type, D, E>(
                         value,
-                        (numerical_value * (total_factor as #float_type)),
+                        numerical_value * (total_factor as #float_type),
                         total_dimension,
                     )
                 }

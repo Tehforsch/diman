@@ -21,16 +21,25 @@ diman::unit_system!(
 macro_rules! gen_tests_for_float {
     ($mod_name: ident, $float_name: ident, $assert_is_close: path) => {
         mod $mod_name {
+            use super::dimensions::{Length, Sorptivity, Time};
+            use super::units;
+            use crate::make_annotated_unit_constructor;
+            make_annotated_unit_constructor!(micrometers, Length<$float_name>, $float_name);
+            make_annotated_unit_constructor!(milliseconds, Time<$float_name>, $float_name);
+            make_annotated_unit_constructor!(
+                meters_per_sqrt_second,
+                Sorptivity<$float_name>,
+                $float_name
+            );
             #[test]
             fn rational_dimensions_allowed() {
-                use super::$float_name::{Length, Sorptivity, Time};
-                let l = Length::micrometers(2.0);
-                let t = Time::milliseconds(5.0);
-                let sorptivity: Sorptivity = l / t.sqrt();
+                let l = micrometers(2.0);
+                let t = milliseconds(5.0);
+                let sorptivity: Sorptivity<$float_name> = l / t.sqrt();
                 let val = l.value_unchecked() / t.value_unchecked().sqrt();
                 $assert_is_close(
                     sorptivity.value_unchecked(),
-                    Sorptivity::meters_per_sqrt_second(val).value_unchecked(),
+                    meters_per_sqrt_second(val).value_unchecked(),
                 );
             }
         }

@@ -1,7 +1,9 @@
-use std::ops::{AddAssign, Mul, Neg};
+use core::ops::{AddAssign, Mul, Neg};
+
+use crate::magnitude::Magnitude;
 
 pub trait DimensionExponent: Clone + PartialEq + Copy + Mul + AddAssign + Neg {
-    fn float_pow(num: f64, exponent: Self) -> f64;
+    fn float_pow(mag: Magnitude, exponent: Self) -> Magnitude;
     fn one() -> Self;
     fn zero() -> Self;
     fn from_int(i: i32) -> Self;
@@ -16,8 +18,8 @@ impl DimensionExponent for i64 {
         0
     }
 
-    fn float_pow(num: f64, exponent: Self) -> f64 {
-        num.powi(exponent as i32)
+    fn float_pow(num: Magnitude, exponent: Self) -> Magnitude {
+        Magnitude::from_f64(num.into_f64().powi(exponent as i32))
     }
 
     fn from_int(i: i32) -> Self {

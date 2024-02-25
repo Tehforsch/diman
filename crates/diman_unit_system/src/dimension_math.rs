@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use diman_lib::dimension_exponent::DimensionExponent;
+use diman_lib::{dimension_exponent::DimensionExponent, magnitude::Magnitude};
 use proc_macro2::Ident;
 
 use crate::{
@@ -16,7 +16,7 @@ pub struct BaseDimensions {
 #[derive(Clone)]
 pub struct DimensionsAndMagnitude {
     pub dimensions: BaseDimensions,
-    pub magnitude: f64,
+    pub magnitude: Magnitude,
 }
 
 impl PartialEq for BaseDimensions {
@@ -109,7 +109,7 @@ impl MulDiv for BaseDimensions {
 }
 
 impl DimensionsAndMagnitude {
-    pub fn magnitude(magnitude: f64) -> Self {
+    pub fn magnitude(magnitude: Magnitude) -> Self {
         Self {
             dimensions: BaseDimensions::none(),
             magnitude,
@@ -119,7 +119,7 @@ impl DimensionsAndMagnitude {
     pub(crate) fn dimensions(dimensions: BaseDimensions) -> Self {
         Self {
             dimensions,
-            magnitude: 1.0,
+            magnitude: Magnitude::from_f64(1.0),
         }
     }
 }

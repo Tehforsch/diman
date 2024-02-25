@@ -1,26 +1,26 @@
-# Diman
+<!-- cargo-rdme start -->
+
 Diman is a library for zero-cost compile time unit checking.
 
 ```rust
-# #![feature(generic_const_exprs)]
-use diman::si::f64::{Length, Time, Velocity};
+use diman::si::dimensions::{Length, Time, Velocity};
+use diman::si::units::{seconds, meters, kilometers, hours, hour};
 
-fn get_velocity(x: Length, t: Time) -> Velocity {
+fn get_velocity(x: Length<f64>, t: Time<f64>) -> Velocity<f64> {
     x / t
 }
 
-let v1 = get_velocity(Length::kilometers(36.0), Time::hours(1.0));
-let v2 = get_velocity(Length::meters(10.0), Time::seconds(1.0));
+let v1 = get_velocity(36.0 * kilometers, 1.0 * hours);
+let v2 = get_velocity(10.0 * meters, 1.0 * seconds);
 
 assert_eq!(v1, v2);
+assert_eq!(format!("{} km/h", v1.value_in(kilometers / hour)), "36 km/h");
 ```
 
-Let's try to assign add quantities with incompatible dimensions:
-```rust compile_fail
-use diman::si::f64::{Length, Time};
-
-let time = Time::seconds(1.0);
-let length = Length::meters(10.0);
+Diman prevents unit errors at compile time:
+```rust
+let time = 1.0 * seconds;
+let length = 10.0 * meters;
 let sum = length + time;
 ```
 This results in a compiler error:
@@ -32,14 +32,14 @@ let sum = length + time;
 ```
 
 
-## Disclaimer
-Diman is implemented using Rust's const generics feature. While `min_const_generics` has been stabilized since Rust 1.51, Diman uses more complex generic expressions and therefore requires the two currently unstable features `generic_const_exprs` and `adt_const_params`. 
+# Disclaimer
+Diman is implemented using Rust's const generics feature. While `min_const_generics` has been stabilized since Rust 1.51, Diman uses more complex generic expressions and therefore requires the two currently unstable features `generic_const_exprs` and `adt_const_params`.
 
 Moreover, Diman is in its early stages of development and APIs will change.
 
 If you cannot use unstable Rust for your project or require a stable library, consider using [`uom`](https://crates.io/crates/uom) or [`dimensioned`](https://crates.io/crates/dimensioned), both of which do not require any experimental features and are much more mature libraries in general.
 
-## Features
+# Features
 * Invalid operations between physical quantities (adding length and time, for example) turn into compile errors.
 * Newly created quantities are automatically converted to an underlying base representation. This means that the used types are dimensions (such as `Length`) instead of concrete units (such as `meters`) which makes for more meaningful code.
 * Systems of dimensions and units can be user defined via the `unit_system!` macro. This gives the user complete freedom over the choice of dimensions and makes them part of the user's library, so that arbitrary new methods can be implemented on them.
@@ -53,102 +53,177 @@ If you cannot use unstable Rust for your project or require a stable library, co
 * Quantities implement the `Equivalence` trait so that they can be sent via MPI using [`mpi`](https://crates.io/crates/mpi) (behind the `mpi` feature gate).
 * Random quantities can be generated via [`rand`](https://crates.io/crates/rand) (behind the `rand` feature gate, see the official documentation for more info).
 
-## Design
-Diman aims to make it as easy as possible to add compile-time unit safety to Rust code. Physical quantities are represented by the `Quantity<S, D>` struct, where `S` is the underlying storage type (`f32`, `f64`, ...) and `D` is the  dimension of the quantity. For example, in order to represent the [SI system of units](https://www.nist.gov/pml/owm/metric-si/si-units), the quantity type would be defined using the `unit_system!` macro as follows:
-```rust ignore
-#![allow(incomplete_features)]
-#![feature(generic_const_exprs, adt_const_params)]
-use diman::unit_system;
+# The `Quantity` type
+Physical quantities are represented by the `Quantity<S, D>` struct, where `S` is the underlying storage type (`f32`, `f64`, ...) and `D` is the  dimension of the quantity.
+`Quantity` should behave like its underlying storage type whenever allowed by the dimensions.
 
-unit_system!(
+## Arithmetics and math
+Addition and subtraction of two quantities is allowed if the dimensions match:
+```rust
+let l = 5.0 * meters + 10.0 * kilometers;
+```
+Multiplication and division of two quantities produces a new quantity:
+```rust
+let l = 5.0 * meters;
+let t = 2.0 * seconds;
+let v: Velocity<f64> = l / t;
+```
+Addition and subtraction of a `Quantity` and a storage type is possible if and only if `D` is dimensionless:
+```rust
+let l1 = 5.0 * meters;
+let l2 = 10.0 * kilometers;
+let x = l1 / l2 - 0.5;
+let y = 0.5 - l1 / l2;
+```
+`Quantity` implements the dimensionless methods of `S`, such as `sin`, `cos`, etc. for dimensionless quantities:
+```rust
+let l1 = 5.0f64 * meters;
+let l2 = 10.0f64 * kilometers;
+let angle_radians = (l1 / l2).asin();
+```
+Exponentiation and related operations are supported via `squared`, `cubed`, `powi`, `sqrt`, `cbrt`:
+```rust
+let length = 2.0f64 * meters;
+let area = length.squared();
+assert_eq!(area, 4.0 * square_meters);
+assert_eq!(area.sqrt(), length);
+let vol = length.cubed();
+assert_eq!(vol, 8.0 * cubic_meters);
+assert_eq!(vol.cbrt(), length);
+let foo = length.powi::<4>();
+```
+Note that unlike its float equivalent, `powi` receives its exponent as a generic instead of as a normal function argument. Exponentiation of dimensionful quantities with an non-constant integer is not supported, since the compiler cannot infer the dimension of the return type. However, dimensionless quantities can be raised to arbitrary powers using `powf`:
+```rust
+let l1 = 2.0f64 * meters;
+let l2 = 5.0f64 * kilometers;
+let x = (l1 / l2).powf(2.71);
+```
+## Creation and conversion
+New quantities can be created either by multiplying with a unit, or by calling the `.new` function on the unit:
+```rust
+let l1 = 2.0 * meters;
+let l2 = meters.new(2.0);
+assert_eq!(l1, l2);
+```
+For a full list of the units supported by dimans `SI` module, see [the definitions](src/si.rs).
+Composite units can be defined on the spot via multiplication/division of units:
+```rust
+let v1 = (kilometers / hour).new(3.6);
+let v2 = 3.6 * kilometers / hour;
+assert_eq!(v1, 1.0 * meters_per_second);
+assert_eq!(v2, 1.0 * meters_per_second);
+```
+Note that at the moment, the creation of quantities via units defined in this composite way incurs
+a small performance overhead compared to creation from just a single unit (which is just a single multiplication). This will be fixed once [const_fn_floating_point_arithmetic](https://github.com/rust-lang/rust/issues/57241) or a similar feature is stabilized.
+
+Conversion into the underlying storage type can be done using the `value_in` function:
+```rust
+let length = 2.0f64 * kilometers;
+assert_eq!(format!("{} m", length.value_in(meters)), "2000 m");
+```
+This also works for composite units:
+```rust
+let vel = 10.0f64 * meters_per_second;
+assert_eq!(format!("{} km/h", vel.value_in(kilometers / hour)), "36 km/h");
+```
+For dimensionless quantities, `.value()` provides access to the underlying storage types. Alternatively, dimensionless quantities also implement `Deref` for the same operation.
+```rust
+let l1: Length<f64> = 5.0 * meters;
+let l2: Length<f64> = 10.0 * kilometers;
+let ratio_value: f64 = (l1 / l2).value();
+let ratio_deref: f64 = *(l1 / l2);
+assert_eq!(ratio_value, ratio_deref);
+```
+## Unchecked creation and conversion
+If absolutely required, `.value_unchecked()` provides access to the underlying storage type for all quantities. This is **not unit-safe** since the return value will depend on the unit system!
+```rust
+let length: Length<f64> = 5.0 * kilometers;
+let value: f64 = length.value_unchecked();
+assert_eq!(value, 5000.0); // This only holds in SI units!
+```
+Similarly, if absolutely required, new quantities can be constructed from storage types using `Quantity::new_unchecked`. This operation is also **not unit-safe**!
+```rust
+let length: Length<f64> = Length::new_unchecked(5000.0);
+assert_eq!(length, 5.0 * kilometers); // This only holds in SI units!
+```
+The combination of `value_unchecked` and `new_unchecked` comes in handy when using third party libraries that only takes the raw storage type as argument. As an example, suppose we have a function `foo` that takes a `Vec<f64>` and returns a `Vec<f64>`, and suppose it sorts the numbers or does some other unit safe operation. Then we could reasonably write:
+```rust
+   let lengths: Vec<Length<f64>> = vec![
+       1.0 * meters,
+       2.0 * kilometers,
+       3.0 * meters,
+       4.0 * kilometers,
+   ];
+   let unchecked = lengths.into_iter().map(|x| x.value_unchecked()).collect();
+   let fooed = foo(unchecked);
+   let result: Vec<_> = fooed
+       .into_iter()
+       .map(|x| Length::new_unchecked(x))
+       .collect();
+```
+## Debug
+`Debug` is implemented and will print the quantity in its base representation.
+```rust
+let length: Length<f64> = 5.0 * kilometers;
+let time: Time<f64> = 1.0 * seconds;
+assert_eq!(format!("{:?}", length / time), "5000 m s^-1")
+```
+
+# Custom unit systems
+## The `unit_system` macro
+Diman also provides the `unit_system` macro for defining custom
+unit systems for everything that is not covered by SI alone. The
+macro will add a new quantity type and implement all the required
+methods and traits to make it usable.
+As an example, consider the following macro call:
+```rust
+diman::unit_system!(
     quantity_type Quantity;
     dimension_type Dimension;
 
     dimension Length;
     dimension Time;
     dimension Mass;
-    dimension Temperature;
-    dimension Current;
-    dimension AmountOfSubstance;
-    dimension LuminousIntensity;
-);
-```
-The first two statements imply that the macro should define a `Quantity` type, which is user-facing, and a `Dimension` type, which is used only internally and will surface in compiler error messages.
-The macro will automatically implement all the required traits and methods for the `Quantity` type, such that addition and subtraction of two quantities is only allowed for quantities with the same `Dimension` type. During multiplication of two quantities, all the entries of the two dimensions are added. See below for a more comprehensive list of the implemented methods on `Quantity`.
-
-The `unit_system!` macro also allows defining derived dimensions and units:
-
-```rust ignore
-#![allow(incomplete_features)]
-#![feature(generic_const_exprs, adt_const_params)]
-use diman::unit_system;
-unit_system!(
-    quantity_type Quantity;
-    dimension_type Dimension;
-
-    dimension Length;
-    dimension Time;
 
     dimension Velocity = Length / Time;
+    dimension Frequency = 1 / Time;
+    dimension Energy = Mass * Velocity^2;
 
     #[prefix(kilo, milli)]
-    #[symbol(m)]
     #[base(Length)]
+    #[symbol(m)]
     unit meters;
 
     #[base(Time)]
+    #[symbol(s)]
     unit seconds;
 
     unit hours: Time = 3600 * seconds;
     unit meters_per_second: Velocity = meters / seconds;
     unit kilometers_per_hour: Velocity = kilometers / hours;
-    constant MY_FAVORITE_VELOCITY = 1000 * kilometers_per_hour;
+    constant SPEED_OF_LIGHT = 299792458 * meters_per_second;
 );
 
-use f64::{Length, Time, Velocity, MY_FAVORITE_VELOCITY};
 
-fn fast_enough(x: Length, t: Time) {
-    let vel = x / t;
-    if vel > MY_FAVORITE_VELOCITY {
-        println!("{} m/s is definitely fast enough!", vel.in_meters_per_second());
-    }
+fn too_fast(x: Length<f64>, t: Time<f64>) -> bool {
+    x / t > 0.1f64 * SPEED_OF_LIGHT
 }
 
-fast_enough(Length::kilometers(100.0), Time::hours(0.3));
+too_fast(100.0 * kilometers, 0.3 * hours);
 ```
 
-Here, `dimension` defines Quantities, which are concrete types, `unit` defines units, which are methods on the corresponding quantities and `constant` defines constants.
-Dimensions without a right hand side are base dimensions (such as length, time, mass, temperature, ... in the SI system of units), whereas dimensions with a right hand side are derived dimensions.
-The same thing holds for units - every unit is either a base unit for a given base dimension (denoted by the `#[base(...)]` attribute), or derived from base units and other derived units. Base units have the special property that the internal representation of the quantity will be in terms of the base unit (for example, a stored value `1.0` for a quantity with a `Length` dimension corresponds to `meter` in the above definitions).
-Other than this, there are no differences between base dimensions and dimensions or base units and units and they can be treated equally in user code.
-The macro also accepts more complex expressions such as `dimension Energy = Mass (Length / Time)^2`.
-The definitions do not have to be in any specific order.
+The macro accepts five different keywords:
+1. `quantity_type` specifies the name of the quantity type. Required for compiler error messages to have something to point to.
+2. `dimension_type` specifies the name of the dimension type. Required for compiler error messages to have something to point to.
+3. `dimension` defines a new dimension which is a type. Dimensions without a right hand side are base dimensions (such as `Length` and `Time` in this example), whereas dimensions with a right hand side are derived dimensions (such as `Velocity` in this example).
+4. `unit` defines a new units, which are methods on the corresponding quantities and `constant` defines constants. Units without a right-hand side are the base units to one specific base dimension, meaning that they are the unit that will internally be represented with a conversion factor of 1. Base units require the `#[base(...)]` attribute in order to specify which dimension they are the base unit of. Units with a right hand side are derived from other units.
+5. `constant` defines a new constant.
 
-## The Quantity type
-The macro will automatically implement numerical traits such as `Add`, `Sub`, `Mul`, and various other methods of the underlying storage type for `Quantity<S, ...>`.
-`Quantity` should behave just like its underlying storage type whenever possible and allowed by the dimensions. 
-For example:
-* Addition of `Quantity<Float, D>` and `Float` is possible if and only if `D` is dimensionless.
-* `Quantity` implements the dimensionless methods of `S`, such as `abs` for dimensionless quantities.
-* It implements `Deref` to `S` if and only if `D` is dimensionless.
-* `Debug` is implemented and will print the quantity in its representation of the "closest" unit. For example `Length::meters(100.0)` would be debug printed as `0.1 km`. If printing in a specific unit is required, conversion methods are available for each unit (such as `Length::in_meters`).
-* `.value()` provides access to the underlying storage type of a dimensionless quantity.
-* `.value_unchecked()` provides access to the underlying storage type for all quantities if absolutely required. This is not unit-safe since the value will depend on the unit system!
-* Similarly, new quantities can be constructed from storage types using `Quantity::new_unchecked`. This is also not unit-safe.
-
-Some other, more complex operations are also allowed:
-```
-use diman::si::f64::{Length, Volume};
-let x = Length::meters(3.0);
-let vol = x.cubed();
-assert_eq!(vol, Volume::cubic_meters(27.0))
-```
-This includes `squared`, `cubed`, `sqrt`, `cbrt` as well as `powi`.
-
-## Prefixes
+## SI Prefixes
 Unit prefixes can automatically be generated with the `#[prefix(...)]` attribute for unit statements.
 For example
-```rust ignore
+```rust
+#[base(Length)]
 #[prefix(kilo, milli)]
 #[symbol(m)]
 unit meters;
@@ -158,80 +233,81 @@ For simplicity, the attribute `#[metric_prefixes]` is provided, which will gener
 
 ## Aliases
 Unit aliases can automatically be generated with the `#[alias(...)]` macro. For example
-```rust ignore
+```rust
 #[alias(metres)]
 unit meters;
 ```
 will automatically generate a unit `metres` that has exactly the same definition as `meters`. This works with prefixes as expected (i.e. an alias is generated for every prefixed unit).
 
-## Quantity products and quotients
+# Quantity products and quotients
 Sometimes, intermediate types in computations are quantities that don't really have a nice name and are also
 not needed too many times. Having to add a definition to the unit system for this case can be cumbersome.
 This is why the `Product` and `Quotient` types are provided:
 ```rust
-use diman::si::f64::{Length, Time};
+use diman::si::dimensions::{Length, Time};
 use diman::{Product, Quotient};
-fn foo(l: Length, t: Time) -> Product<Length, Time> {
+
+fn foo(l: Length<f64>, t: Time<f64>) -> Product<Length<f64>, Time<f64>> {
     l * t
 }
 
-fn bar(l: Length, t: Time) -> Quotient<Length, Time> {
+fn bar(l: Length<f64>, t: Time<f64>) -> Quotient<Length<f64>, Time<f64>> {
     l / t
 }
 ```
 
-## Rational dimensions
-The `rational-dimensions` feature allows using quantities with rational exponents in their base dimensions, as opposed to just integer values. This allows expressing defining dimensions and units such as
-```rust ignore
-dimension Sorptivity = Length Time^(-1/2);
-unit meters_per_sqrt_second: Sorptivity = meters / seconds^(1/2);
-```
-and using them in the usual manner
-```rust ignore
-let l = Length::micrometers(2.0);
-let t = Time::milliseconds(5.0);
+# Rational dimensions
+The `rational-dimensions` feature allows using quantities with rational exponents in their base dimensions, as opposed to just integer values. This allows expressing defining dimensions and units such as:
+```rust
+unit_system!(
+    // ...
+    dimension Sorptivity = Length Time^(-1/2);
+    unit meters_per_sqrt_second: Sorptivity = meters / seconds^(1/2);
+    // ...
+);
+let l = 2.0 * micrometers;
+let t = 5.0 * milliseconds;
 let sorptivity: Sorptivity = l / t.sqrt();
 ```
 
 The unit system generated with `rational-dimensions` supports a superset of features of a unit system generated without them.
 Still, this feature should be enabled only when necessary, since the compiler errors in case of dimension mismatches will be harder to read.
 
-## `serde`
-Serialization and deserialization of the units is provided via `serde` if the `serde` feature gate is enabled:
-```rust ignore
-use diman::si::f64::{Length, Velocity};
-use serde::{Serialize, Deserialize};
+# `serde`
+Serialization and deserialization of the units is provided via [`serde`](https://crates.io/crates/serde) if the `serde` feature gate is enabled:
+```rust
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 struct Parameters {
-    my_length: Length,
-    my_vel: Velocity,
+    my_length: Length<f64>,
+    my_vel: Velocity<f64>,
 }
 
-let params: Parameters = 
+let params: Parameters =
      serde_yaml::from_str("
         my_length: 100 m
         my_vel: 10 m s^-1
     ").unwrap();
 assert_eq!(
-    params, 
+    params,
     Parameters {
-        my_length: Length::meters(100.0),
-        my_vel: Velocity::meters_per_second(10.0),
+        my_length: 100.0 * meters,
+        my_vel: 10.0 * meters_per_second,
     }
 )
 ```
 
-## `rand`
-Diman allows generating random quantities via `rand` if the `rand` feature gate is enabled:
-```rust ignore
-use rand::Rng;
-
-use diman::si::f64::Length;
+# `rand`
+Diman allows generating random quantities via [`rand`](https://crates.io/crates/rand) if the `rand` feature gate is enabled:
+```rust
 
 let mut rng = rand::thread_rng();
 for _ in 0..100 {
-    let x = rng.gen_range(Length::meters(0.0)..Length::kilometers(1.0));
+    let start = 0.0 * meters;
+    let end = 1.0 * kilometers;
+    let x = rng.gen_range(start..end);
     assert!(Length::meters(0.0) <= x);
     assert!(x < Length::meters(1000.0));
 }
 ```
+
+<!-- cargo-rdme end -->

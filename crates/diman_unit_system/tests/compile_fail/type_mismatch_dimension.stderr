@@ -1,8 +1,8 @@
 error[E0308]: mismatched types
- --> tests/compile_fail/type_mismatch_dimension.rs:7:19
+ --> tests/compile_fail/type_mismatch_dimension.rs:8:24
   |
-7 |     let x: Time = Length::meters(1.0);
-  |                   ^^^^^^^^^^^^^^^^^^^ expected `Dimension { length: 0, time: 1, mass: 0, temperature: 0 }`, found `Dimension { length: 1, time: 0, mass: 0, temperature: 0 }`
+8 |     let x: Time<f64> = meters.new(1.0);
+  |                        ^^^^^^^^^^^^^^^ expected `Dimension { length: 0, time: 1, mass: 0, temperature: 0 }`, found `Dimension { length: 1, time: 0, mass: 0, temperature: 0 }`
   |
   = note: expected constant `Dimension { length: 0, time: 1, mass: 0, temperature: 0 }`
              found constant `Dimension { length: 1, time: 0, mass: 0, temperature: 0 }`

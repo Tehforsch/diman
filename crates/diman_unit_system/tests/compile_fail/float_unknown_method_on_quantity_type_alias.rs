@@ -3,6 +3,6 @@
 pub mod example_system;
 
 fn main() {
-    use example_system::f64::Length;
+    use example_system::dimensions::Length;
     Length::unknown_method(49.0);
 }

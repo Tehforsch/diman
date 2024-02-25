@@ -17,30 +17,39 @@ unit_system!(
 macro_rules! gen_tests_for_float {
     ($float_name: ident, $mod_name: ident, $assert_is_close: path, $assert_is_close_float: path) => {
         mod $mod_name {
-            use super::$float_name::Length;
+            use super::dimensions::Length;
+            use super::units;
+            use crate::make_annotated_unit_constructor;
+            make_annotated_unit_constructor!(meters, Length<$float_name>, $float_name);
+            make_annotated_unit_constructor!(metres, Length<$float_name>, $float_name);
+            make_annotated_unit_constructor!(centimeters, Length<$float_name>, $float_name);
+            make_annotated_unit_constructor!(centimetres, Length<$float_name>, $float_name);
+            make_annotated_unit_constructor!(kilometers, Length<$float_name>, $float_name);
+            make_annotated_unit_constructor!(foo, Length<$float_name>, $float_name);
+            make_annotated_unit_constructor!(kilofoo, Length<$float_name>, $float_name);
 
             #[test]
             fn unit_aliases() {
-                assert_eq!(Length::meters(100.0), Length::metres(100.0));
-                let x = Length::meters(100.0);
-                assert_eq!(x.in_meters(), 100.0);
-                assert_eq!(x.in_metres(), 100.0);
+                assert_eq!(meters(100.0), metres(100.0));
+                let x = meters(100.0);
+                assert_eq!(x.value_in(units::meters), 100.0);
+                assert_eq!(x.value_in(units::metres), 100.0);
             }
 
             #[test]
             fn prefixed_aliases() {
-                assert_eq!(Length::centimeters(100.0), Length::centimetres(100.0));
-                let x = Length::centimeters(100.0);
-                assert_eq!(x.in_meters(), 1.0);
-                assert_eq!(x.in_metres(), 1.0);
-                assert_eq!(x.in_centimeters(), 100.0);
-                assert_eq!(x.in_centimetres(), 100.0);
+                assert_eq!(centimeters(100.0), centimetres(100.0));
+                let x = centimeters(100.0);
+                assert_eq!(x.value_in(units::meters), 1.0);
+                assert_eq!(x.value_in(units::metres), 1.0);
+                assert_eq!(x.value_in(units::centimeters), 100.0);
+                assert_eq!(x.value_in(units::centimetres), 100.0);
             }
 
             #[test]
             fn explicit_prefix() {
-                assert_eq!(Length::foo(100.0), Length::meters(25.0));
-                assert_eq!(Length::kilofoo(100.0), Length::kilometers(25.0));
+                assert_eq!(foo(100.0), meters(25.0));
+                assert_eq!(kilofoo(100.0), kilometers(25.0));
             }
         }
     };

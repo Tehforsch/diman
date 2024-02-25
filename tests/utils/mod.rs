@@ -33,3 +33,16 @@ pub(crate) fn assert_is_close_float_f32(x: f32, y: f32) {
 pub(crate) fn assert_is_close_float_f64(x: f64, y: f64) {
     assert!((x - y).abs() < f64::EPSILON, "{} {}", x, y)
 }
+
+// These help with what would otherwise require lots of
+// type annotations for the float which are awkward to do
+// because we can't write 1.0f64 or similar literals here
+
+#[macro_export]
+macro_rules! make_annotated_unit_constructor {
+    ($unit: ident, $quantity: ty, $float_name: ident) => {
+        fn $unit(x: $float_name) -> $quantity {
+            x * units::$unit
+        }
+    };
+}

@@ -1,47 +1,50 @@
 //! Example showing gas equation of state conversions
 
-use diman::si::f64::{
-    Dimensionless, EnergyDensity, MassDensity, MomentumDensity, Pressure, SpecificEnergy,
-    SpecificHeatCapacity, Temperature, Velocity,
+use diman::si::{
+    dimensions::{
+        Dimensionless, EnergyDensity, MassDensity, MomentumDensity, Pressure, SpecificEnergy,
+        SpecificHeatCapacity, Temperature, Velocity,
+    },
+    units::{joules_per_kilogram_kelvin, kelvin, meters_per_second, pascals},
 };
 
 #[derive(Debug)]
 struct Primitive {
-    pressure: Pressure,
-    velocity: [Velocity; 3],
-    temperature: Temperature,
+    pressure: Pressure<f64>,
+    velocity: [Velocity<f64>; 3],
+    temperature: Temperature<f64>,
 }
 
 impl Primitive {
     fn ntp() -> Self {
         Self {
-            pressure: Pressure::pascals(100e3),
-            velocity: [Velocity::meters_per_second(100.0); 3],
-            temperature: Temperature::kelvin(293.15),
+            pressure: pascals.new(100e3),
+            velocity: [meters_per_second.new(100.0); 3],
+            temperature: kelvin.new(293.15),
         }
     }
 }
 
 #[derive(Debug)]
 struct Conservative {
-    density: MassDensity,
-    momentum: [MomentumDensity; 3],
-    energy: EnergyDensity,
+    density: MassDensity<f64>,
+    momentum: [MomentumDensity<f64>; 3],
+    energy: EnergyDensity<f64>,
 }
 
 #[derive(Debug)]
 struct IdealGas {
     #[allow(dead_code)]
-    cp: SpecificHeatCapacity,
-    cv: SpecificHeatCapacity,
-    r: SpecificHeatCapacity,
-    gamma: Dimensionless,
+    cp: SpecificHeatCapacity<f64>,
+    cv: SpecificHeatCapacity<f64>,
+    r: SpecificHeatCapacity<f64>,
+    gamma: Dimensionless<f64>,
 }
 
 impl IdealGas {
     fn air() -> Self {
-        let cp = SpecificHeatCapacity::joules_per_kilogram_kelvin(1004.);
-        let cv = SpecificHeatCapacity::joules_per_kilogram_kelvin(717.);
+        let cp = joules_per_kilogram_kelvin.new(1004.);
+        let cv = joules_per_kilogram_kelvin.new(717.);
         Self {
             cp,
             cv,
@@ -54,13 +57,13 @@ impl IdealGas {
 impl From<&Primitive> for Conservative {
     fn from(s: &Primitive) -> Self {
         let gas = IdealGas::air();
-        let density: MassDensity = s.pressure / (gas.r * s.temperature);
-        let energy_internal: SpecificEnergy = gas.cv * s.temperature;
+        let density: MassDensity<f64> = s.pressure / (gas.r * s.temperature);
+        let energy_internal: SpecificEnergy<f64> = gas.cv * s.temperature;
         let energy_kinetic = 0.5
             * s.velocity
                 .iter()
                 .map(|v| v.powi::<2>())
-                .sum::<SpecificEnergy>();
+                .sum::<SpecificEnergy<f64>>();
         Self {
             density,
             momentum: s.velocity.map(|v| density * v),
@@ -77,7 +80,7 @@ impl From<&Conservative> for Primitive {
             * velocity
                 .iter()
                 .map(|v| v.powi::<2>())
-                .sum::<SpecificEnergy>();
+                .sum::<SpecificEnergy<f64>>();
         let e_internal = c.energy / c.density - energy_kinetic;
         Self {
             pressure: (gas.gamma - 1.0) * c.density * e_internal,

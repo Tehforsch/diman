@@ -24,7 +24,7 @@ impl Codegen {
         let units: TokenStream = units
             .filter_map(|unit| {
                 let dim = self.get_dimension_expr(&unit.dimensions);
-                let magnitude = unit.magnitude;
+                let magnitude = unit.magnitude.into_f64();
                 let symbol = &unit.symbol.as_ref()?.0.to_string();
                 Some(quote! {
                     #runtime_unit::new(
@@ -35,8 +35,9 @@ impl Codegen {
                 })
             })
             .collect();
+        let dimension_type = &self.defs.dimension_type;
         quote! {
-            let units_array = &[#units];
+            let units_array: &[#runtime_unit::<#dimension_type>] = &[#units];
             let units = #runtime_unit_storage::new(units_array);
         }
     }
@@ -44,8 +45,12 @@ impl Codegen {
     pub fn gen_debug_trait_impl(&self) -> TokenStream {
         let dimension_type = &self.defs.dimension_type;
         let quantity_type = &self.defs.quantity_type;
-        let units_storage =
-            self.runtime_unit_storage(self.defs.units.iter().filter(|unit| unit.magnitude == 1.0));
+        let units_storage = self.runtime_unit_storage(
+            self.defs
+                .units
+                .iter()
+                .filter(|unit| unit.magnitude.is_one()),
+        );
         let get_base_dimension_symbols = self
             .defs
             .base_dimensions
