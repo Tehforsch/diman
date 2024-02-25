@@ -17,5 +17,5 @@ unit_system_internal!(
 
 fn main() {
     use crate::units::meters;
-    let l = 1.0 * meters;
+    let _ = 1.0 * meters;
 }

@@ -31,9 +31,6 @@ pub trait StorageType {
     /// For vector types, this represents the underlying storage of a
     /// single entry in the vector.
     fn base_storage(&self) -> &FloatType;
-
-    fn module_name(&self) -> &TokenStream;
-    fn generate_constants(&self) -> bool;
 }
 
 impl StorageType for VectorType {
@@ -44,14 +41,6 @@ impl StorageType for VectorType {
     fn base_storage(&self) -> &FloatType {
         &self.float_type
     }
-
-    fn module_name(&self) -> &TokenStream {
-        &self.module_name
-    }
-
-    fn generate_constants(&self) -> bool {
-        false
-    }
 }
 
 impl StorageType for FloatType {
@@ -61,14 +50,6 @@ impl StorageType for FloatType {
 
     fn base_storage(&self) -> &FloatType {
         self
-    }
-
-    fn module_name(&self) -> &TokenStream {
-        &self.module_name
-    }
-
-    fn generate_constants(&self) -> bool {
-        true
     }
 }
 

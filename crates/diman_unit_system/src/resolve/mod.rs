@@ -1,7 +1,7 @@
 mod error;
 mod ident_storage;
 
-use std::{collections::HashMap, result::Result};
+use std::collections::HashMap;
 
 use proc_macro2::Span;
 use syn::Ident;
