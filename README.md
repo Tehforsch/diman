@@ -16,9 +16,8 @@ let v2 = get_velocity(10.0 * meters, 1.0 * seconds);
 assert_eq!(v1, v2);
 ```
 
-Let's try to assign add quantities with incompatible dimensions:
-```rust compile_fail
-# use diman::si::units::{seconds, meters};
+Let's try to add quantities with incompatible dimensions:
+```rust
 let time = 1.0 * seconds;
 let length = 10.0 * meters;
 let sum = length + time;
@@ -175,26 +174,9 @@ fn bar(l: Length<f64>, t: Time<f64>) -> Quotient<Length<f64>, Time<f64>> {
 
 # Rational dimensions
 The `rational-dimensions` feature allows using quantities with rational exponents in their base dimensions, as opposed to just integer values. This allows expressing defining dimensions and units such as:
-```rust ignore
-# mod surround {
-# use diman_unit_system::unit_system;
-# unit_system!(
-# quantity_type Quantity;
-# dimension_type Dimension;
-# dimension Length;
-# dimension Time;
-# #[base(Length)]
-# #[symbol(m)]
-# unit meters;
-# #[base(Time)]
-# #[symbol(s)]
-# unit seconds;
+```rust
 dimension Sorptivity = Length Time^(-1/2);
 unit meters_per_sqrt_second: Sorptivity = meters / seconds^(1/2);
-# );
-# }
-# use surround::dimensions::Sorptivity;
-# use surround::units::{micrometers,milliseconds};
 let l = 2.0 * micrometers;
 let t = 5.0 * milliseconds;
 let sorptivity: Sorptivity = l / t.sqrt();
@@ -205,10 +187,7 @@ Still, this feature should be enabled only when necessary, since the compiler er
 
 # `serde`
 Serialization and deserialization of the units is provided via `serde` if the `serde` feature gate is enabled:
-```rust ignore
-# use diman::si::dimensions::{Length, Velocity};
-# use diman::si::units::{meters, meters_per_second};
-# use serde::{Serialize, Deserialize};
+```rust
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 struct Parameters {
     my_length: Length<f64>,
@@ -231,9 +210,7 @@ assert_eq!(
 
 # `rand`
 Diman allows generating random quantities via `rand` if the `rand` feature gate is enabled:
-```rust ignore
-# use rand::Rng;
-# use diman::si::units::{meters, kilometers};
+```rust
 
 let mut rng = rand::thread_rng();
 for _ in 0..100 {

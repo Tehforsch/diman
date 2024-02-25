@@ -15,8 +15,8 @@
 //! assert_eq!(v1, v2);
 //! ```
 //!
-//! Let's try to assign add quantities with incompatible dimensions:
-//! ```rust compile_fail
+//! Let's try to add quantities with incompatible dimensions:
+//! ```compile_fail
 //! # use diman::si::units::{seconds, meters};
 //! let time = 1.0 * seconds;
 //! let length = 10.0 * meters;
@@ -54,7 +54,7 @@
 //!
 //! # Design
 //! Diman aims to make it as easy as possible to add compile-time unit safety to Rust code. Physical quantities are represented by the `Quantity<S, D>` struct, where `S` is the underlying storage type (`f32`, `f64`, ...) and `D` is the  dimension of the quantity. For example, in order to represent the [SI system of units](https://www.nist.gov/pml/owm/metric-si/si-units), the quantity type would be defined using the `unit_system!` macro as follows:
-//! ```rust
+//! ```
 //! # #![allow(incomplete_features)]
 //! # #![feature(generic_const_exprs, adt_const_params)]
 //! # mod surround {
@@ -77,7 +77,7 @@
 //!
 //! The `unit_system!` macro also allows defining derived dimensions and units:
 //!
-//! ```rust
+//! ```
 //! # #![allow(incomplete_features)]
 //! # #![feature(generic_const_exprs, adt_const_params)]
 //! # mod surround {
@@ -152,7 +152,7 @@
 //! # Prefixes
 //! Unit prefixes can automatically be generated with the `#[prefix(...)]` attribute for unit statements.
 //! For example
-//! ```rust
+//! ```
 //! # #![allow(incomplete_features)]
 //! # #![feature(generic_const_exprs, adt_const_params)]
 //! # mod surround {
@@ -172,7 +172,7 @@
 //!
 //! # Aliases
 //! Unit aliases can automatically be generated with the `#[alias(...)]` macro. For example
-//! ```rust
+//! ```
 //! # #![allow(incomplete_features)]
 //! # #![feature(generic_const_exprs, adt_const_params)]
 //! # mod surround {
@@ -193,7 +193,7 @@
 //! Sometimes, intermediate types in computations are quantities that don't really have a nice name and are also
 //! not needed too many times. Having to add a definition to the unit system for this case can be cumbersome.
 //! This is why the `Product` and `Quotient` types are provided:
-//! ```rust
+//! ```
 //! use diman::si::dimensions::{Length, Time};
 //! use diman::{Product, Quotient};
 //! fn foo(l: Length<f64>, t: Time<f64>) -> Product<Length<f64>, Time<f64>> {
@@ -207,7 +207,7 @@
 //!
 //! # Rational dimensions
 //! The `rational-dimensions` feature allows using quantities with rational exponents in their base dimensions, as opposed to just integer values. This allows expressing defining dimensions and units such as:
-//! ```rust ignore
+//! ```ignore
 //! # mod surround {
 //! # use diman_unit_system::unit_system;
 //! # unit_system!(
@@ -237,7 +237,7 @@
 //!
 //! # `serde`
 //! Serialization and deserialization of the units is provided via `serde` if the `serde` feature gate is enabled:
-//! ```rust ignore
+//! ```ignore
 //! # use diman::si::dimensions::{Length, Velocity};
 //! # use diman::si::units::{meters, meters_per_second};
 //! # use serde::{Serialize, Deserialize};
@@ -263,7 +263,7 @@
 //!
 //! # `rand`
 //! Diman allows generating random quantities via `rand` if the `rand` feature gate is enabled:
-//! ```rust ignore
+//! ```ignore
 //! # use rand::Rng;
 //! # use diman::si::units::{meters, kilometers};
 //!
@@ -309,7 +309,7 @@ pub mod si;
 /// 3. `dimension`: Define a new dimension. If no expression is given (as in `dimension Length;`), this will define a new base dimension. If an expression is given, it will define a type alias for a derived dimension (as in `dimension Velocity = Length / Time`).
 /// 4. `constant`: Define a new constant. Example: `constant ELECTRON_CHARGE = 1.602176634e-19 volts`.
 /// 5. `unit`: Define a new unit. If no expression is given and the `#[base(...)]` attribute is set, it will be the base unit for the given dimension. Example:
-/// ```rust
+/// ```
 /// # #![allow(incomplete_features)]
 /// # #![feature(generic_const_exprs, adt_const_params)]
 /// # mod surround {
@@ -325,7 +325,7 @@ pub mod si;
 /// # }
 /// ```
 /// Derived units can be defined via expressions, such as
-/// ```rust
+/// ```
 /// # #![allow(incomplete_features)]
 /// # #![feature(generic_const_exprs, adt_const_params)]
 /// # mod surround {
@@ -342,7 +342,7 @@ pub mod si;
 /// # }
 /// ```
 /// Unit statements may optionally be annotated with their resulting dimension to prevent bugs:
-/// ```rust
+/// ```
 /// # #![allow(incomplete_features)]
 /// # #![feature(generic_const_exprs, adt_const_params)]
 /// # mod surround {
@@ -364,7 +364,7 @@ pub mod si;
 /// The symbol of the unit can be defined using the `#[symbol(...)]` attribute.
 ///
 /// Example usage:
-/// ```rust
+/// ```
 /// # #![allow(incomplete_features)]
 /// # #![feature(generic_const_exprs, adt_const_params)]
 /// # mod surround {
