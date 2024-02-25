@@ -55,7 +55,8 @@ If you cannot use unstable Rust for your project or require a stable library, co
 # The `Quantity` type
 Physical quantities are represented by the `Quantity<S, D>` struct, where `S` is the underlying storage type (`f32`, `f64`, ...) and `D` is the  dimension of the quantity.
 `Quantity` should behave like its underlying storage type whenever allowed by the dimensions.
-## Arithmetics
+
+## Arithmetics and math
 Addition and subtraction of two quantities is allowed if the dimensions match.
 ```rust
 let l: Length<f64> = 5.0 * meters + 10.0 * kilometers;
@@ -79,31 +80,6 @@ let l1: Length<f64> = 5.0 * meters;
 let l2: Length<f64> = 10.0 * kilometers;
 let angle_radians = (l1 / l2).asin();
 ```
-For dimensionless quantities, `.value()` provides access to the underlying storage types. Alternatively, dimensionless quantities also implement `Deref` for the same operation.
-```rust
-let l1: Length<f64> = 5.0 * meters;
-let l2: Length<f64> = 10.0 * kilometers;
-let ratio_value: f64 = (l1 / l2).value();
-let ratio_deref: f64 = *(l1 / l2);
-assert_eq!(ratio_value, ratio_deref);
-```
-If absolutely required, `.value_unchecked()` provides access to the underlying storage type for all quantities. This is not unit-safe since the return value will depend on the unit system!
-```rust
-let length: Length<f64> = 5.0 * kilometers;
-let value: f64 = length.value_unchecked();
-assert_eq!(value, 5000.0); // This only holds in SI units!
-```
-Similarly, new quantities can be constructed from storage types using `Quantity::new_unchecked`. This operation is also not unit-safe!
-```rust
-let length: Length<f64> = Length::new_unchecked(5000.0);
-assert_eq!(length, 5.0 * kilometers); // This only holds in SI units!
-```
-`Debug` is implemented and will print the quantity in its base representation.
-```rust
-let length: Length<f64> = 5.0 * kilometers;
-let time: Time<f64> = 1.0 * seconds;
-assert_eq!(format!("{:?}", length / time), "5000 m s^-1")
-```
 Exponentiation and related operations are supported via `squared`, `cubed`, `powi`, `sqrt`, `cbrt`:
 ```rust
 let length = 2.0f64 * meters;
@@ -120,6 +96,50 @@ Note that unlike its float equivalent, `powi` receives its exponent as a generic
 let l1 = 2.0f64 * meters;
 let l2 = 5.0f64 * kilometers;
 let x = (l1 / l2).powf(2.71);
+```
+## Creation and conversion
+New quantities can be created either by multiplying with a unit, or by calling the `.new` function on the unit:
+```rust
+let l1 = 2.0 * meters;
+let l2 = meters.new(2.0);
+assert_eq!(l1, l2);
+```
+For a full list of the units supported by dimans `SI` module, see [the definitions](src/si.rs).
+
+For dimensionless quantities, `.value()` provides access to the underlying storage types. Alternatively, dimensionless quantities also implement `Deref` for the same operation.
+```rust
+let l1: Length<f64> = 5.0 * meters;
+let l2: Length<f64> = 10.0 * kilometers;
+let ratio_value: f64 = (l1 / l2).value();
+let ratio_deref: f64 = *(l1 / l2);
+assert_eq!(ratio_value, ratio_deref);
+```
+If absolutely required, `.value_unchecked()` provides access to the underlying storage type for all quantities. This is not unit-safe since the return value will depend on the unit system!
+```rust
+let length: Length<f64> = 5.0 * kilometers;
+let value: f64 = length.value_unchecked();
+assert_eq!(value, 5000.0); // This only holds in SI units!
+```
+Similarly, if absolutely required, new quantities can be constructed from storage types using `Quantity::new_unchecked`. This operation is also not unit-safe!
+```rust
+let length: Length<f64> = Length::new_unchecked(5000.0);
+assert_eq!(length, 5.0 * kilometers); // This only holds in SI units!
+```
+The combination of `value_unchecked` and `new_unchecked` comes in handy when using third party libraries that only takes the raw storage type as argument. As an example, suppose we have a function `foo` that takes a `Vec<f64>` and returns a `Vec<f64>`, and suppose it sorts the numbers or does some other unit safe operation. Then we could reasonably write:
+```rust
+let lengths: Vec<Length<f64>> = vec![1.0 * meters, 2.0 * kilometers, 3.0 * meters, 4.0 * kilometers];
+let unchecked = lengths
+                       .into_iter()
+                       .map(|x| x.value_unchecked())
+                       .collect();
+let fooed = foo(unchecked);
+let result: Vec<_> = fooed.into_iter().map(|x| Length::new_unchecked(x)).collect();
+```
+`Debug` is implemented and will print the quantity in its base representation.
+```rust
+let length: Length<f64> = 5.0 * kilometers;
+let time: Time<f64> = 1.0 * seconds;
+assert_eq!(format!("{:?}", length / time), "5000 m s^-1")
 ```
 
 # Design
