@@ -56,13 +56,13 @@
 //! Physical quantities are represented by the `Quantity<S, D>` struct, where `S` is the underlying storage type (`f32`, `f64`, ...) and `D` is the  dimension of the quantity.
 //! `Quantity` should behave like its underlying storage type whenever allowed by the dimensions.
 //! ## Arithmetics
-//! * Addition and subtraction of two quantities with the same storage type is allowed if the dimensions match.
+//! Addition and subtraction of two quantities is allowed if the dimensions match.
 //! ```
 //! # use diman::si::dimensions::{Length};
 //! # use diman::si::units::{kilometers, meters};
 //! let l: Length<f64> = 5.0 * meters + 10.0 * kilometers;
 //! ```
-//! * Multiplication and division of two quantities with the same storage type produces a new quantity:
+//! Multiplication and division of two quantities produces a new quantity:
 //! ```
 //! # #![feature(generic_const_exprs)]
 //! # use diman::si::dimensions::{Length, Time, Velocity};
@@ -71,21 +71,45 @@
 //! let t: Time<f64> = 2.0 * seconds;
 //! let v: Velocity<f64> = l / t;
 //! ```
-//! * Addition of `Quantity<Float, D>` and `Float` is possible if and only if `D` is dimensionless.
+//! Addition and subtraction of a `Quantity` and a storage type is possible if and only if `D` is dimensionless.
 //! ```
 //! # #![feature(generic_const_exprs)]
-//! # use diman::si::dimensions::{Dimensionless, Length};
+//! # use diman::si::dimensions::{Length};
 //! # use diman::si::units::{kilometers, meters};
 //! let l1: Length<f64> = 5.0 * meters;
 //! let l2: Length<f64> = 10.0 * kilometers;
 //! let x = l1 / l2 - 0.5;
-//! let y = 0.5 + l1 / l2;
+//! let y = 0.5 - l1 / l2;
 //! ```
-//! * `Quantity` implements the dimensionless methods of `S`, such as `abs` for dimensionless quantities.
-//! * It implements `Deref` to `S` if and only if `D` is dimensionless.
-//! * `Debug` is implemented and will print the quantity in its representation of the "closest" unit. For example `Length::meters(100.0)` would be debug printed as `0.1 km`. If printing in a specific unit is required, conversion methods are available for each unit (such as `Length::in_meters`).
-//! * `.value()` provides access to the underlying storage type of a dimensionless quantity.
-//! * `.value_unchecked()` provides access to the underlying storage type for all quantities if absolutely required. This is not unit-safe since the value will depend on the unit system!
+//! `Quantity` implements the dimensionless methods of `S`, such as `sin`, `cos`, etc. for dimensionless quantities.
+//! ```
+//! # #![feature(generic_const_exprs)]
+//! # use diman::si::dimensions::{Length};
+//! # use diman::si::units::{kilometers, meters};
+//! let l1: Length<f64> = 5.0 * meters;
+//! let l2: Length<f64> = 10.0 * kilometers;
+//! let angle_radians = (l1 / l2).asin();
+//! ```
+//! For dimensionless quantities, `.value()` provides access to the underlying storage types. Alternatively, dimensionless quantities also implement `Deref` for the same operation.
+//! ```
+//! # #![feature(generic_const_exprs)]
+//! # use diman::si::dimensions::{Length};
+//! # use diman::si::units::{kilometers, meters};
+//! let l1: Length<f64> = 5.0 * meters;
+//! let l2: Length<f64> = 10.0 * kilometers;
+//! let ratio_value: f64 = (l1 / l2).value();
+//! let ratio_deref: f64 = *(l1 / l2);
+//! assert_eq!(ratio_value, ratio_deref);
+//! ```
+//! If absolutely required, `.value_unchecked()` provides access to the underlying storage type for all quantities. This is not unit-safe since the return value will depend on the unit system!
+//! ```
+//! # #![feature(generic_const_exprs)]
+//! # use diman::si::dimensions::{Dimensionless, Length};
+//! # use diman::si::units::{kilometers, meters};
+//! let length: Length<f64> = 5.0 * kilometers;
+//! let value: f64 = length.value_unchecked(); // In this case, returns 5000.0
+//! ```
+//! `Debug` is implemented and will print the quantity in its representation of the "closest" unit. For example `Length::meters(100.0)` would be debug printed as `0.1 km`. If printing in a specific unit is required, conversion methods are available for each unit (such as `Length::in_meters`).
 //! * Similarly, new quantities can be constructed from storage types using `Quantity::new_unchecked`. This is also not unit-safe.
 //!
 //! Some other, more complex operations are also allowed:
