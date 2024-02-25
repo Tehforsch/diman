@@ -62,15 +62,15 @@
 //! ```
 //! # use diman::si::dimensions::{Length};
 //! # use diman::si::units::{kilometers, meters};
-//! let l: Length<f64> = 5.0 * meters + 10.0 * kilometers;
+//! let l = 5.0 * meters + 10.0 * kilometers;
 //! ```
 //! Multiplication and division of two quantities produces a new quantity:
 //! ```
 //! # #![feature(generic_const_exprs)]
 //! # use diman::si::dimensions::{Length, Time, Velocity};
 //! # use diman::si::units::{meters, seconds};
-//! let l: Length<f64> = 5.0 * meters;
-//! let t: Time<f64> = 2.0 * seconds;
+//! let l = 5.0 * meters;
+//! let t = 2.0 * seconds;
 //! let v: Velocity<f64> = l / t;
 //! ```
 //! Addition and subtraction of a `Quantity` and a storage type is possible if and only if `D` is dimensionless:
@@ -78,8 +78,8 @@
 //! # #![feature(generic_const_exprs)]
 //! # use diman::si::dimensions::{Length};
 //! # use diman::si::units::{kilometers, meters};
-//! let l1: Length<f64> = 5.0 * meters;
-//! let l2: Length<f64> = 10.0 * kilometers;
+//! let l1 = 5.0 * meters;
+//! let l2 = 10.0 * kilometers;
 //! let x = l1 / l2 - 0.5;
 //! let y = 0.5 - l1 / l2;
 //! ```
@@ -88,8 +88,8 @@
 //! # #![feature(generic_const_exprs)]
 //! # use diman::si::dimensions::{Length};
 //! # use diman::si::units::{kilometers, meters};
-//! let l1: Length<f64> = 5.0 * meters;
-//! let l2: Length<f64> = 10.0 * kilometers;
+//! let l1 = 5.0f64 * meters;
+//! let l2 = 10.0f64 * kilometers;
 //! let angle_radians = (l1 / l2).asin();
 //! ```
 //! Exponentiation and related operations are supported via `squared`, `cubed`, `powi`, `sqrt`, `cbrt`:
