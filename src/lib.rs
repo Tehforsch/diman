@@ -396,8 +396,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs, adt_const_params)]
-// clippy bug: https://github.com/rust-lang/rust-clippy/issues/12133
-#![allow(clippy::unconditional_recursion)]
 
 // This ensures we don't have to differentiate between
 // imports via `crate::` and `diman::` in the proc macro.

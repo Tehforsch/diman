@@ -1,8 +1,6 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs, adt_const_params)]
 #![feature(const_fn_floating_point_arithmetic)]
-// clippy bug: https://github.com/rust-lang/rust-clippy/issues/12133
-#![allow(clippy::unconditional_recursion)]
 
 pub mod example_system;
 pub mod utils;
