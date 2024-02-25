@@ -134,26 +134,31 @@ let ratio_deref: f64 = *(l1 / l2);
 assert_eq!(ratio_value, ratio_deref);
 ```
 ## Unchecked creation and conversion
-If absolutely required, `.value_unchecked()` provides access to the underlying storage type for all quantities. This is not unit-safe since the return value will depend on the unit system!
+If absolutely required, `.value_unchecked()` provides access to the underlying storage type for all quantities. This is **not unit-safe** since the return value will depend on the unit system!
 ```rust
 let length: Length<f64> = 5.0 * kilometers;
 let value: f64 = length.value_unchecked();
 assert_eq!(value, 5000.0); // This only holds in SI units!
 ```
-Similarly, if absolutely required, new quantities can be constructed from storage types using `Quantity::new_unchecked`. This operation is also not unit-safe!
+Similarly, if absolutely required, new quantities can be constructed from storage types using `Quantity::new_unchecked`. This operation is also **not unit-safe**!
 ```rust
 let length: Length<f64> = Length::new_unchecked(5000.0);
 assert_eq!(length, 5.0 * kilometers); // This only holds in SI units!
 ```
 The combination of `value_unchecked` and `new_unchecked` comes in handy when using third party libraries that only takes the raw storage type as argument. As an example, suppose we have a function `foo` that takes a `Vec<f64>` and returns a `Vec<f64>`, and suppose it sorts the numbers or does some other unit safe operation. Then we could reasonably write:
 ```rust
-let lengths: Vec<Length<f64>> = vec![1.0 * meters, 2.0 * kilometers, 3.0 * meters, 4.0 * kilometers];
-let unchecked = lengths
-                       .into_iter()
-                       .map(|x| x.value_unchecked())
-                       .collect();
-let fooed = foo(unchecked);
-let result: Vec<_> = fooed.into_iter().map(|x| Length::new_unchecked(x)).collect();
+   let lengths: Vec<Length<f64>> = vec![
+       1.0 * meters,
+       2.0 * kilometers,
+       3.0 * meters,
+       4.0 * kilometers,
+   ];
+   let unchecked = lengths.into_iter().map(|x| x.value_unchecked()).collect();
+   let fooed = foo(unchecked);
+   let result: Vec<_> = fooed
+       .into_iter()
+       .map(|x| Length::new_unchecked(x))
+       .collect();
 ```
 ## Debug
 `Debug` is implemented and will print the quantity in its base representation.
@@ -163,8 +168,13 @@ let time: Time<f64> = 1.0 * seconds;
 assert_eq!(format!("{:?}", length / time), "5000 m s^-1")
 ```
 
-# Design
- For example, in order to represent the [SI system of units](https://www.nist.gov/pml/owm/metric-si/si-units), the quantity type would be defined using the `unit_system!` macro as follows:
+# Custom unit systems
+## The `unit_system` macro
+Diman also provides the `unit_system` macro for defining custom
+unit systems for everything that is not covered by SI alone. The
+macro will add a new quantity type and implement all the required
+methods and traits to make it usable.
+As an example, consider the following macro call:
 ```rust
 diman::unit_system!(
     quantity_type Quantity;
@@ -173,26 +183,10 @@ diman::unit_system!(
     dimension Length;
     dimension Time;
     dimension Mass;
-    dimension Temperature;
-    dimension Current;
-    dimension AmountOfSubstance;
-    dimension LuminousIntensity;
-);
-```
-The first two statements imply that the macro should define a `Quantity` type, which is user-facing, and a `Dimension` type, which is used only internally and will surface in compiler error messages.
-The macro will automatically implement all the required traits and methods for the `Quantity` type, such that addition and subtraction of two quantities is only allowed for quantities with the same `Dimension` type. During multiplication of two quantities, all the entries of the two dimensions are added. See below for a more comprehensive list of the implemented methods on `Quantity`.
-
-The `unit_system!` macro also allows defining derived dimensions and units:
-
-```rust
-diman::unit_system!(
-    quantity_type Quantity;
-    dimension_type Dimension;
-
-    dimension Length;
-    dimension Time;
 
     dimension Velocity = Length / Time;
+    dimension Frequency = 1 / Time;
+    dimension Energy = Mass * Velocity^2;
 
     #[prefix(kilo, milli)]
     #[base(Length)]
@@ -206,28 +200,25 @@ diman::unit_system!(
     unit hours: Time = 3600 * seconds;
     unit meters_per_second: Velocity = meters / seconds;
     unit kilometers_per_hour: Velocity = kilometers / hours;
-    constant MY_FAVORITE_VELOCITY = 1000 * kilometers_per_hour;
+    constant SPEED_OF_LIGHT = 299792458 * meters_per_second;
 );
 
 
-fn fast_enough(x: Length<f64>, t: Time<f64>) {
-    let vel = x / t;
-    if vel > 1.0 * MY_FAVORITE_VELOCITY {
-        println!("{} m/s is definitely fast enough!", vel.value_in(meters_per_second));
-    }
+fn too_fast(x: Length<f64>, t: Time<f64>) -> bool {
+    x / t > 0.1f64 * SPEED_OF_LIGHT
 }
 
-fast_enough(100.0 * kilometers, 0.3 * hours);
+too_fast(100.0 * kilometers, 0.3 * hours);
 ```
 
-Here, `dimension` defines Quantities, which are concrete types, `unit` defines units, which are methods on the corresponding quantities and `constant` defines constants.
-Dimensions without a right hand side are base dimensions (such as length, time, mass, temperature, ... in the SI system of units), whereas dimensions with a right hand side are derived dimensions.
-The same thing holds for units - every unit is either a base unit for a given base dimension (denoted by the `#[base(...)]` attribute), or derived from base units and other derived units. Base units have the special property that the internal representation of the quantity will be in terms of the base unit (for example, a stored value `1.0` for a quantity with a `Length` dimension corresponds to `meter` in the above definitions).
-Other than this, there are no differences between base dimensions and dimensions or base units and units and they can be treated equally in user code.
-The macro also accepts more complex expressions such as `dimension Energy = Mass (Length / Time)^2`.
-The definitions do not have to be in any specific order.
+The macro accepts five different keywords:
+1. `quantity_type` specifies the name of the quantity type. Required for compiler error messages to have something to point to.
+2. `dimension_type` specifies the name of the dimension type. Required for compiler error messages to have something to point to.
+3. `dimension` defines a new dimension which is a type. Dimensions without a right hand side are base dimensions (such as `Length` and `Time` in this example), whereas dimensions with a right hand side are derived dimensions (such as `Velocity` in this example).
+4. `unit` defines a new units, which are methods on the corresponding quantities and `constant` defines constants. Units without a right-hand side are the base units to one specific base dimension, meaning that they are the unit that will internally be represented with a conversion factor of 1. Base units require the `#[base(...)]` attribute in order to specify which dimension they are the base unit of. Units with a right hand side are derived from other units.
+5. `constant` defines a new constant.
 
-# Prefixes
+## SI Prefixes
 Unit prefixes can automatically be generated with the `#[prefix(...)]` attribute for unit statements.
 For example
 ```rust
@@ -239,7 +230,7 @@ unit meters;
 will automatically generate the unit `meters` with symbol `m`, as well as `kilometers` and `millimeters` with symbols `km` and `mm` corresponding to `1e3 m` and `1e-3 m`.
 For simplicity, the attribute `#[metric_prefixes]` is provided, which will generate all metric prefixes from `atto-` to `exa-` automatically.
 
-# Aliases
+## Aliases
 Unit aliases can automatically be generated with the `#[alias(...)]` macro. For example
 ```rust
 #[alias(metres)]
