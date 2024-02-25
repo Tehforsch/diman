@@ -116,12 +116,23 @@
 //! ## Creation and conversion
 //! New quantities can be created either by multiplying with a unit, or by calling the `.new` function on the unit:
 //! ```
-//! # use diman::si::units::meters;
+//! # use diman::si::units::{kilometers, meters, hour};
 //! let l1 = 2.0 * meters;
 //! let l2 = meters.new(2.0);
 //! assert_eq!(l1, l2);
 //! ```
 //! For a full list of the units supported by dimans `SI` module, see [the definitions](src/si.rs).
+//! Composite units can be defined on the spot via multiplication/division of units:
+//! ```
+//! # #![feature(generic_const_exprs)]
+//! # use diman::si::units::{kilometers, meters, hour, meters_per_second};
+//! let v1 = (kilometers / hour).new(3.6);
+//! let v2 = 3.6 * kilometers / hour;
+//! assert_eq!(v1, 1.0 * meters_per_second);
+//! assert_eq!(v2, 1.0 * meters_per_second);
+//! ```
+//! Note that at the moment, the creation of quantities via units defined in this composite way incurs
+//! a small performance overhead compared to creation from just a single unit (which is just a single multiplication). This will be fixed once [const_fn_floating_point_arithmetic](https://github.com/rust-lang/rust/issues/57241) or a similar feature is stabilized.
 //!
 //! Conversion into the underlying storage type can be done using the `value_in` function:
 //! ```
