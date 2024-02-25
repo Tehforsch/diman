@@ -61,8 +61,8 @@ impl Codegen {
             where
                 S: core::ops::Div<Magnitude, Output = S> + core::fmt::Debug,
             {
-                pub fn value_in<const R: Magnitude>(self, _: Unit<D, R>) -> S {
-                    self.value_unchecked() / R
+                pub fn value_in<A: Into<Magnitude>>(self, a: A) -> S {
+                    self.value_unchecked() / a.into()
                 }
             }
 

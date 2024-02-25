@@ -163,6 +163,18 @@ impl Codegen {
                     Quantity(val * self.0)
                 }
             }
+
+            impl<const D: Dimension, const F: Magnitude> From<Unit<D, F>> for Magnitude {
+                fn from(_: Unit<D, F>) -> Magnitude {
+                    F
+                }
+            }
+
+            impl<const D: Dimension> From<RuntimeUnit<D>> for Magnitude {
+                fn from(unit: RuntimeUnit<D>) -> Magnitude {
+                    unit.0
+                }
+            }
         }
     }
 

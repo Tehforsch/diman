@@ -57,7 +57,7 @@
 //! `Quantity` should behave like its underlying storage type whenever allowed by the dimensions.
 //!
 //! ## Arithmetics and math
-//! Addition and subtraction of two quantities is allowed if the dimensions match.
+//! Addition and subtraction of two quantities is allowed if the dimensions match:
 //! ```
 //! # use diman::si::dimensions::{Length};
 //! # use diman::si::units::{kilometers, meters};
@@ -72,7 +72,7 @@
 //! let t: Time<f64> = 2.0 * seconds;
 //! let v: Velocity<f64> = l / t;
 //! ```
-//! Addition and subtraction of a `Quantity` and a storage type is possible if and only if `D` is dimensionless.
+//! Addition and subtraction of a `Quantity` and a storage type is possible if and only if `D` is dimensionless:
 //! ```
 //! # #![feature(generic_const_exprs)]
 //! # use diman::si::dimensions::{Length};
@@ -82,7 +82,7 @@
 //! let x = l1 / l2 - 0.5;
 //! let y = 0.5 - l1 / l2;
 //! ```
-//! `Quantity` implements the dimensionless methods of `S`, such as `sin`, `cos`, etc. for dimensionless quantities.
+//! `Quantity` implements the dimensionless methods of `S`, such as `sin`, `cos`, etc. for dimensionless quantities:
 //! ```
 //! # #![feature(generic_const_exprs)]
 //! # use diman::si::dimensions::{Length};
@@ -102,7 +102,7 @@
 //! let vol = length.cubed();
 //! assert_eq!(vol, 8.0 * cubic_meters);
 //! assert_eq!(vol.cbrt(), length);
-//! let questionable = length.powi::<4>();
+//! let foo = length.powi::<4>();
 //! ```
 //! Note that unlike its float equivalent, `powi` receives its exponent as a generic instead of as a normal function argument. Exponentiation of dimensionful quantities with an non-constant integer is not supported, since the compiler cannot infer the dimension of the return type. However, dimensionless quantities can be raised to arbitrary powers using `powf`:
 //! ```
@@ -139,6 +139,13 @@
 //! # use diman::si::units::{kilometers, meters};
 //! let length = 2.0f64 * kilometers;
 //! assert_eq!(format!("{} m", length.value_in(meters)), "2000 m");
+//! ```
+//! This also works for composite units:
+//! ```
+//! # #![feature(generic_const_exprs)]
+//! # use diman::si::units::{kilometers, meters_per_second, hour};
+//! let vel = 10.0f64 * meters_per_second;
+//! assert_eq!(format!("{} km/h", vel.value_in(kilometers / hour)), "36 km/h");
 //! ```
 //! For dimensionless quantities, `.value()` provides access to the underlying storage types. Alternatively, dimensionless quantities also implement `Deref` for the same operation.
 //! ```

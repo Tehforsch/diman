@@ -57,7 +57,7 @@ Physical quantities are represented by the `Quantity<S, D>` struct, where `S` is
 `Quantity` should behave like its underlying storage type whenever allowed by the dimensions.
 
 ## Arithmetics and math
-Addition and subtraction of two quantities is allowed if the dimensions match.
+Addition and subtraction of two quantities is allowed if the dimensions match:
 ```rust
 let l: Length<f64> = 5.0 * meters + 10.0 * kilometers;
 ```
@@ -67,14 +67,14 @@ let l: Length<f64> = 5.0 * meters;
 let t: Time<f64> = 2.0 * seconds;
 let v: Velocity<f64> = l / t;
 ```
-Addition and subtraction of a `Quantity` and a storage type is possible if and only if `D` is dimensionless.
+Addition and subtraction of a `Quantity` and a storage type is possible if and only if `D` is dimensionless:
 ```rust
 let l1: Length<f64> = 5.0 * meters;
 let l2: Length<f64> = 10.0 * kilometers;
 let x = l1 / l2 - 0.5;
 let y = 0.5 - l1 / l2;
 ```
-`Quantity` implements the dimensionless methods of `S`, such as `sin`, `cos`, etc. for dimensionless quantities.
+`Quantity` implements the dimensionless methods of `S`, such as `sin`, `cos`, etc. for dimensionless quantities:
 ```rust
 let l1: Length<f64> = 5.0 * meters;
 let l2: Length<f64> = 10.0 * kilometers;
@@ -89,7 +89,7 @@ assert_eq!(area.sqrt(), length);
 let vol = length.cubed();
 assert_eq!(vol, 8.0 * cubic_meters);
 assert_eq!(vol.cbrt(), length);
-let questionable = length.powi::<4>();
+let foo = length.powi::<4>();
 ```
 Note that unlike its float equivalent, `powi` receives its exponent as a generic instead of as a normal function argument. Exponentiation of dimensionful quantities with an non-constant integer is not supported, since the compiler cannot infer the dimension of the return type. However, dimensionless quantities can be raised to arbitrary powers using `powf`:
 ```rust
@@ -105,11 +105,25 @@ let l2 = meters.new(2.0);
 assert_eq!(l1, l2);
 ```
 For a full list of the units supported by dimans `SI` module, see [the definitions](src/si.rs).
+Composite units can be defined on the spot via multiplication/division of units:
+```rust
+let v1 = (kilometers / hour).new(3.6);
+let v2 = 3.6 * kilometers / hour;
+assert_eq!(v1, 1.0 * meters_per_second);
+assert_eq!(v2, 1.0 * meters_per_second);
+```
+Note that at the moment, the creation of quantities via units defined in this composite way incurs
+a small performance overhead compared to creation from just a single unit (which is just a single multiplication). This will be fixed once [const_fn_floating_point_arithmetic](https://github.com/rust-lang/rust/issues/57241) or a similar feature is stabilized.
 
 Conversion into the underlying storage type can be done using the `value_in` function:
 ```rust
 let length = 2.0f64 * kilometers;
 assert_eq!(format!("{} m", length.value_in(meters)), "2000 m");
+```
+This also works for composite units:
+```rust
+let vel = 10.0f64 * meters_per_second;
+assert_eq!(format!("{} km/h", vel.value_in(kilometers / hour)), "36 km/h");
 ```
 For dimensionless quantities, `.value()` provides access to the underlying storage types. Alternatively, dimensionless quantities also implement `Deref` for the same operation.
 ```rust
