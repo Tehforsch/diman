@@ -5,12 +5,6 @@ use core::{
 
 pub const MAX_NUM_FACTORS: usize = 10;
 
-#[derive(Clone, Copy, PartialEq, Eq, ConstParamTy, Debug)]
-struct Factor {
-    f: u64,
-    exp: i16,
-}
-
 #[derive(Copy, Clone, PartialEq, Eq, Debug, ConstParamTy)]
 pub struct Magnitude {
     pub mantissa: u64,
