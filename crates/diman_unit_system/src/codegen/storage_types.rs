@@ -6,7 +6,6 @@ use super::Codegen;
 
 pub struct VectorType {
     pub name: Type,
-    pub module_name: TokenStream,
     pub float_type: FloatType,
     pub num_dims: usize,
 }
@@ -14,14 +13,11 @@ pub struct VectorType {
 #[derive(Clone)]
 pub struct FloatType {
     pub name: Type,
-    pub module_name: TokenStream,
     pub conversion_method: TokenStream,
     #[cfg(feature = "mpi")]
     pub mpi_type: TokenStream,
     #[cfg(feature = "hdf5")]
     pub hdf5_type: TokenStream,
-    #[cfg(feature = "serde")]
-    pub serialize_method: TokenStream,
 }
 
 pub trait StorageType {
@@ -79,28 +75,24 @@ impl Codegen {
             #[cfg(feature = "glam-vec2")]
             VectorType {
                 name: _vec2,
-                module_name: quote! { vec2 },
                 float_type: self.f32_type(),
                 num_dims: 2,
             },
             #[cfg(feature = "glam-dvec2")]
             VectorType {
                 name: _dvec2,
-                module_name: quote! { dvec2 },
                 float_type: self.f64_type(),
                 num_dims: 2,
             },
             #[cfg(feature = "glam-vec3")]
             VectorType {
                 name: _vec3,
-                module_name: quote! { vec3 },
                 float_type: self.f32_type(),
                 num_dims: 3,
             },
             #[cfg(feature = "glam-dvec3")]
             VectorType {
                 name: _dvec3,
-                module_name: quote! { dvec3 },
                 float_type: self.f64_type(),
                 num_dims: 3,
             },
@@ -112,14 +104,11 @@ impl Codegen {
         let f32_ty: Type = syn::parse2(quote! { f32 }).unwrap();
         FloatType {
             name: f32_ty,
-            module_name: quote! { f32 },
             conversion_method: quote! { into_f32 },
             #[cfg(feature = "mpi")]
             mpi_type: quote! { ::mpi::ffi::RSMPI_FLOAT },
             #[cfg(feature = "hdf5")]
             hdf5_type: quote! { hdf5::types::FloatSize::U4 },
-            #[cfg(feature = "serde")]
-            serialize_method: quote! { serialize_f32 },
         }
     }
 
@@ -128,14 +117,11 @@ impl Codegen {
         let f64_ty: Type = syn::parse2(quote! { f64 }).unwrap();
         FloatType {
             name: f64_ty,
-            module_name: quote! { f64 },
             conversion_method: quote! { into_f64 },
             #[cfg(feature = "mpi")]
             mpi_type: quote! { ::mpi::ffi::RSMPI_DOUBLE },
             #[cfg(feature = "hdf5")]
             hdf5_type: quote! { hdf5::types::FloatSize::U8 },
-            #[cfg(feature = "serde")]
-            serialize_method: quote! { serialize_f64 },
         }
     }
 
