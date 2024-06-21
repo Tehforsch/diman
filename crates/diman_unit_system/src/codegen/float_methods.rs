@@ -97,6 +97,32 @@ impl Codegen {
         let float_type = &float_type.name;
         let dimension_type = &self.defs.dimension_type;
         let quantity_type = &self.defs.quantity_type;
+
+        #[cfg(any(feature = "std", feature = "num-traits-libm"))]
+        let roots = quote! {
+                pub fn sqrt(&self) -> #quantity_type<#float_type, { D.div_2() }>
+                {
+                    #quantity_type::<#float_type, { D.div_2() }>(self.0.sqrt())
+                }
+
+                pub fn cbrt(&self) -> #quantity_type<#float_type, { D.div_3() }>
+                {
+                    #quantity_type::<#float_type, { D.div_3() }>(self.0.cbrt())
+                }
+        };
+        #[cfg(all(not(feature = "std"), not(feature = "num-traits-libm")))]
+        let roots = quote! {
+                pub fn sqrt(&self) -> #quantity_type<#float_type, { D.div_2() }>
+                {
+                    #quantity_type::<#float_type, { D.div_2() }>(self.0.sqrt())
+                }
+
+                pub fn cbrt(&self) -> #quantity_type<#float_type, { D.div_3() }>
+                {
+                    #quantity_type::<#float_type, { D.div_3() }>(self.0.cbrt())
+                }
+        };
+
         quote! {
             impl<const D: #dimension_type> #quantity_type<#float_type, D> {
                 pub fn squared(&self) -> #quantity_type<#float_type, { D.mul(2) }>
@@ -113,6 +139,7 @@ impl Codegen {
                     #quantity_type::<#float_type, { D.mul(3) }>(self.0.powi(3))
                 }
 
+
                 pub fn powi<const I: i32>(&self) -> #quantity_type<#float_type, { D.mul(I) }>
                 where
                     #quantity_type::<#float_type, { D.mul(I) }>:
@@ -120,17 +147,7 @@ impl Codegen {
                     #quantity_type::<#float_type, { D.mul(I) }>(self.0.powi(I))
                 }
 
-                #[cfg(any(feature = "std", feature = "num-traits-libm"))]
-                pub fn sqrt(&self) -> #quantity_type<#float_type, { D.div_2() }>
-                {
-                    #quantity_type::<#float_type, { D.div_2() }>(self.0.sqrt())
-                }
-
-                #[cfg(any(feature = "std", feature = "num-traits-libm"))]
-                pub fn cbrt(&self) -> #quantity_type<#float_type, { D.div_3() }>
-                {
-                    #quantity_type::<#float_type, { D.div_3() }>(self.0.cbrt())
-                }
+                #roots
 
                 pub fn min<Q: Into<Self>>(self, other: Q) -> Self {
                     Self(self.0.min(other.into().0))
