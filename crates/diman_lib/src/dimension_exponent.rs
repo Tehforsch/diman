@@ -1,6 +1,8 @@
 use core::ops::{AddAssign, Mul, Neg};
 
 use crate::magnitude::Magnitude;
+#[cfg(not(feature = "std"))]
+use num_traits::float::FloatCore;
 
 pub trait DimensionExponent: Clone + PartialEq + Copy + Mul + AddAssign + Neg {
     fn float_pow(mag: Magnitude, exponent: Self) -> Magnitude;

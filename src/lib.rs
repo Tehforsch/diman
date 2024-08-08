@@ -535,10 +535,4 @@ pub type Quotient<Q1, Q2> = <Q1 as core::ops::Div<Q2>>::Output;
 
 pub mod internal {
     pub use diman_lib::*;
-    pub mod num_traits_reexport {
-        #[cfg(feature = "num-traits-libm")]
-        pub use num_traits::float::Float;
-        #[cfg(not(feature = "num-traits-libm"))]
-        pub use num_traits::float::FloatCore;
-    }
 }
