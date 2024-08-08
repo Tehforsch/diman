@@ -99,9 +99,11 @@
 //! let length = 2.0f64 * meters;
 //! let area = length.squared();
 //! assert_eq!(area, 4.0 * square_meters);
+//! #[cfg(any(feature = "std", feature = "num-traits-libm"))]
 //! assert_eq!(area.sqrt(), length);
 //! let vol = length.cubed();
 //! assert_eq!(vol, 8.0 * cubic_meters);
+//! #[cfg(any(feature = "std", feature = "num-traits-libm"))]
 //! assert_eq!(vol.cbrt(), length);
 //! let foo = length.powi::<4>();
 //! ```
