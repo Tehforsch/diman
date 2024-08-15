@@ -3,7 +3,11 @@ use core::{
     ops::{Div, Mul},
 };
 
-use crate::num_traits_reexport::*; // either Float or FloatCore
+#[cfg(feature = "num-traits-libm")]
+pub use num_traits::float::Float;
+
+#[cfg(not(feature = "num-traits-libm"))]
+pub use num_traits::float::FloatCore;
 
 pub const MAX_NUM_FACTORS: usize = 10;
 
