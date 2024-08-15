@@ -22,8 +22,8 @@ serde = []
 rand = []
 hdf5 = []
 rational-dimensions = []
-num-traits-libm = []
-std = []
+num-traits-libm = ["diman_lib/num-traits-libm"]
+std = ["diman_lib/std"]
 
 default = ["f32", "f64"]
 
