@@ -370,7 +370,7 @@ impl OperatorTrait {
     /// 2. If necessary, a `Copy` trait bound for the LHS/RHS storage type, if we only
     ///    receive a &Quantity on the LHS/RHS respectively.
     /// 3. If necessary, a bound on the const generic expression for
-    /// mul/div-type traits, where a new dimension is created.
+    ///    mul/div-type traits, where a new dimension is created.
     fn trait_bounds(
         &self,
         quantity_type: &Ident,
