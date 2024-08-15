@@ -20,6 +20,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Install latest nightly
         uses: dtolnay/rust-toolchain@nightly
+        with:
+          target: nvptx64-nvidia-cuda
       - name: Install hdf5 libraries
         run: |
           sudo apt-get update
@@ -30,6 +32,8 @@ jobs:
           sudo apt-get install mpich
       - name: Build
         run: cargo build --verbose --all-targets
+      - name: Build with no_std on nvptx64-nvidia-cuda
+        run: cargo build --target nvptx64-nvidia-cuda --no-default-features --features f32,f64
       - name: Run tests (default features)
         run: cargo test --tests --workspace
       - name: Run tests (all features, no rational dimensions)
