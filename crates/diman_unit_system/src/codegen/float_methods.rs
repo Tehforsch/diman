@@ -111,17 +111,7 @@ impl Codegen {
                 }
         };
         #[cfg(all(not(feature = "std"), not(feature = "num-traits-libm")))]
-        let roots = quote! {
-                pub fn sqrt(&self) -> #quantity_type<#float_type, { D.div_2() }>
-                {
-                    #quantity_type::<#float_type, { D.div_2() }>(self.0.sqrt())
-                }
-
-                pub fn cbrt(&self) -> #quantity_type<#float_type, { D.div_3() }>
-                {
-                    #quantity_type::<#float_type, { D.div_3() }>(self.0.cbrt())
-                }
-        };
+        let roots = quote! {};
 
         quote! {
             impl<const D: #dimension_type> #quantity_type<#float_type, D> {

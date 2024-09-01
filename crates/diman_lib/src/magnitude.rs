@@ -3,6 +3,12 @@ use core::{
     ops::{Div, Mul},
 };
 
+#[cfg(feature = "num-traits-libm")]
+pub use num_traits::float::Float;
+
+#[cfg(not(feature = "num-traits-libm"))]
+pub use num_traits::float::FloatCore;
+
 pub const MAX_NUM_FACTORS: usize = 10;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, ConstParamTy)]
@@ -45,6 +51,7 @@ impl Magnitude {
         self.into_f64() as f32
     }
 
+    #[cfg(any(feature = "std", feature = "num-traits-libm"))]
     pub fn pow_rational(&self, num: i64, denom: i64) -> Magnitude {
         Self::from_f64(self.into_f64().powf(num as f64 / denom as f64))
     }

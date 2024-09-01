@@ -2,6 +2,13 @@ use core::ops::{AddAssign, Mul, Neg};
 
 use crate::magnitude::Magnitude;
 
+// For some reason, this use statement is never recognized as used
+// even when I build the crates with no std, where removing the use
+// statement means that powi below cannot be used.
+#[allow(unused)]
+#[cfg(not(any(feature = "std")))]
+use num_traits::float::FloatCore;
+
 pub trait DimensionExponent: Clone + PartialEq + Copy + Mul + AddAssign + Neg {
     fn float_pow(mag: Magnitude, exponent: Self) -> Magnitude;
     fn one() -> Self;

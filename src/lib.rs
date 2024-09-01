@@ -99,9 +99,11 @@
 //! let length = 2.0f64 * meters;
 //! let area = length.squared();
 //! assert_eq!(area, 4.0 * square_meters);
+//! # #[cfg(any(feature = "std", feature = "num-traits-libm"))]
 //! assert_eq!(area.sqrt(), length);
 //! let vol = length.cubed();
 //! assert_eq!(vol, 8.0 * cubic_meters);
+//! # #[cfg(any(feature = "std", feature = "num-traits-libm"))]
 //! assert_eq!(vol.cbrt(), length);
 //! let foo = length.powi::<4>();
 //! ```
@@ -535,10 +537,4 @@ pub type Quotient<Q1, Q2> = <Q1 as core::ops::Div<Q2>>::Output;
 
 pub mod internal {
     pub use diman_lib::*;
-    pub mod num_traits_reexport {
-        #[cfg(feature = "num-traits-libm")]
-        pub use num_traits::float::Float;
-        #[cfg(not(feature = "num-traits-libm"))]
-        pub use num_traits::float::FloatCore;
-    }
 }
