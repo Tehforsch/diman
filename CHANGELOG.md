@@ -1,3 +1,10 @@
+# v0.5.1
+## Fixes
+- Fix feature gates on square root / cube root implementation.
+- Remove unused code lints in new rust version (@jedbrown)
+- Restore no_std (@jedbrown, see #77)
+- Use maintained HDF5 fork to allow HDF5 versions of 1.14.x (see #78, #79)
+
 # v0.5.0
 ## Features
 - `no_std` support (@jedbrown, see #55, #60)
