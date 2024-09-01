@@ -1,17 +1,23 @@
 [package]
 name = "diman"
-version = "0.5.0"
-edition = "2021"
 description = "Zero-cost compile-time dimensional analysis."
 authors = ["Toni Peter <mail@tonipeter.de>"]
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/tehforsch/diman"
 categories = ["science"]
 keywords = ["units", "dimensional-analysis"]
 readme = "README.md"
+version.workspace = true
+license.workspace = true
+repository.workspace = true
+edition.workspace = true
 
 [workspace]
 members = ["crates/*"]
+
+[workspace.package]
+version = "0.5.1"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/tehforsch/diman"
+edition = "2021"
 
 [features]
 num-traits-libm = ["diman_unit_system/num-traits-libm", "diman_lib/num-traits-libm"]
@@ -42,8 +48,8 @@ hdf5 = { package = "hdf5-metno", version = "0.9.0", optional = true}
 mpi = { version = "0.7", default-features = false, features = ["derive"], optional = true }
 once_cell = { version = "1.18.0", optional = true }
 
-diman_unit_system = { path = "crates/diman_unit_system", version = "0.5", default-features = false }
-diman_lib = { path = "crates/diman_lib", version = "0.5" }
+diman_unit_system = { path = "crates/diman_unit_system", version = "0.5.1", default-features = false }
+diman_lib = { path = "crates/diman_lib", version = "0.5.1" }
 
 [dev-dependencies]
 serde_yaml = "0.9.27"
