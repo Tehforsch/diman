@@ -2,7 +2,7 @@ error[E0271]: type mismatch resolving `<f64 as Div<Quantity<f64, Dimension>>>::O
  --> tests/compile_fail/type_mismatch_div_quantity_type.rs:7:21
   |
 7 |     let x: () = 1.0 / dimensionless.new(1.0);
-  |                     ^ expected `Quantity<f64, Dimension>`, found `()`
+  |                     ^ expected `()`, found `Quantity<f64, Dimension>`
   |
-  = note: expected struct `Quantity<f64, Dimension>`
-          found unit type `()`
+  = note: expected unit type `()`
+                found struct `Quantity<f64, Dimension>`

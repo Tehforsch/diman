@@ -2,7 +2,7 @@ error[E0271]: type mismatch resolving `<Quantity<f64, Dimension> as Mul<f64>>::O
  --> tests/compile_fail/type_mismatch_mul_type_quantity.rs:7:40
   |
 7 |     let x: () = dimensionless.new(1.0) * 1.0;
-  |                                        ^ expected `Quantity<f64, Dimension>`, found `()`
+  |                                        ^ expected `()`, found `Quantity<f64, Dimension>`
   |
-  = note: expected struct `Quantity<f64, Dimension>`
-          found unit type `()`
+  = note: expected unit type `()`
+                found struct `Quantity<f64, Dimension>`

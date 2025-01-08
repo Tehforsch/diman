@@ -123,7 +123,7 @@ fn format_lhs_rhs_dimensions(lhs: &BaseDimensions, rhs: &BaseDimensions) -> (Str
     (format(lhs), format(rhs))
 }
 
-impl<'a> Emit for ViolatedAnnotationError<'a> {
+impl Emit for ViolatedAnnotationError<'_> {
     fn emit(self) {
         // In the future, it would be nice to have a proper span for the
         // second help text that points to the rhs. Unfortunately, joining
@@ -146,7 +146,7 @@ impl<'a> Emit for ViolatedAnnotationError<'a> {
     }
 }
 
-impl<'a> Emit for UndefinedAnnotationDimensionError<'a> {
+impl Emit for UndefinedAnnotationDimensionError<'_> {
     fn emit(self) {
         self.0
             .span()
@@ -199,7 +199,7 @@ impl Emit for MultipleDefinitionsError {
     }
 }
 
-impl<'a> Emit for KindNotAllowedError<'a> {
+impl Emit for KindNotAllowedError<'_> {
     fn emit(self) {
         let name = |kind| match kind {
             Kind::Dimension => "Dimension",
@@ -242,7 +242,7 @@ impl<'a> Emit for KindNotAllowedError<'a> {
     }
 }
 
-impl<'a> Emit for WrongTypeInAnnotationError<'a> {
+impl Emit for WrongTypeInAnnotationError<'_> {
     fn emit(self) {
         let name = match self.annotation_kind {
             Kind::Dimension => unreachable!(),
@@ -262,7 +262,7 @@ impl<'a> Emit for WrongTypeInAnnotationError<'a> {
     }
 }
 
-impl<'a> Emit for MultipleBaseUnitsForDimensionError<'a> {
+impl Emit for MultipleBaseUnitsForDimensionError<'_> {
     fn emit(self) {
         self.unit
             .span()
@@ -277,7 +277,7 @@ impl<'a> Emit for MultipleBaseUnitsForDimensionError<'a> {
     }
 }
 
-impl<'a> Emit for BaseUnitForNonBaseDimensionError<'a> {
+impl Emit for BaseUnitForNonBaseDimensionError<'_> {
     fn emit(self) {
         self.unit
             .span()
@@ -293,7 +293,7 @@ impl<'a> Emit for BaseUnitForNonBaseDimensionError<'a> {
     }
 }
 
-impl<'a> Emit for SymbolDefinedMultipleTimes<'a> {
+impl Emit for SymbolDefinedMultipleTimes<'_> {
     fn emit(self) {
         Diagnostic::spanned(
             self.units
@@ -307,7 +307,7 @@ impl<'a> Emit for SymbolDefinedMultipleTimes<'a> {
     }
 }
 
-impl<'a> Emit for NoSymbolForBaseUnitError<'a> {
+impl Emit for NoSymbolForBaseUnitError<'_> {
     fn emit(self) {
         self.0
             .name
