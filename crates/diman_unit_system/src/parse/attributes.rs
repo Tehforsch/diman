@@ -134,7 +134,7 @@ impl Parse for Alias {
     }
 }
 
-impl<'a> Attribute<'a> {
+impl Attribute<'_> {
     fn inner_or_err(&self) -> Result<&ParseBuffer> {
         self.inner
             .as_ref()
