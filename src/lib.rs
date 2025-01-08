@@ -32,13 +32,48 @@
 //!         found struct `Quantity<_, Dimension { length: 0, time: 1, mass: 0, temperature: 0, current: 0, amount_of_substance: 0, luminous_intensity: 0 }>`
 //! ```
 //!
+//! While Diman provides a full definition of the SI system of units, it also fully supports defining custom systems of dimensions and units:
+//! ```
+//! # #![allow(incomplete_features)]
+//! # #![feature(generic_const_exprs, adt_const_params)]
+//! # mod surround {
+//! diman::unit_system!(
+//!     quantity_type Quantity;
+//!     dimension_type Dimension;
+//!
+//!     dimension Information;
+//!     dimension Time;
+//!
+//!     dimension Bandwidth = Information / Time;
+//!
+//!     #[prefix(kilo, mega)]
+//!     #[base(Information)]
+//!     #[symbol(B)]
+//!     unit byte;
+//!
+//!     #[base(Time)]
+//!     #[symbol(s)]
+//!     unit seconds;
+//!
+//!     unit hours = 3600 * seconds;
+//! );
+//! # }
+//!
+//! # use surround::dimensions::{Bandwidth, Information, Time};
+//! # use surround::units::{seconds, megabyte, hours};
+//! fn get_bitrate(information: Information<f64>, time: Time<f64>) -> Bandwidth<f64> {
+//!     information / time
+//! }
+//!
+//! get_bitrate(50.0 * megabyte, 2.0 * hours);
+//! ```
 //!
 //! # Disclaimer
-//! Diman is implemented using Rust's const generics feature. While `min_const_generics` has been stabilized since Rust 1.51, Diman uses more complex generic expressions and therefore requires the two currently unstable features `generic_const_exprs` and `adt_const_params`.
+//! Diman is implemented using Rust's const generics feature. This makes for very readable error messages compared to alternatives which are typically based on `typenum`. While `min_const_generics` has been stabilized since Rust 1.51, Diman uses more complex generic expressions and therefore requires the two currently unstable features `generic_const_exprs` and `adt_const_params`.
 //!
-//! Moreover, Diman is in its early stages of development and APIs will change.
+//! Moreover, Diman is in its early stages of development and APIs might change.
 //!
-//! If you cannot use unstable Rust for your project or require a stable library, consider using [`uom`](https://crates.io/crates/uom) or [`dimensioned`](https://crates.io/crates/dimensioned), both of which do not require any experimental features and are much more mature libraries in general.
+//! If you cannot use unstable Rust for your project, consider using [`uom`](https://crates.io/crates/uom) or [`dimensioned`](https://crates.io/crates/dimensioned), both of which do not require any experimental features.
 //!
 //! # Features
 //! * Invalid operations between physical quantities (adding length and time, for example) turn into compile errors.
