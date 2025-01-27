@@ -99,16 +99,16 @@ let v: Velocity<f64> = l / t;
 ```
 Addition and subtraction of a `Quantity` and a storage type is possible if and only if `D` is dimensionless:
 ```rust
-let l1 = 5.0 * meters;
-let l2 = 10.0 * kilometers;
-let x = l1 / l2 - 0.5;
-let y = 0.5 - l1 / l2;
+let d1 = 5.0 * meters;
+let d2 = 10.0 * kilometers;
+let x = d1 / d2 - 0.5;
+let y = 0.5 - d1 / d2;
 ```
 `Quantity` implements the dimensionless methods of `S`, such as `sin`, `cos`, etc. for dimensionless quantities:
 ```rust
-let l1 = 5.0f64 * meters;
-let l2 = 10.0f64 * kilometers;
-let angle_radians = (l1 / l2).asin();
+let d1 = 5.0f64 * meters;
+let d2 = 10.0f64 * kilometers;
+let angle_radians = (d1 / d2).asin();
 ```
 Exponentiation and related operations are supported via `squared`, `cubed`, `powi`, `sqrt`, `cbrt`:
 ```rust
@@ -123,16 +123,16 @@ let foo = length.powi::<4>();
 ```
 Note that unlike its float equivalent, `powi` receives its exponent as a generic instead of as a normal function argument. Exponentiation of dimensionful quantities with an non-constant integer is not supported, since the compiler cannot infer the dimension of the return type. However, dimensionless quantities can be raised to arbitrary powers using `powf`:
 ```rust
-let l1 = 2.0f64 * meters;
-let l2 = 5.0f64 * kilometers;
-let x = (l1 / l2).powf(2.71);
+let d1 = 2.0f64 * meters;
+let d2 = 5.0f64 * kilometers;
+let x = (d1 / d2).powf(2.71);
 ```
 ## Creation and conversion
 New quantities can be created either by multiplying with a unit, or by calling the `.new` function on the unit:
 ```rust
-let l1 = 2.0 * meters;
-let l2 = meters.new(2.0);
-assert_eq!(l1, l2);
+let d1 = 2.0 * meters;
+let d2 = meters.new(2.0);
+assert_eq!(d1, d2);
 ```
 For a full list of the units supported by dimans `SI` module, see [the definitions](src/si.rs).
 Composite units can be defined on the spot via multiplication/division of units:
@@ -157,10 +157,10 @@ assert_eq!(format!("{} km/h", vel.value_in(kilometers / hour)), "36 km/h");
 ```
 For dimensionless quantities, `.value()` provides access to the underlying storage types. Alternatively, dimensionless quantities also implement `Deref` for the same operation.
 ```rust
-let l1: Length<f64> = 5.0 * meters;
-let l2: Length<f64> = 10.0 * kilometers;
-let ratio_value: f64 = (l1 / l2).value();
-let ratio_deref: f64 = *(l1 / l2);
+let d1: Length<f64> = 5.0 * meters;
+let d2: Length<f64> = 10.0 * kilometers;
+let ratio_value: f64 = (d1 / d2).value();
+let ratio_deref: f64 = *(d1 / d2);
 assert_eq!(ratio_value, ratio_deref);
 ```
 ## Unchecked creation and conversion
