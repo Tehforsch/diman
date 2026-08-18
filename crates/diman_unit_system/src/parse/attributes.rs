@@ -135,7 +135,7 @@ impl Parse for Alias {
 }
 
 impl Attribute<'_> {
-    fn inner_or_err(&self) -> Result<&ParseBuffer> {
+    fn inner_or_err(&'_ self) -> Result<&'_ ParseBuffer<'_>> {
         self.inner
             .as_ref()
             .ok_or_else(|| Error::new(self.span, "Attribute expects arguments."))
