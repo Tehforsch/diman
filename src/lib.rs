@@ -456,7 +456,8 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![allow(incomplete_features)]
-#![feature(generic_const_exprs, adt_const_params)]
+#![feature(generic_const_exprs)]
+#![cfg_attr(feature = "si", feature(adt_const_params))]
 
 // This ensures we don't have to differentiate between
 // imports via `crate::` and `diman::` in the proc macro.
