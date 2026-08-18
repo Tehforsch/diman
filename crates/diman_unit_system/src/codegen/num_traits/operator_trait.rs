@@ -404,8 +404,23 @@ impl OperatorTrait {
             .as_ref()
             .map(|output_type| output_type.generic_const_bound(quantity_type))
             .unwrap_or_default();
+        let (lhs_storage, rhs_storage) = self.storage_types();
+        let lhs_storage_bound =
+            if self.lhs.is_storage() && matches!(self.lhs.storage, StorageType::Generic) {
+                quote! { #lhs_storage: __DimanStorage, }
+            } else {
+                quote! {}
+            };
+        let rhs_storage_bound =
+            if self.rhs.is_storage() && matches!(self.rhs.storage, StorageType::Generic) {
+                quote! { #rhs_storage: __DimanStorage, }
+            } else {
+                quote! {}
+            };
         quote! {
             #storage_bounds
+            #lhs_storage_bound
+            #rhs_storage_bound
             #generic_const_bound
         }
     }
