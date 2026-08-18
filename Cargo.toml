@@ -41,6 +41,10 @@ default = ["f32", "f64", "si", "std"]
 [lib]
 
 [dependencies]
+# These dependencies are required because the built-in SI needs to depend on the
+# libraries directly. Version mismatch in consumer crates is fine, if those crates
+# don't use the `si` feature. Unfortunately, cargo does not let me express the fact
+# that (for example) glam is only required when both `si` and `glam-vec2` are enabled.
 glam = { version = "0.24.2", optional = true }
 rand = { version = "0.8.5", optional = true }
 serde = { version = "1.0.193", features = ["derive"], optional = true }
