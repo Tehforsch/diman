@@ -27,7 +27,7 @@ impl Codegen {
     /// incoherent, since we could also choose `Quantity<_, Dimension::none()>`
     /// as storage type which would overlap with the quantity-to-quantity
     /// operator implementations.
-    /// 
+    ///
     /// This was the case in previous implementations but the compiler did not
     /// catch it (due to a compiler bug, allowing incoherent impls).
     fn gen_storage_trait(&self) -> TokenStream {
