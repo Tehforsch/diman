@@ -1,3 +1,10 @@
+# v0.6.0
+## Breaking changes
+- Replace `generic_const_exprs` with Rust's new generic const arguments features. Custom unit systems now require `adt_const_params`, `generic_const_args`, `generic_const_items`, and `min_generic_const_args` on nightly Rust.
+
+## Fixes
+- Only enable the unstable const-generic features when the built-in `si` unit system is enabled.
+
 # v0.5.1
 ## Fixes
 - Fix feature gates on square root / cube root implementation.
