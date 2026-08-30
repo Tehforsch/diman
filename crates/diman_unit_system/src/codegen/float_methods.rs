@@ -100,14 +100,14 @@ impl Codegen {
 
         #[cfg(any(feature = "std", feature = "num-traits-libm"))]
         let roots = quote! {
-                pub fn sqrt(&self) -> #quantity_type<#float_type, { D.div_2() }>
+                pub fn sqrt(&self) -> #quantity_type<#float_type, ::core::direct_const_arg!(__DIMAN_DIMENSION_DIV_2::<D>)>
                 {
-                    #quantity_type::<#float_type, { D.div_2() }>(self.0.sqrt())
+                    #quantity_type::<#float_type, ::core::direct_const_arg!(__DIMAN_DIMENSION_DIV_2::<D>)>(self.0.sqrt())
                 }
 
-                pub fn cbrt(&self) -> #quantity_type<#float_type, { D.div_3() }>
+                pub fn cbrt(&self) -> #quantity_type<#float_type, ::core::direct_const_arg!(__DIMAN_DIMENSION_DIV_3::<D>)>
                 {
-                    #quantity_type::<#float_type, { D.div_3() }>(self.0.cbrt())
+                    #quantity_type::<#float_type, ::core::direct_const_arg!(__DIMAN_DIMENSION_DIV_3::<D>)>(self.0.cbrt())
                 }
         };
         #[cfg(all(not(feature = "std"), not(feature = "num-traits-libm")))]
@@ -115,26 +115,20 @@ impl Codegen {
 
         quote! {
             impl<const D: #dimension_type> #quantity_type<#float_type, D> {
-                pub fn squared(&self) -> #quantity_type<#float_type, { D.mul(2) }>
-                where
-                    #quantity_type::<#float_type, { D.mul(2) }>:
+                pub fn squared(&self) -> #quantity_type<#float_type, ::core::direct_const_arg!(__DIMAN_DIMENSION_MUL::<D, 2>)>
                 {
-                    #quantity_type::<#float_type, { D.mul(2) }>(self.0.powi(2))
+                    #quantity_type::<#float_type, ::core::direct_const_arg!(__DIMAN_DIMENSION_MUL::<D, 2>)>(self.0.powi(2))
                 }
 
-                pub fn cubed(&self) -> #quantity_type<#float_type, { D.mul(3) }>
-                where
-                    #quantity_type::<#float_type, { D.mul(3) }>:
+                pub fn cubed(&self) -> #quantity_type<#float_type, ::core::direct_const_arg!(__DIMAN_DIMENSION_MUL::<D, 3>)>
                 {
-                    #quantity_type::<#float_type, { D.mul(3) }>(self.0.powi(3))
+                    #quantity_type::<#float_type, ::core::direct_const_arg!(__DIMAN_DIMENSION_MUL::<D, 3>)>(self.0.powi(3))
                 }
 
 
-                pub fn powi<const I: i32>(&self) -> #quantity_type<#float_type, { D.mul(I) }>
-                where
-                    #quantity_type::<#float_type, { D.mul(I) }>:
+                pub fn powi<const I: i32>(&self) -> #quantity_type<#float_type, ::core::direct_const_arg!(__DIMAN_DIMENSION_MUL::<D, I>)>
                 {
-                    #quantity_type::<#float_type, { D.mul(I) }>(self.0.powi(I))
+                    #quantity_type::<#float_type, ::core::direct_const_arg!(__DIMAN_DIMENSION_MUL::<D, I>)>(self.0.powi(I))
                 }
 
                 #roots

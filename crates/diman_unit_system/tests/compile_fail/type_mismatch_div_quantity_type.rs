@@ -1,8 +1,8 @@
 #![allow(incomplete_features)]
-#![feature(generic_const_exprs, adt_const_params)]
+#![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 pub mod example_system;
 use example_system::units::dimensionless;
 
 fn main() {
-    let x: () = 1.0 / dimensionless.new(1.0);
+    let x: () = 1.0f64 / dimensionless.new(1.0);
 }

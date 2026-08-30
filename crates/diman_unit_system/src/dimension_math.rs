@@ -80,7 +80,7 @@ impl core::ops::Mul for BaseDimensions {
 
 impl BaseDimensions {
     fn inv(mut self) -> Self {
-        for (_, value) in self.fields.iter_mut() {
+        for value in self.fields.values_mut() {
             *value = -*value;
         }
         self

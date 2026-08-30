@@ -1,8 +1,13 @@
-error[E0271]: type mismatch resolving `<Quantity<f64, Dimension> as Div<f64>>::Output == ()`
+error[E0271]: type mismatch resolving `<Quantity<f64, Dimension { length: 0, time: 0, mass: 0, temperature: 0 }> as Div<f64>>::Output == ()`
  --> tests/compile_fail/type_mismatch_div_type_quantity.rs:7:40
   |
 7 |     let x: () = dimensionless.new(1.0) / 1.0;
-  |                                        ^ expected `()`, found `Quantity<f64, Dimension>`
+  |                                        ^ type mismatch resolving `<Quantity<f64, Dimension { length: 0, time: 0, mass: 0, temperature: 0 }> as Div<f64>>::Output == ()`
   |
+note: expected this to be `()`
+ --> tests/compile_fail/example_system/mod.rs
+  |
+  |     quantity_type Quantity;
+  |                   ^^^^^^^^
   = note: expected unit type `()`
-                found struct `Quantity<f64, Dimension>`
+                found struct `Quantity<f64, Dimension { length: 0, time: 0, mass: 0, temperature: 0 }>`

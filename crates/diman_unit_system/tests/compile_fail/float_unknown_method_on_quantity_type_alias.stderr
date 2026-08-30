@@ -1,23 +1,16 @@
-error[E0599]: no function or associated item named `unknown_method` found for struct `Quantity` in the current scope
+error[E0599]: no associated function or constant named `unknown_method` found for struct `Quantity<S, D>` in the current scope
  --> tests/compile_fail/float_unknown_method_on_quantity_type_alias.rs:7:13
   |
 7 |     Length::unknown_method(49.0);
-  |             ^^^^^^^^^^^^^^ function or associated item not found in `Quantity<_, Dimension>`
+  |             ^^^^^^^^^^^^^^ associated function or constant not found in `Quantity<_, Dimension { length: 1, time: 0, mass: 0, temperature: 0 }>`
   |
  ::: tests/compile_fail/example_system/mod.rs
   |
   |     quantity_type Quantity;
-  |                   -------- function or associated item `unknown_method` not found for this struct
+  |                   -------- associated function or constant `unknown_method` not found for this struct
   |
-note: if you're trying to build a new `Quantity<_, Dimension>`, consider using `Quantity::<S, D>::new_unchecked` which returns `Quantity<_, _>`
+note: if you're trying to build a new `Quantity<_, Dimension { length: 1, time: 0, mass: 0, temperature: 0 }>`, consider using `Quantity::<S, D>::new_unchecked` which returns `Quantity<_, _>`
  --> tests/compile_fail/example_system/mod.rs
   |
-  | / unit_system_internal!(
-  | |     quantity_type Quantity;
-  | |     dimension_type Dimension;
-  | |     dimension Length;
-... |
-  | |     constant SOLAR_MASS_AWKWARD = 1.988477e30 * kilograms / (seconds / seconds);
-  | | );
-  | |_^
-  = note: this error originates in the macro `unit_system_internal` (in Nightly builds, run with -Z macro-backtrace for more info)
+  |     quantity_type Quantity;
+  |                   ^^^^^^^^

@@ -34,6 +34,8 @@ impl Codegen {
         quote! {
             pub use #path_prefix::magnitude::Magnitude;
             mod unit_type {
+                use super::__DIMAN_DIMENSION_ADD;
+                use super::__DIMAN_DIMENSION_SUB;
                 use super::Dimension;
                 use super::Magnitude;
                 use super::Quantity;
