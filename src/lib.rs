@@ -67,7 +67,7 @@
 //! ```
 //!
 //! # Disclaimer
-//! Diman is implemented using Rust's const generics feature. This makes for very readable error messages compared to alternatives which are typically based on `typenum`. While `min_const_generics` has been stabilized since Rust 1.51, Diman uses more complex generic expressions and therefore requires the two currently unstable features `generic_const_exprs` and `adt_const_params`.
+//! Diman is implemented using Rust's const generics feature. This makes for very readable error messages compared to alternatives which are typically based on `typenum`. While `min_const_generics` has been stabilized since Rust 1.51, Diman uses more complex generic expressions and therefore requires the four currently unstable features `generic_const_args`, `generic_const_items`, `min_generic_const_args`, and `adt_const_params`.
 //!
 //! Moreover, Diman is in its early stages of development and APIs might change.
 //!
