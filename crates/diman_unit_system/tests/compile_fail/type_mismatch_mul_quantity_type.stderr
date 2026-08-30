@@ -1,14 +1,10 @@
-error[E0271]: type mismatch resolving `<f64 as Mul<_>>::Output == ()`
- --> tests/compile_fail/type_mismatch_mul_quantity_type.rs:7:21
+error[E0308]: mismatched types
+ --> tests/compile_fail/type_mismatch_mul_quantity_type.rs:7:17
   |
-7 |     let x: () = 1.0 * dimensionless.new(1.0);
-  |                     ^ type mismatch resolving `<f64 as Mul<_>>::Output == ()`
+7 |     let x: () = 1.0f64 * dimensionless.new(1.0);
+  |            --   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `()`, found `Quantity<f64, Dimension { length: 0, time: 0, mass: 0, temperature: 0 }>`
+  |            |
+  |            expected due to this
   |
-note: expected this to be `()`
- --> tests/compile_fail/example_system/mod.rs
-  |
-  |     quantity_type Quantity;
-  |                   ^^^^^^^^
   = note: expected unit type `()`
                 found struct `Quantity<f64, Dimension { length: 0, time: 0, mass: 0, temperature: 0 }>`
-  = note: consider using `--verbose` to print the full type name to the console
