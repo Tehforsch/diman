@@ -86,6 +86,7 @@ impl Trait {
     }
 }
 
+#[allow(clippy::large_enum_variant)]
 enum StorageType {
     Generic,
     Concrete(Type),
