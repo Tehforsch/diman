@@ -136,71 +136,16 @@ impl Operand {
     }
 }
 
-enum OutputQuantityDimension {
-    Existing(TokenStream),
-    New(TokenStream),
-}
-
-impl OutputQuantityDimension {
-    fn unwrap(&self) -> &TokenStream {
-        match self {
-            OutputQuantityDimension::Existing(t) => t,
-            OutputQuantityDimension::New(t) => t,
-        }
-    }
-}
-
 struct OutputQuantity {
     storage: TokenStream,
-    dimension: OutputQuantityDimension,
+    dimension: TokenStream,
 }
 
 impl OutputQuantity {
     fn output_type_def(&self, quantity_type: &Ident) -> TokenStream {
         let OutputQuantity { storage, dimension } = self;
-        let dimension = dimension.unwrap();
-        let out = quote! { type Output = #quantity_type < #storage, #dimension >; };
-        out
-    }
-
-    fn generic_const_bound(&self, quantity_type: &Ident) -> TokenStream {
-        if let OutputQuantityDimension::New(dim) = &self.dimension {
-            //
-            // TODO(minor): This compiles?
-            // A very weird sequence of events has led me to this
-            // code. For context: this 'trait' bound is needed whenever
-            // generic_const_exprs are used in return types of functions (as
-            // far as I understand it it has to do with making sure the const
-            // expr evaluates without panicking.). Now it seemed to me that
-            // you would write `Quantity< STORAGE, DIM >:` where STORAGE is the
-            // storage type of the return type and DIM is the dimension of the
-            // return type.
-            // This works for almost all of the trait impls, but the one for
-            // concrete storage types (such as f32) run into
-            // error[E0275]: overflow evaluating the requirement `f32: Mul<Quantity<_, _>>`
-            //
-            // It seems that this problem is somewhat similar to this one:
-            // https://github.com/rust-lang/rust/issues/79807
-            // I've reproduced a minimal example of this here:
-            // https://gist.github.com/rust-play/df60936a9a6bc0f7c29b190545fb7d34
-            // Note that this happens on stable rust and doesn't require adt_const_params
-            // or generic_const_exprs.
-            //
-            // Now I realized that the same code had previously compiled with a different
-            // trait bound for the const generic and that made me realize I could literally
-            // put whatever storage type that I wanted here. I am guessing that this trait
-            // bound is really only used to evaluate the const generic expression and
-            // doesn't care about the storage type. Still, this seems very confusing.
-            // However, since this helps with getting the code to compile, I put the
-            // most innocent possible storage type here: `()`.
-            // (Note that _ is not allowed)
-            //
-            // Not sure how much of a bug this is but I filed
-            // https://github.com/rust-lang/rust/issues/119690
-            quote! { #quantity_type < (), #dim >: }
-        } else {
-            quote! {}
-        }
+        let span = quantity_type.span();
+        quote_spanned! { span=> type Output = #quantity_type < #storage, #dimension >; }
     }
 }
 
@@ -369,13 +314,7 @@ impl OperatorTrait {
     /// 1. A trait bound for the same trait but for the underlying storage types
     /// 2. If necessary, a `Copy` trait bound for the LHS/RHS storage type, if we only
     ///    receive a &Quantity on the LHS/RHS respectively.
-    /// 3. If necessary, a bound on the const generic expression for
-    ///    mul/div-type traits, where a new dimension is created.
-    fn trait_bounds(
-        &self,
-        quantity_type: &Ident,
-        output_type: &Option<OutputQuantity>,
-    ) -> TokenStream {
+    fn trait_bounds(&self) -> TokenStream {
         let storage_bounds = if matches!(self.lhs.storage, StorageType::Generic)
             || matches!(self.rhs.storage, StorageType::Generic)
         {
@@ -400,10 +339,6 @@ impl OperatorTrait {
         } else {
             quote! {}
         };
-        let generic_const_bound = output_type
-            .as_ref()
-            .map(|output_type| output_type.generic_const_bound(quantity_type))
-            .unwrap_or_default();
         let (lhs_storage, rhs_storage) = self.storage_types();
         let lhs_storage_bound =
             if self.lhs.is_storage() && matches!(self.lhs.storage, StorageType::Generic) {
@@ -421,7 +356,6 @@ impl OperatorTrait {
             #storage_bounds
             #lhs_storage_bound
             #rhs_storage_bound
-            #generic_const_bound
         }
     }
 
@@ -438,26 +372,31 @@ impl OperatorTrait {
         quote! { < #lhs as #trait_name<#rhs> >::Output }
     }
 
-    fn output_quantity_dimension(&self, dimension_type: &Ident) -> OutputQuantityDimension {
+    fn output_quantity_dimension(&self, dimension_type: &Ident) -> TokenStream {
         assert!(self.name.has_output_type());
         let span = dimension_type.span();
-        use OutputQuantityDimension::*;
         use QuantityType::*;
-        let existing = Existing(quote_spanned! { span=> D });
+        let existing = quote_spanned! { span=> D };
         match (&self.lhs.type_, &self.rhs.type_) {
             (Quantity, Quantity) => match self.name {
-                Mul => New(quote_spanned! {span=> { DL.add(DR) } }),
-                Div => New(quote_spanned! {span=> { DL.sub(DR) } }),
+                Mul => {
+                    quote_spanned! {span=> ::core::direct_const_arg!(__DIMAN_DIMENSION_ADD::<DL, DR>) }
+                }
+                Div => {
+                    quote_spanned! {span=> ::core::direct_const_arg!(__DIMAN_DIMENSION_SUB::<DL, DR>) }
+                }
                 _ => existing,
             },
             (Quantity, Storage) => existing,
             (Storage, Quantity) => match self.name {
                 Mul => existing,
-                Div => New(quote_spanned! {span=> { D.neg() } }),
+                Div => {
+                    quote_spanned! {span=> ::core::direct_const_arg!(__DIMAN_DIMENSION_NEG::<D>) }
+                }
                 _ => unreachable!(),
             },
             (Dimensionless, Storage) | (Storage, Dimensionless) => {
-                New(quote_spanned! {span=> { #dimension_type :: none() } })
+                quote_spanned! {span=> { #dimension_type :: none() } }
             }
             _ => unreachable!(),
         }
@@ -663,7 +602,7 @@ impl Codegen {
             .as_ref()
             .map(|output_type| output_type.output_type_def(&self.defs.quantity_type));
 
-        let trait_bounds = numeric_trait.trait_bounds(&self.defs.quantity_type, &output_type);
+        let trait_bounds = numeric_trait.trait_bounds();
         let fn_return_expr = numeric_trait.fn_return_expr(&self.defs.quantity_type, &output_type);
         quote! {
             impl #impl_generics #trait_name::<#rhs> for #lhs

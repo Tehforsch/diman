@@ -21,6 +21,14 @@ impl Codegen {
     fn quantity_functions(&self) -> TokenStream {
         let dimension_type = &self.defs.dimension_type;
         let quantity_type = &self.defs.quantity_type;
+        let new_unchecked = quote_spanned! { quantity_type.span()=>
+            /// Create a new quantity for the dimension with a given value.
+            /// Use carefully, since the constructed quantity depends on the
+            /// used base units.
+            pub const fn new_unchecked(s: S) -> Self {
+                Self(s)
+            }
+        };
         quote! {
             impl<S> #quantity_type<S, { #dimension_type::none() }> {
                 /// Return the stored value of a dimensionless quantity.
@@ -49,12 +57,7 @@ impl Codegen {
                     &self.0
                 }
 
-                /// Create a new quantity for the dimension with a given value.
-                /// Use carefully, since the constructed quantity depends on the
-                /// used base units.
-                pub const fn new_unchecked(s: S) -> Self {
-                    Self(s)
-                }
+                #new_unchecked
             }
 
             impl<const D: #dimension_type, S> #quantity_type<S, D>

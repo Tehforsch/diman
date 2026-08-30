@@ -1,6 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![allow(incomplete_features)]
-#![feature(generic_const_exprs, adt_const_params)]
+#![feature(adt_const_params)]
 
 pub mod dimension_exponent;
 pub mod magnitude;

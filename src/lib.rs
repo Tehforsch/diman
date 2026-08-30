@@ -2,7 +2,7 @@
 //!
 //! ```
 //! # #![allow(incomplete_features)]
-//! # #![feature(generic_const_exprs, adt_const_params)]
+//! # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 //! use diman::si::dimensions::{Length, Time, Velocity};
 //! use diman::si::units::{seconds, meters, kilometers, hours, hour};
 //!
@@ -35,7 +35,7 @@
 //! While Diman provides a full definition of the SI system of units, it also fully supports defining custom systems of dimensions and units:
 //! ```
 //! # #![allow(incomplete_features)]
-//! # #![feature(generic_const_exprs, adt_const_params)]
+//! # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 //! # mod surround {
 //! diman::unit_system!(
 //!     quantity_type Quantity;
@@ -97,7 +97,7 @@
 //! Addition and subtraction of two quantities is allowed if the dimensions match:
 //! ```
 //! # #![allow(incomplete_features)]
-//! # #![feature(generic_const_exprs, adt_const_params)]
+//! # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 //! # use diman::si::dimensions::{Length};
 //! # use diman::si::units::{kilometers, meters};
 //! let l = 5.0 * meters + 10.0 * kilometers;
@@ -105,7 +105,7 @@
 //! Multiplication and division of two quantities produces a new quantity:
 //! ```
 //! # #![allow(incomplete_features)]
-//! # #![feature(generic_const_exprs, adt_const_params)]
+//! # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 //! # use diman::si::dimensions::{Length, Time, Velocity};
 //! # use diman::si::units::{meters, seconds};
 //! let l = 5.0 * meters;
@@ -115,7 +115,7 @@
 //! Addition and subtraction of a `Quantity` and a storage type is possible if and only if `D` is dimensionless:
 //! ```
 //! # #![allow(incomplete_features)]
-//! # #![feature(generic_const_exprs, adt_const_params)]
+//! # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 //! # use diman::si::dimensions::{Length};
 //! # use diman::si::units::{kilometers, meters};
 //! let l1 = 5.0 * meters;
@@ -126,7 +126,7 @@
 //! `Quantity` implements the dimensionless methods of `S`, such as `sin`, `cos`, etc. for dimensionless quantities:
 //! ```
 //! # #![allow(incomplete_features)]
-//! # #![feature(generic_const_exprs, adt_const_params)]
+//! # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 //! # use diman::si::dimensions::{Length};
 //! # use diman::si::units::{kilometers, meters};
 //! let l1 = 5.0f64 * meters;
@@ -136,7 +136,7 @@
 //! Exponentiation and related operations are supported via `squared`, `cubed`, `powi`, `sqrt`, `cbrt`:
 //! ```
 //! # #![allow(incomplete_features)]
-//! # #![feature(generic_const_exprs, adt_const_params)]
+//! # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 //! # use diman::si::dimensions::{Length};
 //! # use diman::si::units::{meters, cubic_meters, square_meters};
 //! let length = 2.0f64 * meters;
@@ -153,7 +153,7 @@
 //! Note that unlike its float equivalent, `powi` receives its exponent as a generic instead of as a normal function argument. Exponentiation of dimensionful quantities with an non-constant integer is not supported, since the compiler cannot infer the dimension of the return type. However, dimensionless quantities can be raised to arbitrary powers using `powf`:
 //! ```
 //! # #![allow(incomplete_features)]
-//! # #![feature(generic_const_exprs, adt_const_params)]
+//! # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 //! # use diman::si::dimensions::{Length, Volume};
 //! # use diman::si::units::{meters, kilometers};
 //! let l1 = 2.0f64 * meters;
@@ -172,7 +172,7 @@
 //! Composite units can be defined on the spot via multiplication/division of units:
 //! ```
 //! # #![allow(incomplete_features)]
-//! # #![feature(generic_const_exprs, adt_const_params)]
+//! # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 //! # use diman::si::units::{kilometers, meters, hour, meters_per_second};
 //! let v1 = (kilometers / hour).new(3.6);
 //! let v2 = 3.6 * kilometers / hour;
@@ -185,7 +185,7 @@
 //! Conversion into the underlying storage type can be done using the `value_in` function:
 //! ```
 //! # #![allow(incomplete_features)]
-//! # #![feature(generic_const_exprs, adt_const_params)]
+//! # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 //! # use diman::si::units::{kilometers, meters};
 //! let length = 2.0f64 * kilometers;
 //! assert_eq!(format!("{} m", length.value_in(meters)), "2000 m");
@@ -193,7 +193,7 @@
 //! This also works for composite units:
 //! ```
 //! # #![allow(incomplete_features)]
-//! # #![feature(generic_const_exprs, adt_const_params)]
+//! # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 //! # use diman::si::units::{kilometers, meters_per_second, hour};
 //! let vel = 10.0f64 * meters_per_second;
 //! assert_eq!(format!("{} km/h", vel.value_in(kilometers / hour)), "36 km/h");
@@ -201,7 +201,7 @@
 //! For dimensionless quantities, `.value()` provides access to the underlying storage types. Alternatively, dimensionless quantities also implement `Deref` for the same operation.
 //! ```
 //! # #![allow(incomplete_features)]
-//! # #![feature(generic_const_exprs, adt_const_params)]
+//! # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 //! # use diman::si::dimensions::{Length};
 //! # use diman::si::units::{kilometers, meters};
 //! let l1: Length<f64> = 5.0 * meters;
@@ -214,7 +214,7 @@
 //! If absolutely required, `.value_unchecked()` provides access to the underlying storage type for all quantities. This is **not unit-safe** since the return value will depend on the unit system!
 //! ```
 //! # #![allow(incomplete_features)]
-//! # #![feature(generic_const_exprs, adt_const_params)]
+//! # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 //! # use diman::si::dimensions::{Length};
 //! # use diman::si::units::{kilometers};
 //! let length: Length<f64> = 5.0 * kilometers;
@@ -224,7 +224,7 @@
 //! Similarly, if absolutely required, new quantities can be constructed from storage types using `Quantity::new_unchecked`. This operation is also **not unit-safe**!
 //! ```
 //! # #![allow(incomplete_features)]
-//! # #![feature(generic_const_exprs, adt_const_params)]
+//! # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 //! # use diman::si::dimensions::{Length};
 //! # use diman::si::units::{kilometers};
 //! let length: Length<f64> = Length::new_unchecked(5000.0);
@@ -233,7 +233,7 @@
 //! The combination of `value_unchecked` and `new_unchecked` comes in handy when using third party libraries that only takes the raw storage type as argument. As an example, suppose we have a function `foo` that takes a `Vec<f64>` and returns a `Vec<f64>`, and suppose it sorts the numbers or does some other unit safe operation. Then we could reasonably write:
 //! ```
 //! # #![allow(incomplete_features)]
-//! # #![feature(generic_const_exprs, adt_const_params)]
+//! # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 //! # use diman::si::dimensions::{Length};
 //! # use diman::si::units::{meters, kilometers};
 //! # fn foo(x: Vec<f64>) -> Vec<f64> {
@@ -256,7 +256,7 @@
 //! `Debug` is implemented and will print the quantity in its base representation.
 //! ```
 //! # #![allow(incomplete_features)]
-//! # #![feature(generic_const_exprs, adt_const_params)]
+//! # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 //! # use diman::si::dimensions::{Length, Time};
 //! # use diman::si::units::{kilometers, seconds};
 //! let length: Length<f64> = 5.0 * kilometers;
@@ -273,7 +273,7 @@
 //! As an example, consider the following macro call:
 //! ```
 //! # #![allow(incomplete_features)]
-//! # #![feature(generic_const_exprs, adt_const_params)]
+//! # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 //! # mod surround {
 //! diman::unit_system!(
 //!     quantity_type Quantity;
@@ -326,7 +326,7 @@
 //! For example
 //! ```
 //! # #![allow(incomplete_features)]
-//! # #![feature(generic_const_exprs, adt_const_params)]
+//! # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 //! # mod surround {
 //! # diman_unit_system::unit_system!(
 //! # quantity_type Quantity;
@@ -346,7 +346,7 @@
 //! Unit aliases can automatically be generated with the `#[alias(...)]` macro. For example
 //! ```
 //! # #![allow(incomplete_features)]
-//! # #![feature(generic_const_exprs, adt_const_params)]
+//! # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 //! # mod surround {
 //! # diman_unit_system::unit_system!(
 //! # quantity_type Quantity;
@@ -367,7 +367,7 @@
 //! This is why the `Product` and `Quotient` types are provided:
 //! ```
 //! # #![allow(incomplete_features)]
-//! # #![feature(generic_const_exprs, adt_const_params)]
+//! # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 //! use diman::si::dimensions::{Length, Time};
 //! use diman::{Product, Quotient};
 //!
@@ -456,7 +456,7 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![allow(incomplete_features)]
-#![feature(generic_const_exprs)]
+#![feature(generic_const_args, generic_const_items, min_generic_const_args)]
 #![cfg_attr(feature = "si", feature(adt_const_params))]
 
 // This ensures we don't have to differentiate between
@@ -487,7 +487,7 @@ pub mod si;
 /// 5. `unit`: Define a new unit. If no expression is given and the `#[base(...)]` attribute is set, it will be the base unit for the given dimension. Example:
 /// ```
 /// # #![allow(incomplete_features)]
-/// # #![feature(generic_const_exprs, adt_const_params)]
+/// # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 /// # mod surround {
 /// # use diman_unit_system::unit_system;
 /// # unit_system!(
@@ -503,7 +503,7 @@ pub mod si;
 /// Derived units can be defined via expressions, such as
 /// ```
 /// # #![allow(incomplete_features)]
-/// # #![feature(generic_const_exprs, adt_const_params)]
+/// # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 /// # mod surround {
 /// # use diman_unit_system::unit_system;
 /// # unit_system!(
@@ -520,7 +520,7 @@ pub mod si;
 /// Unit statements may optionally be annotated with their resulting dimension to prevent bugs:
 /// ```
 /// # #![allow(incomplete_features)]
-/// # #![feature(generic_const_exprs, adt_const_params)]
+/// # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 /// # mod surround {
 /// # use diman_unit_system::unit_system;
 /// # unit_system!(
@@ -542,7 +542,7 @@ pub mod si;
 /// Example usage:
 /// ```
 /// # #![allow(incomplete_features)]
-/// # #![feature(generic_const_exprs, adt_const_params)]
+/// # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 /// # mod surround {
 /// # use diman_unit_system::unit_system;
 /// unit_system!(
@@ -575,7 +575,7 @@ pub use diman_unit_system::unit_system;
 /// Constructs a product of quantities for one-off quantities.
 /// ```
 /// # #![allow(incomplete_features)]
-/// # #![feature(generic_const_exprs, adt_const_params)]
+/// # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 /// # use diman::si::dimensions::{Length, Time};
 /// # use diman::si::units::{meters, seconds};
 /// # use diman::Product;
@@ -586,7 +586,7 @@ pub type Product<Q1, Q2> = <Q1 as ::core::ops::Mul<Q2>>::Output;
 /// Constructs a quotient of two quantities for one-off quantities.
 /// ```
 /// # #![allow(incomplete_features)]
-/// # #![feature(generic_const_exprs, adt_const_params)]
+/// # #![feature(adt_const_params, generic_const_args, generic_const_items, min_generic_const_args)]
 /// # use diman::si::dimensions::{Length, Time};
 /// # use diman::si::units::{meters, seconds};
 /// # use diman::Quotient;

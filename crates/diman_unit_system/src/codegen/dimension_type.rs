@@ -158,6 +158,19 @@ impl Codegen {
             }
 
             #methods_impl
+
+            #[doc(hidden)]
+            pub const __DIMAN_DIMENSION_ADD<const L: #name, const R: #name>: #name = const { L.add(R) };
+            #[doc(hidden)]
+            pub const __DIMAN_DIMENSION_SUB<const L: #name, const R: #name>: #name = const { L.sub(R) };
+            #[doc(hidden)]
+            pub const __DIMAN_DIMENSION_NEG<const D: #name>: #name = const { D.neg() };
+            #[doc(hidden)]
+            pub const __DIMAN_DIMENSION_MUL<const D: #name, const I: i32>: #name = const { D.mul(I) };
+            #[doc(hidden)]
+            pub const __DIMAN_DIMENSION_DIV_2<const D: #name>: #name = const { D.div_2() };
+            #[doc(hidden)]
+            pub const __DIMAN_DIMENSION_DIV_3<const D: #name>: #name = const { D.div_3() };
         }
     }
 
